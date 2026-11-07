@@ -362,10 +362,22 @@ function PlayHud({
             </>
           )}
           {snap.seats > 0 && !rush ? (
-            <p className="mt-1 truncate text-xs text-muted">
-              ركاب {snap.passengers.length}/{snap.seats}
-              {snap.passengers[0] ? ` · ${snap.passengers[0].dest} · ${snap.passengers[0].fare} ج` : ""}
-            </p>
+            <div className="mt-2 space-y-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-muted">
+                <span>ركاب {snap.passengers.length}/{snap.seats}</span>
+                <span>منتظرين {snap.waitingPassengers}</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {snap.passengers.map((passenger, index) => (
+                  <span key={`${passenger.dest}-${index}`} className="rounded-md bg-panel-2 px-1.5 py-1 text-[10px] font-bold">
+                    {passenger.dest} · {passenger.fare}ج
+                  </span>
+                ))}
+              </div>
+              {snap.passengers.length > 0 ? (
+                <p className="text-xs font-extrabold text-amber">أجرة متوقعة {snap.onboardFareTotal} ج</p>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
