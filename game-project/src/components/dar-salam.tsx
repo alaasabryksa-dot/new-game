@@ -365,7 +365,13 @@ function PlayHud({
             <div className="mt-2 space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-muted">
                 <span>ركاب {snap.passengers.length}/{snap.seats}</span>
-                <span>منتظرين {snap.waitingPassengers}</span>
+                <span>منتظرين {snap.waitingPassengers}/8</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-line">
+                <div
+                  className="h-full rounded-full bg-nile transition-[width] duration-300"
+                  style={{ width: `${Math.max(0, Math.min(100, (snap.waitingPassengers / 8) * 100))}%` }}
+                />
               </div>
               <div className="flex flex-wrap gap-1">
                 {snap.passengers.map((passenger, index) => (
