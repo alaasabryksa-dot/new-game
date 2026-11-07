@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="192" viewBox="0 0 128 192">
+<defs>
+ <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8d66d"/><stop offset=".48" stop-color="#15966b"/><stop offset="1" stop-color="#075b49"/></linearGradient>
+ <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe9a4"/><stop offset="1" stop-color="#bb853b"/></linearGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d6f2ed"/><stop offset=".5" stop-color="#65949a"/><stop offset="1" stop-color="#284a54"/></linearGradient>
+</defs>
+<ellipse cx="64" cy="102" rx="45" ry="79" fill="#101719" opacity=".28"/>
+<path d="M27 30 Q28 12 43 9 L85 9 Q100 12 101 30 L108 150 Q108 171 91 181 L37 181 Q20 171 20 150Z" fill="#182323"/>
+<path d="M32 29 Q34 17 46 16 H82 Q94 17 96 29 L102 147 Q103 164 88 173 H40 Q25 164 26 147Z" fill="url(#body)" stroke="#f4d18a" stroke-width="3"/>
+<path d="M36 30 Q40 22 49 22 H79 Q88 22 92 30 L95 53 H33Z" fill="url(#glass)" stroke="#f7e5b6" stroke-width="3"/>
+<path d="M40 27 L58 25 L58 50 L35 50Z" fill="#fff" opacity=".18"/>
+<path d="M68 24 L84 25 L91 50 L68 50Z" fill="#fff" opacity=".12"/>
+<path d="M30 60 Q64 51 98 60 L101 135 Q64 144 27 135Z" fill="#173d39" stroke="#e9c878" stroke-width="3"/>
+<path d="M36 67 Q64 59 92 67 L94 126 Q64 135 34 126Z" fill="#9b7b4d"/>
+<path d="M39 72 Q64 65 89 72 L90 119 Q64 127 38 119Z" fill="#334b50"/>
+<path d="M42 77 Q64 71 86 77 L87 91 Q64 98 41 91Z" fill="#6f9895"/>
+<path d="M42 102 Q64 108 86 102 L87 116 Q64 123 41 116Z" fill="#26393b"/>
+<path d="M24 137 Q64 145 104 137 L101 159 Q96 175 82 178 H46 Q30 174 27 159Z" fill="#0d604d" stroke="#e7c273" stroke-width="3"/>
+<path d="M32 148 Q64 155 96 148" fill="none" stroke="#f9df9d" stroke-width="4"/>
+<path d="M34 160 L94 160" stroke="#f5cf76" stroke-width="3" stroke-dasharray="7 5"/>
+<path d="M28 9 Q29 2 39 2 H89 Q99 2 100 9 L96 27 Q64 34 32 27Z" fill="#14211f" stroke="#e8c16d" stroke-width="3"/>
+<path d="M35 9 Q64 4 93 9 L90 20 Q64 25 38 20Z" fill="url(#roof)"/>
+<path d="M43 11 L85 11" stroke="#fff0c5" stroke-width="2" opacity=".8"/>
+<rect x="13" y="45" width="9" height="36" rx="4" fill="#171d1e"/><rect x="106" y="45" width="9" height="36" rx="4" fill="#171d1e"/>
+<rect x="13" y="47" width="4" height="30" rx="2" fill="#687474"/><rect x="111" y="47" width="4" height="30" rx="2" fill="#687474"/>
+<rect x="5" y="77" width="17" height="35" rx="6" fill="#171c1d" stroke="#59615f" stroke-width="2"/><rect x="106" y="77" width="17" height="35" rx="6" fill="#171c1d" stroke="#59615f" stroke-width="2"/>
+<path d="M34 4 L47 4 L43 10 L31 10Z M81 4 L94 4 L97 10 L85 10Z" fill="#fff4c7"/>
+<rect x="29" y="171" width="70" height="7" rx="3" fill="#e8dfc7"/><rect x="42" y="173" width="44" height="3" rx="1" fill="#475250"/>
+<circle cx="25" cy="139" r="4" fill="#ffd98b"/><circle cx="103" cy="139" r="4" fill="#ffd98b"/>
+<path d="M29 184 H99" stroke="#1a2423" stroke-width="4" stroke-linecap="round"/>
+
+<!-- Additional top-down driver, cabin and Egyptian street-service details. -->
+<path d="M24 29 L14 23 L10 26 L20 38 M104 29 L114 23 L118 26 L108 38" fill="none" stroke="#26302e" stroke-width="4" stroke-linecap="round"/>
+<circle cx="10" cy="25" r="4" fill="#d8ded2" stroke="#37413e" stroke-width="2"/><circle cx="118" cy="25" r="4" fill="#d8ded2" stroke="#37413e" stroke-width="2"/>
+<path d="M38 57 Q64 51 90 57" fill="none" stroke="#f4d18a" stroke-width="2"/>
+<path d="M39 63 L39 124 M89 63 L89 124" stroke="#d7bd80" stroke-width="2" opacity=".7"/>
+<path d="M47 80 Q64 74 81 80 L81 104 Q64 111 47 104Z" fill="#b18b55" stroke="#e8d09b" stroke-width="2"/>
+<path d="M51 83 Q64 79 77 83 L77 100 Q64 105 51 100Z" fill="#31494a"/>
+<circle cx="64" cy="88" r="8" fill="none" stroke="#d6bd85" stroke-width="2"/>
+<path d="M64 80 L64 96 M56 88 L72 88" stroke="#d6bd85" stroke-width="1.5"/>
+<rect x="29" y="131" width="70" height="5" rx="2" fill="#f0d58e"/>
+<rect x="39" y="165" width="50" height="8" rx="2" fill="#f3e5c7" stroke="#4a514c" stroke-width="1.5"/>
+<path d="M43 169 H85" stroke="#4b5b58" stroke-width="1.5"/>
+<circle cx="28" cy="56" r="3" fill="#f7d78b"/><circle cx="100" cy="56" r="3" fill="#f7d78b"/>
+<path d="M20 119 Q13 124 17 135 M108 119 Q115 124 111 135" fill="none" stroke="#e4c477" stroke-width="2"/>
+<path d="M28 31 L24 42 M100 31 L104 42" stroke="#f7e3ae" stroke-width="2" opacity=".7"/>
+</svg>

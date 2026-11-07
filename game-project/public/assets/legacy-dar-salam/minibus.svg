@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="192" viewBox="0 0 128 192">
+<defs><linearGradient id="paint" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e1f0e8"/><stop offset=".45" stop-color="#7d9da0"/><stop offset="1" stop-color="#315461"/></linearGradient><linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#bcd9d6"/><stop offset="1" stop-color="#34515b"/></linearGradient></defs>
+<ellipse cx="64" cy="100" rx="46" ry="82" fill="#101719" opacity=".3"/>
+<rect x="14" y="13" width="100" height="166" rx="24" fill="#1e282a"/>
+<path d="M23 26 Q28 12 44 10 H84 Q100 12 105 26 L108 154 Q106 171 89 176 H39 Q22 171 20 154Z" fill="url(#paint)" stroke="#d8e4d9" stroke-width="3"/>
+<path d="M31 31 Q37 20 49 20 H79 Q91 20 97 31 L98 58 H30Z" fill="url(#glass)" stroke="#e4e8dc" stroke-width="3"/>
+<path d="M31 66 H97 V112 H31Z" fill="#304950" stroke="#dce4d8" stroke-width="3"/>
+<path d="M36 71 H59 V106 H36Z M69 71 H92 V106 H69Z" fill="url(#glass)"/>
+<path d="M34 119 H94 L91 151 Q88 161 77 163 H51 Q40 161 37 151Z" fill="#35484c" stroke="#d6e0d8" stroke-width="3"/>
+<path d="M43 126 H85 L82 150 H46Z" fill="url(#glass)"/>
+<rect x="8" y="44" width="14" height="32" rx="5" fill="#111718"/><rect x="106" y="44" width="14" height="32" rx="5" fill="#111718"/>
+<rect x="7" y="125" width="15" height="34" rx="5" fill="#111718"/><rect x="106" y="125" width="15" height="34" rx="5" fill="#111718"/>
+<rect x="31" y="12" width="19" height="6" rx="2" fill="#fff2c8"/><rect x="78" y="12" width="19" height="6" rx="2" fill="#fff2c8"/>
+<rect x="30" y="171" width="20" height="5" rx="2" fill="#e25b4c"/><rect x="78" y="171" width="20" height="5" rx="2" fill="#e25b4c"/>
+<path d="M24 60 H104 M24 115 H104" stroke="#f1d58c" stroke-width="3"/>
+<path d="M39 182 H89" stroke="#222b2d" stroke-width="4" stroke-linecap="round"/>
+
+<!-- Minibus roof glazing, mirrors, side-door seam and rear plate. -->
+<path d="M22 42 L12 37 L8 42 L19 53 M106 42 L116 37 L120 42 L109 53" fill="none" stroke="#283b40" stroke-width="4" stroke-linecap="round"/>
+<circle cx="9" cy="41" r="3.5" fill="#c9d9d0"/><circle cx="119" cy="41" r="3.5" fill="#c9d9d0"/>
+<path d="M64 61 V116" stroke="#e8e8d8" stroke-width="1.5" opacity=".55"/>
+<path d="M29 116 H99" stroke="#e4d4a4" stroke-width="2" opacity=".75"/>
+<rect x="43" y="155" width="42" height="8" rx="2" fill="#e8eee4" stroke="#4e6266" stroke-width="1.2"/>
+<path d="M48 159 H80" stroke="#496069" stroke-width="1.5"/>
+<path d="M37 17 L91 17" stroke="#f5f3e8" stroke-width="2" opacity=".55"/>
+</svg>
