@@ -59,6 +59,15 @@ export function DarSalam() {
     if (!canvas || !map) return;
     let dead = false;
     let handle: GameHandle | null = null;
+    const releaseInputs = () => {
+      holds.current = { l: false, r: false, g: false, b: false };
+      gameRef.current?.setTouch({ steer: 0, throttle: 0, brake: 0 });
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") releaseInputs();
+    };
+    window.addEventListener("blur", releaseInputs);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     void import("@/game/engine").then(({ mountGame }) => {
       if (dead) return;
       handle = mountGame(canvas, map, setSnap);
@@ -69,6 +78,9 @@ export function DarSalam() {
     });
     return () => {
       dead = true;
+      window.removeEventListener("blur", releaseInputs);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      releaseInputs();
       handle?.dispose();
       gameRef.current = null;
     };
