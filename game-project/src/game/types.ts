@@ -150,7 +150,7 @@ export const SHIFT_SECONDS = 180;
 export const GAS_COST = 22;
 export const JOBS_NEED = 4;
 
-export type Pax = { dest: number };
+export type Pax = { dest: number; fare: number };
 
 export type Hud = {
   phase: Phase;
