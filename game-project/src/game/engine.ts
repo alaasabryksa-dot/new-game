@@ -589,7 +589,7 @@ export function mountGame(
 
   const dummy = new THREE.Object3D();
   const tukColor = new THREE.Color("#d4654a");
-  const PEOPLE = 36;
+  const PEOPLE = 80;
   const people = new THREE.InstancedMesh(
     new THREE.CapsuleGeometry(0.22, 0.5, 4, 7),
     new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.78 }),
@@ -650,6 +650,7 @@ export function mountGame(
   let pax: Pax[] = [];
   let waiting = track.stops.map(() => 2 + Math.floor(Math.random() * 3));
   let queueClock = 0;
+  let stopHold = 0;
   let serviced = -1;
   let message = "";
   let messageT = 0;
@@ -919,6 +920,7 @@ export function mountGame(
     pax = [];
     waiting = track.stops.map(() => 2 + Math.floor(Math.random() * 3));
     queueClock = 0;
+    stopHold = 0;
     serviced = -1;
     hitCd = 0;
     radarCd = 0;
@@ -1014,6 +1016,8 @@ export function mountGame(
         const relevant = waiting[targetI] > 0 || pax.some((person) => person.dest === targetI);
         if (relevant && targetD < 90 && proj.lat < 3.2) hint = "خش يمين وهدّي";
         else if (relevant && targetD < 40 && player.speed > 4.5) hint = "هدّي عند المحطة";
+        else if (relevant && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المحطة لاستلام الركاب";
+        else if (relevant && targetD < 22 && stopHold < 0.85) hint = "ثبّت لحظة لاستلام الركاب";
       }
     }
     return {
@@ -1475,6 +1479,11 @@ export function mountGame(
       return d < 17 && proj.lat > 3.2 && Math.abs(player.speed) < 2.8;
     };
 
+    // Require a brief, steady stop at the curb before serving passengers or a delivery.
+    // This prevents a fast brush past the stop from counting as a successful pickup.
+    const stoppedAtStop = track.stops.some((_, index) => nearStop(index));
+    stopHold = stoppedAtStop ? Math.min(1.2, stopHold + dt) : 0;
+
     if (serviced >= 0) {
       const away = Math.abs(wrapDelta(track.stops[serviced].s, proj.s, track.total));
       if (away > 32) {
@@ -1485,7 +1494,7 @@ export function mountGame(
 
     if (cfg.mode !== "rush" && spec.seats > 0) {
       for (let i = 0; i < track.stops.length; i++) {
-        if (!nearStop(i) || serviced === i) continue;
+        if (!nearStop(i) || serviced === i || stopHold < 0.85) continue;
         const dropping = pax.filter((person) => person.dest === i);
         if (dropping.length) {
           const earned = Math.round(dropping.reduce((sum, person) => sum + person.fare, 0));
@@ -1517,7 +1526,7 @@ export function mountGame(
       }
     }
 
-    if (cfg.mode === "rush" && phase === "play" && jobs[jobIndex] != null && nearStop(jobs[jobIndex])) {
+    if (cfg.mode === "rush" && phase === "play" && jobs[jobIndex] != null && nearStop(jobs[jobIndex]) && stopHold >= 0.85) {
       jobIndex += 1;
       money += 45;
       flash("cash");
@@ -1627,7 +1636,7 @@ export function mountGame(
     let i = 0;
     const bobT = performance.now() / 1000;
     for (let sIdx = 0; sIdx < track.stops.length; sIdx++) {
-      const n = Math.min(3, waiting[sIdx] ?? 0);
+      const n = Math.min(8, waiting[sIdx] ?? 0);
       const sm = track.sample(track.stops[sIdx].s);
       const rx = Math.cos(sm.yaw);
       const rz = -Math.sin(sm.yaw);
