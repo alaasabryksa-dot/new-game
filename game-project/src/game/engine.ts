@@ -2171,6 +2171,34 @@ function buildCity(scene: THREE.Scene, track: Track) {
     color: "#f5d69a", emissive: "#ffbd62", emissiveIntensity: 0.65, roughness: 0.45,
   });
   const entryLamps = new THREE.InstancedMesh(entryLampGeo, entryLampMat, 140);
+  // Distinct Arabic building-number plaques above selected residential entrances.
+  const buildingNumberLabels = ["١٢", "١٤", "١٦", "٢١", "٢٣", "٢٥", "٣٢", "٣٤", "٤١", "٤٣", "٥٢", "٥٤"];
+  const numberPlateGeo = new THREE.BoxGeometry(0.12, 0.42, 0.96);
+  const numberPlateMeshes = buildingNumberLabels.map((label, index) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = "#25333a";
+      ctx.fillRect(0, 0, 256, 128);
+      ctx.strokeStyle = "#d8bd83";
+      ctx.lineWidth = 8;
+      ctx.strokeRect(5, 5, 246, 118);
+      ctx.fillStyle = "#f5e7c7";
+      ctx.direction = "rtl";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 78px Tajawal, sans-serif";
+      ctx.fillText(label, 128, 66);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.InstancedMesh(numberPlateGeo, new THREE.MeshStandardMaterial({
+      color: "#ffffff", map: texture, roughness: 0.68,
+    }), 16);
+  });
+  const numberPlateCounts = buildingNumberLabels.map(() => 0);
   let entryCount = 0;
   let acCount = 0;
   let balconyCount = 0;
@@ -2256,6 +2284,16 @@ function buildCity(scene: THREE.Scene, track: Track) {
       );
       dummy.updateMatrix();
       entryLamps.setMatrixAt(entryCount, dummy.matrix);
+
+      const numberIndex = (Math.floor(i / 4) + 3) % numberPlateMeshes.length;
+      const plateX = p.x + rx * (side * depth + frontX - side * 0.18);
+      const plateZ = p.z + rz * (side * depth + frontX - side * 0.18) - rz * 1.12;
+      dummy.position.set(plateX, 3.05, plateZ);
+      dummy.rotation.set(0, p.yaw, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      const plateSlot = numberPlateCounts[numberIndex]++;
+      if (plateSlot < 16) numberPlateMeshes[numberIndex].setMatrixAt(plateSlot, dummy.matrix);
       entryCount++;
     }
 
@@ -2337,6 +2375,11 @@ function buildCity(scene: THREE.Scene, track: Track) {
   entryFrames.instanceMatrix.needsUpdate = true;
   entrySteps.instanceMatrix.needsUpdate = true;
   entryLamps.instanceMatrix.needsUpdate = true;
+  numberPlateMeshes.forEach((mesh, i) => {
+    mesh.count = numberPlateCounts[i];
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  });
   acUnits.instanceMatrix.needsUpdate = true;
   acGrilles.instanceMatrix.needsUpdate = true;
   balconyMesh.instanceMatrix.needsUpdate = true;
