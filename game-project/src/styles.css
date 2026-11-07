@@ -1,0 +1,36 @@
+@import "tailwindcss";
+@import "@fontsource/tajawal/arabic-500.css";
+@import "@fontsource/tajawal/arabic-700.css";
+@import "@fontsource/tajawal/arabic-800.css";
+@import "@fontsource/tajawal/latin-500.css";
+@import "@fontsource/tajawal/latin-700.css";
+@import "@fontsource/tajawal/latin-800.css";
+
+@theme {
+  --color-asphalt: #14181e;
+  --color-panel: #1c222b;
+  --color-panel-2: #2a3340;
+  --color-ink: #f6f1e7;
+  --color-muted: #b7aea0;
+  --color-amber: #f0b429;
+  --color-amber-ink: #1c1406;
+  --color-brick: #d4654a;
+  --color-nile: #1aa6a6;
+  --color-line: #3a4452;
+  --font-sans: "Tajawal", "Segoe UI", sans-serif;
+  --radius: 1rem;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    background: #14181e;
+  }
+}
