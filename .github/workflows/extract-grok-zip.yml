@@ -1,0 +1,69 @@
+name: Extract Grok project ZIP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Safely extract project archive
+        run: |
+          python - <<'PY'
+          from pathlib import Path, PurePosixPath
+          from zipfile import ZipFile
+          import shutil
+
+          archive = Path("grok-workspace.zip")
+          destination = Path("game-project")
+          if not archive.is_file():
+              raise SystemExit("grok-workspace.zip was not found")
+
+          if destination.exists():
+              shutil.rmtree(destination)
+          destination.mkdir()
+
+          with ZipFile(archive) as z:
+              members = [m for m in z.infolist() if not m.is_dir()]
+              if not members:
+                  raise SystemExit("The ZIP archive contains no files")
+
+              paths = []
+              for m in members:
+                  p = PurePosixPath(m.filename)
+                  if p.is_absolute() or ".." in p.parts:
+                      raise SystemExit(f"Unsafe path in ZIP: {m.filename}")
+                  paths.append((m, p))
+
+              # Remove a shared top-level folder when the archive has one.
+              first_parts = {p.parts[0] for _, p in paths if p.parts}
+              strip_root = len(first_parts) == 1 and all(len(p.parts) > 1 for _, p in paths)
+
+              for member, p in paths:
+                  parts = p.parts[1:] if strip_root else p.parts
+                  if not parts:
+                      continue
+                  target = destination.joinpath(*parts)
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  with z.open(member) as src, target.open("wb") as dst:
+                      shutil.copyfileobj(src, dst)
+
+          count = sum(1 for p in destination.rglob("*") if p.is_file())
+          print(f"Extracted {count} files into game-project/")
+          if count == 0:
+              raise SystemExit("No files were extracted")
+          PY
+
+      - name: Commit extracted project files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add game-project/
+          git commit -m "Extract Grok game project"
+          git push
