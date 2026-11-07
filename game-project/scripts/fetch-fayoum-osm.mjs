@@ -7,7 +7,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
-const WAY_ID = Number(process.argv[2] ?? 37195082);
+const WAY_ID = Number(process.argv[2] || 37195082);
+if (!Number.isSafeInteger(WAY_ID) || WAY_ID <= 0) {
+  throw new Error(`Invalid OSM way ID: ${process.argv[2]}`);
+}
 const OUTPUT = resolve(
   process.argv[3] ?? "src/game/data/fayoum-street-osm.json",
 );
@@ -18,7 +21,8 @@ const ENDPOINTS = [
 
 async function overpass(query) {
   let lastError;
-  for (const endpoint of ENDPOINTS) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (const endpoint of ENDPOINTS) {
     try {
       const response = await fetch(endpoint, {
         method: "POST",
@@ -27,7 +31,7 @@ async function overpass(query) {
           "user-agent": "NewGame-FayoumStreetResearch/1.0 (OSM data attribution included)",
         },
         body: new URLSearchParams({ data: query }),
-        signal: AbortSignal.timeout(45000),
+        signal: AbortSignal.timeout(20000),
       });
       if (!response.ok) throw new Error(`Overpass HTTP ${response.status}`);
       const data = await response.json();
@@ -35,6 +39,7 @@ async function overpass(query) {
       return data;
     } catch (error) {
       lastError = error;
+    }
     }
   }
   throw lastError ?? new Error("All Overpass endpoints failed");
