@@ -1852,13 +1852,13 @@ function buildRoad(scene: THREE.Scene, track: Track) {
   sidewalkGeo.setAttribute("position", new THREE.Float32BufferAttribute(walkPositions, 3));
   sidewalkGeo.computeVertexNormals();
   scene.add(new THREE.Mesh(sidewalkGeo, new THREE.MeshStandardMaterial({
-    color: "#aaa69b", roughness: 0.96, metalness: 0,
+    color: "#aaa69b", roughness: 0.96, metalness: 0, side: THREE.DoubleSide,
     polygonOffset: true, polygonOffsetFactor: -1,
   })));
   const curbGeo = new THREE.BufferGeometry();
   curbGeo.setAttribute("position", new THREE.Float32BufferAttribute(curbPositions, 3));
   curbGeo.computeVertexNormals();
-  scene.add(new THREE.Mesh(curbGeo, new THREE.MeshStandardMaterial({ color: "#d4cbb9", roughness: 0.88 })));
+  scene.add(new THREE.Mesh(curbGeo, new THREE.MeshStandardMaterial({ color: "#d4cbb9", roughness: 0.88, side: THREE.DoubleSide })));
 
   // Subtle transverse paving joints, instanced to keep draw calls low.
   const joints: THREE.Matrix4[] = [];
