@@ -1174,12 +1174,16 @@ export function mountGame(
           const d = wrapDelta(track.stops[i].s, n.s, track.total);
           // Microbuses in the curb-side lanes slow down and briefly wait at stops.
           if (n.lane > 1.5 && d > -10 && d < 34) {
-            target = Math.min(target, d < 8 ? 1.4 : 3.2);
+            const stopApproachSpeed = d < 8
+              ? Math.max(0, (d - 1.2) * 0.62)
+              : 3.2;
+            target = Math.min(target, stopApproachSpeed);
             if (d < 2.2 && d > -1.5 && n.stopAt !== i && n.stopTimer <= 0) {
               n.stopAt = i;
               n.stopTimer = 1.8 + Math.random() * 1.8;
             }
-            if (n.stopTimer > 0 && n.stopAt === i) target = 0.45;
+            // A bus fully stops while boarding/alighting instead of crawling forward.
+            if (n.stopTimer > 0 && n.stopAt === i) target = 0;
           } else if (n.stopAt === i && d < -10) {
             n.stopAt = -1;
           }
@@ -1205,8 +1209,8 @@ export function mountGame(
         }
         if (redLight) {
           redStopDistance = Math.min(redStopDistance, distanceToLine);
-          const approachSpeed = distanceToLine > 5
-            ? Math.max(0, (distanceToLine - 2.4) * 0.72)
+          const approachSpeed = distanceToLine > 2.4
+            ? Math.max(0, (distanceToLine - 2.4) * 0.82)
             : 0;
           target = Math.min(target, approachSpeed);
         } else if (amberLight && distanceToLine > 9) {
@@ -1259,8 +1263,9 @@ export function mountGame(
       const safeGap = (5.5 + spec.length * 0.72
         + Math.max(0, n.speed - leadSpeed) * 0.9) * gapFactor;
       if (leadGap < safeGap + 10) {
-        const followFactor = Math.max(0.28, Math.min(1, (leadGap - safeGap) / 10));
-        target = Math.min(target, leadSpeed * followFactor + 1.1);
+        const followFactor = Math.max(0, Math.min(1, (leadGap - safeGap) / 10));
+        const queueCreep = Math.max(0, leadGap - safeGap) * 0.16;
+        target = Math.min(target, leadSpeed * followFactor + queueCreep);
       }
       const brakeResponse = n.kind === "truck" ? 2.35 : n.kind === "micro" ? 2.8 : 3.5;
       const accelResponse = n.kind === "truck" ? 0.72 : n.kind === "tuktuk" ? 1.55 : n.kind === "taxi" ? 1.35 : 1.2;
@@ -1331,7 +1336,7 @@ export function mountGame(
 
       // Keep vehicles committed to their approach lane close to a signal.
       // This prevents late lane changes from cutting around a stopped queue.
-      if (nearestSignalDistance < 18) {
+      if (nearestSignalDistance < 22) {
         n.laneTarget = Math.round(n.lane);
       }
 
