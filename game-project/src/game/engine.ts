@@ -648,7 +648,7 @@ export function mountGame(
   let trafficClock = 0;
   let crashes = 0;
   let pax: Pax[] = [];
-  let waiting = track.stops.map(() => 2 + Math.floor(Math.random() * 4));
+  let waiting = track.stops.map(() => 2 + Math.floor(Math.random() * 3));
   let serviced = -1;
   let message = "";
   let messageT = 0;
@@ -1022,6 +1022,8 @@ export function mountGame(
       time,
       crashes,
       passengers: pax.map((person) => ({ dest: track.stops[person.dest].name, fare: person.fare })),
+      onboardFareTotal: pax.reduce((sum, person) => sum + person.fare, 0),
+      waitingPassengers: Math.max(0, waiting[targetI] ?? 0),
       seats: spec.seats,
       stopName: stop?.name ?? "",
       stopDist: Math.max(0, Math.round(targetD)),
@@ -1463,7 +1465,7 @@ export function mountGame(
     if (serviced >= 0) {
       const away = Math.abs(wrapDelta(track.stops[serviced].s, proj.s, track.total));
       if (away > 32) {
-        if (waiting[serviced] <= 0) waiting[serviced] = 1 + Math.floor(Math.random() * 5);
+        waiting[serviced] = Math.min(6, waiting[serviced] + 1 + Math.floor(Math.random() * 3));
         serviced = -1;
       }
     }
@@ -1482,18 +1484,20 @@ export function mountGame(
         }
         const free = Math.max(0, spec.seats - pax.length);
         if (free > 0 && waiting[i] > 0) {
-          const n = Math.min(free, waiting[i], 3);
-          let lastDest = i;
+          const n = Math.max(0, Math.min(free, waiting[i], 3));
+          const boarded: Pax[] = [];
           for (let k = 0; k < n; k++) {
             const hop = 2 + Math.floor(Math.random() * 3);
-            lastDest = (i + hop) % track.stops.length;
-            // Fare is fixed when boarding, based on the number of stop-to-stop legs.
-            // This rewards longer trips while keeping the existing seat upgrade multiplier.
-            const fare = Math.round((24 + hop * 12) * spec.fare);
-            pax.push({ dest: lastDest, fare });
+            const dest = (i + hop) % track.stops.length;
+            // Fare is fixed at pickup and scales with trip length and seat upgrades.
+            const fare = Math.max(1, Math.round((24 + hop * 12) * spec.fare));
+            const passenger = { dest, fare };
+            pax.push(passenger);
+            boarded.push(passenger);
           }
-          waiting[i] -= n;
-          say(`ركّبت ${n} · ${track.stops[lastDest].name}`);
+          waiting[i] = Math.max(0, waiting[i] - boarded.length);
+          const destinations = boarded.map((person) => track.stops[person.dest].name).join("، ");
+          say(`ركّبنا ${boarded.length}: ${destinations}`);
           sfx.cash();
         }
         serviced = i;
