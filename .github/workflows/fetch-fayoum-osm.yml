@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 22
       - name: Fetch mapped street geometry
-        run: node scripts/fetch-fayoum-osm.mjs "${{ inputs.way_id }}"
+        run: node scripts/fetch-fayoum-osm.mjs "${{ inputs.way_id || '37195082' }}"
       - name: Upload raw OSM geometry for review
         uses: actions/upload-artifact@v4
         with:
