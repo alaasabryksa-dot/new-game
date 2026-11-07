@@ -1194,9 +1194,11 @@ export function mountGame(
       const redLight = signalCycle < 7;
       const amberLight = signalCycle >= 7 && signalCycle < 8.2;
       let redStopDistance = Infinity;
+      let nearestSignalDistance = Infinity;
       for (const stop of track.stops) {
         const distanceToLine = wrapDelta(stop.s, n.s, track.total);
         if (distanceToLine <= 0 || distanceToLine > 30) continue;
+        nearestSignalDistance = Math.min(nearestSignalDistance, distanceToLine);
         if (redLight) {
           redStopDistance = Math.min(redStopDistance, distanceToLine);
           const approachSpeed = distanceToLine > 5
@@ -1206,6 +1208,28 @@ export function mountGame(
         } else if (amberLight && distanceToLine > 9) {
           target = Math.min(target, 4.2);
         }
+      }
+      // Release a queue in sequence after green: vehicles closest to the line
+      // move first, while following vehicles wait briefly for space to open.
+      if (!redLight && !amberLight && nearestSignalDistance < Infinity) {
+        let queueAhead = 0;
+        for (const other of npcs) {
+          if (other === n || !other.alive || Math.abs(other.lane - n.lane) > 0.72) continue;
+          const otherDistance = wrapDelta(
+            track.stops.reduce((best, stop) => {
+              const d = wrapDelta(stop.s, other.s, track.total);
+              return d > 0 && d < best ? d : best;
+            }, Infinity) === Infinity ? n.s : track.stops[0].s,
+            other.s,
+            track.total,
+          );
+          if (otherDistance > 0 && otherDistance < nearestSignalDistance && otherDistance <= 30) {
+            queueAhead++;
+          }
+        }
+        const releaseAt = Math.min(13.2, 8.2 + queueAhead * 0.42);
+        const greenElapsed = Math.max(0, signalCycle - releaseAt);
+        target = Math.min(target, greenElapsed <= 0 ? 0 : greenElapsed * 2.6);
       }
       // Follow traffic with a longer buffer for large vehicles and higher closing speeds.
       let leadGap = Infinity;
