@@ -2,6 +2,8 @@ name: Extract Grok project ZIP
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: write
@@ -41,7 +43,6 @@ jobs:
                       raise SystemExit(f"Unsafe path in ZIP: {m.filename}")
                   paths.append((m, p))
 
-              # Remove a shared top-level folder when the archive has one.
               first_parts = {p.parts[0] for _, p in paths if p.parts}
               strip_root = len(first_parts) == 1 and all(len(p.parts) > 1 for _, p in paths)
 
@@ -65,5 +66,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add game-project/
-          git commit -m "Extract Grok game project"
+          git commit -m "Extract Grok game project" || echo "No new extracted files"
           git push
