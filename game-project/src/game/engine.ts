@@ -2615,7 +2615,7 @@ function buildCity(scene: THREE.Scene, track: Track) {
     const fx = -Math.sin(p.yaw);
     const fz = -Math.cos(p.yaw);
     const hsh = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
-    const side = i % 12 === 0 ? -1 : 1;
+    const side = Math.floor(i / 4) % 2 === 0 ? -1 : 1;
     const shop = hsh > 0.68;
     const depth = 15.5 + hsh * 5.5;
     const floors = shop ? 1 : 2 + Math.floor(hsh * 4.5);
@@ -3235,143 +3235,10 @@ function buildGantries(scene: THREE.Scene, track: Track) {
   add(track.tollS, true);
 }
 
-function buildQuarter(scene: THREE.Scene, track: Track) {
-  const stone = new THREE.MeshStandardMaterial({ color: "#efe6d4", roughness: 0.88 });
-  const domeMat = new THREE.MeshStandardMaterial({ color: "#d7c6a2", roughness: 0.72 });
-  const teal = new THREE.MeshStandardMaterial({ color: "#1aa6a6", roughness: 0.62 });
-  const yellow = new THREE.MeshStandardMaterial({ color: "#f0b429", roughness: 0.5 });
-  const white = new THREE.MeshStandardMaterial({ color: "#f7f3ea", roughness: 0.7 });
-  const red = new THREE.MeshStandardMaterial({ color: "#d4654a", roughness: 0.6 });
-  const green = new THREE.MeshStandardMaterial({ color: "#2f6b3a", roughness: 0.8 });
-
-  const spot = (dist: number, lat: number) => {
-    const sm = track.sample(dist);
-    const rx = Math.cos(sm.yaw);
-    const rz = -Math.sin(sm.yaw);
-    return {
-      x: sm.x + rx * lat,
-      z: sm.z + rz * lat,
-      yaw: sm.yaw,
-      fx: -Math.sin(sm.yaw),
-      fz: -Math.cos(sm.yaw),
-      rx,
-      rz,
-    };
-  };
-
-  {
-    const p = spot(track.stops[3].s, 20);
-    const g = new THREE.Group();
-    g.position.set(p.x, 0, p.z);
-    g.rotation.y = p.yaw;
-    const base = new THREE.Mesh(new THREE.BoxGeometry(12, 7, 11), stone);
-    base.position.y = 3.5;
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(4.1, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), domeMat);
-    dome.position.y = 7;
-    const minaret = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.95, 16, 8), stone);
-    minaret.position.set(6, 8, 2);
-    const cap = new THREE.Mesh(new THREE.ConeGeometry(1.15, 2.4, 8), domeMat);
-    cap.position.set(6, 16.6, 2);
-    g.add(base, dome, minaret, cap);
-    scene.add(g);
-  }
-
-  {
-    const p = spot(track.stops[0].s, 16);
-    const g = new THREE.Group();
-    g.position.set(p.x, 0, p.z);
-    g.rotation.y = p.yaw;
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(16, 0.35, 5.5), teal);
-    roof.position.y = 4.3;
-    g.add(roof);
-    for (const x of [-7, 7]) {
-      const pil = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.3, 0.4), white);
-      pil.position.set(x, 2.15, 0);
-      g.add(pil);
-    }
-    scene.add(g);
-  }
-
-  {
-    const p = spot(track.stops[2].s, 18);
-    const g = new THREE.Group();
-    g.position.set(p.x, 0, p.z);
-    g.rotation.y = p.yaw;
-    const block = new THREE.Mesh(new THREE.BoxGeometry(14, 11, 8), white);
-    block.position.y = 5.5;
-    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.45, 2.5, 0.2), red);
-    const crossH = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.45, 0.2), red);
-    crossV.position.set(0, 7, 4.05);
-    crossH.position.set(0, 7, 4.08);
-    g.add(block, crossV, crossH);
-    scene.add(g);
-  }
-
-  const awnings = [red, yellow, teal, green, red];
-  awnings.forEach((mat, k) => {
-    const p = spot(track.stops[1].s + (k - 2) * 8, 11.2);
-    const g = new THREE.Group();
-    g.position.set(p.x, 0, p.z);
-    g.rotation.y = p.yaw;
-    const stall = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.2, 2.4), stone);
-    stall.position.y = 1.1;
-    const awning = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.16, 2.8), mat);
-    awning.position.y = 2.35;
-    g.add(stall, awning);
-    scene.add(g);
-  });
-
-  {
-    const p = spot(track.gasS, 11);
-    const g = new THREE.Group();
-    g.position.set(p.x, 0, p.z);
-    g.rotation.y = p.yaw;
-    const canopy = new THREE.Mesh(new THREE.BoxGeometry(8, 0.28, 5.2), yellow);
-    canopy.position.y = 3.7;
-    const colA = new THREE.Mesh(new THREE.BoxGeometry(0.28, 3.7, 0.28), white);
-    colA.position.set(-3.4, 1.85, -2);
-    const colB = new THREE.Mesh(new THREE.BoxGeometry(0.28, 3.7, 0.28), white);
-    colB.position.set(3.4, 1.85, -2);
-    const pump = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.5, 0.4), red);
-    pump.position.set(0, 0.75, 0.4);
-    g.add(canopy, colA, colB, pump);
-    scene.add(g);
-  }
-
-  const bumpMat = new THREE.MeshStandardMaterial({ color: "#f0b429", roughness: 0.5 });
-  for (const b of track.bumps) {
-    const sm = track.sample(b);
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(11, 0.16, 0.85), bumpMat);
-    mesh.position.set(sm.x, 0.08, sm.z);
-    mesh.rotation.y = sm.yaw;
-    scene.add(mesh);
-  }
-
-  const trunkMat = new THREE.MeshStandardMaterial({ color: "#6b4a2b", roughness: 0.9 });
-  const leafMat = new THREE.MeshStandardMaterial({ color: "#2f6b3a", roughness: 0.82 });
-  const trunks: THREE.Matrix4[] = [];
-  const crowns: THREE.Matrix4[] = [];
-  const o = new THREE.Object3D();
-  const pts = track.pts;
-  for (let i = 0; i < pts.length; i += 8) {
-    const pt = pts[i];
-    const rx = Math.cos(pt.yaw);
-    const rz = -Math.sin(pt.yaw);
-    const side = i % 16 === 0 ? -1 : 1;
-    o.position.set(pt.x + rx * side * 10.4, 2.2, pt.z + rz * side * 10.4);
-    o.rotation.set(0, 0, 0);
-    o.scale.set(1, 1, 1);
-    o.updateMatrix();
-    trunks.push(o.matrix.clone());
-    o.position.y = 4.7;
-    o.updateMatrix();
-    crowns.push(o.matrix.clone());
-  }
-  const trunkMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.16, 0.28, 4.4, 6), trunkMat, trunks.length);
-  trunks.forEach((m, i) => trunkMesh.setMatrixAt(i, m));
-  const crownMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1.2, 7, 6), leafMat, crowns.length);
-  crowns.forEach((m, i) => crownMesh.setMatrixAt(i, m));
-  scene.add(trunkMesh, crownMesh);
+function buildQuarter(_scene: THREE.Scene, _track: Track) {
+  // Keep the route free of invented landmark claims. Location-specific mosques,
+  // hospitals, stations and named markets will be added only after their positions
+  // and appearance have been verified against real references.
 }
 
 
