@@ -550,6 +550,7 @@ export function mountGame(
 
   buildRoad(scene, track);
   const buildings = buildCity(scene, track);
+  buildRooftopLife(scene, track);
   const lamps = buildLamps(scene, track);
   buildStreetFurniture(scene, track);
   const animatePedestrians = buildPedestrians(scene, track);
@@ -2181,6 +2182,83 @@ function buildCity(scene: THREE.Scene, track: Track) {
     scene.add(tankMesh);
   }
   return mats;
+}
+
+
+function buildRooftopLife(scene: THREE.Scene, track: Track) {
+  const dishGeo = new THREE.SphereGeometry(0.48, 9, 5, 0, Math.PI * 2, 0, Math.PI / 2);
+  const dishMat = new THREE.MeshStandardMaterial({ color: "#b8bec0", roughness: 0.62, metalness: 0.28, side: THREE.DoubleSide });
+  const dishes = new THREE.InstancedMesh(dishGeo, dishMat, 90);
+  const poleGeo = new THREE.CylinderGeometry(0.035, 0.035, 2.4, 5);
+  const poleMat = new THREE.MeshStandardMaterial({ color: "#777b78", metalness: 0.35, roughness: 0.7 });
+  const lines = new THREE.InstancedMesh(poleGeo, poleMat, 90);
+  const clothGeo = new THREE.BoxGeometry(0.62, 0.72, 0.055);
+  const clothMats = ["#e9dfc9", "#a84f42", "#557b87", "#d5b65e"].map(
+    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.92, side: THREE.DoubleSide }),
+  );
+  const clothes = clothMats.map((mat) => new THREE.InstancedMesh(clothGeo, mat, 180));
+  const clothCounts = clothMats.map(() => 0);
+  const o = new THREE.Object3D();
+  let dishCount = 0;
+  let lineCount = 0;
+
+  // Rooftop dishes and balcony laundry are sparse, deterministic details.
+  for (let i = 0; i < track.pts.length; i += 4) {
+    const p = track.pts[i];
+    const hash = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+    if (hash <= 0.57) continue;
+    const side = i % 12 === 0 ? -1 : 1;
+    const depth = 15.5 + hash * 5.5;
+    const floors = 2 + Math.floor(hash * 4.5);
+    const height = 5.2 + floors * 2.65;
+    const width = 8 + hash * 5;
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+
+    if (dishCount < 90 && i % 8 === 0) {
+      o.position.set(p.x + rx * side * depth, height + 0.95, p.z + rz * side * depth);
+      o.rotation.set(0, p.yaw, 0);
+      o.scale.set(1, 1, 1);
+      o.updateMatrix();
+      dishes.setMatrixAt(dishCount++, o.matrix);
+    }
+
+    if (i % 12 === 0 && lineCount < 90) {
+      const front = -side * (width / 2 + 0.22);
+      const floor = 2.2 + Math.min(2, Math.max(1, floors - 1)) * 2.65;
+      const centerX = p.x + rx * (side * depth + front - side * 0.5);
+      const centerZ = p.z + rz * (side * depth + front - side * 0.5);
+      o.position.set(centerX, floor + 0.85, centerZ);
+      o.rotation.set(0, p.yaw, 0);
+      o.scale.set(1, 1, 1);
+      o.updateMatrix();
+      lines.setMatrixAt(lineCount++, o.matrix);
+
+      for (let n = 0; n < 3; n++) {
+        const color = (Math.floor(hash * 1000) + n) % clothMats.length;
+        o.position.set(
+          centerX + rx * (n - 1) * 0.72,
+          floor + 0.35,
+          centerZ + rz * (n - 1) * 0.72,
+        );
+        o.rotation.set(0, p.yaw, (n - 1) * 0.035);
+        o.scale.set(1, 1, 1);
+        o.updateMatrix();
+        clothes[color].setMatrixAt(clothCounts[color]++, o.matrix);
+      }
+    }
+  }
+
+  dishes.count = dishCount;
+  lines.count = lineCount;
+  dishes.instanceMatrix.needsUpdate = true;
+  lines.instanceMatrix.needsUpdate = true;
+  scene.add(dishes, lines);
+  clothes.forEach((mesh, i) => {
+    mesh.count = clothCounts[i];
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  });
 }
 
 function buildLamps(scene: THREE.Scene, track: Track) {
