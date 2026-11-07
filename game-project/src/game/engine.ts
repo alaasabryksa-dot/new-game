@@ -1986,12 +1986,46 @@ function buildCity(scene: THREE.Scene, track: Track) {
   );
   const awnings = awningMats.map((mat) => new THREE.InstancedMesh(awningGeo, mat, 100));
   const signGeo = new THREE.BoxGeometry(0.16, 0.72, 1);
-  const signMat = new THREE.MeshStandardMaterial({ color: "#174b70", roughness: 0.68 });
-  const shopSigns = new THREE.InstancedMesh(signGeo, signMat, 100);
+  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات"];
+  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c"];
+  const signMeshes = signLabels.map((label, index) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = signColors[index];
+      ctx.fillRect(0, 0, 512, 128);
+      ctx.fillStyle = "#f5e9c9";
+      ctx.fillRect(0, 0, 512, 7);
+      ctx.fillRect(0, 121, 512, 7);
+      ctx.direction = "rtl";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 66px Tajawal, sans-serif";
+      ctx.fillText(label, 256, 67);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.InstancedMesh(signGeo, new THREE.MeshStandardMaterial({
+      color: "#ffffff", map: texture, roughness: 0.72,
+    }), 100);
+  });
+  const shopGlassGeo = new THREE.BoxGeometry(0.12, 1.75, 1);
+  const shopGlassMat = new THREE.MeshStandardMaterial({
+    color: "#79a5ad", roughness: 0.22, metalness: 0.12,
+    emissive: "#203b42", emissiveIntensity: 0.12,
+  });
+  const shopGlass = new THREE.InstancedMesh(shopGlassGeo, shopGlassMat, 100);
+  const shopDoorGeo = new THREE.BoxGeometry(0.14, 1.9, 0.72);
+  const shopDoorMat = new THREE.MeshStandardMaterial({ color: "#4b4540", roughness: 0.55 });
+  const shopDoors = new THREE.InstancedMesh(shopDoorGeo, shopDoorMat, 100);
   let balconyCount = 0;
   let awningCount = 0;
   let signCount = 0;
+  let shopFrontCount = 0;
   const awningCounts = [0, 0, 0, 0];
+  const signCounts = [0, 0, 0, 0];
 
   for (let i = 0; i < pts.length; i += 4) {
     const p = pts[i];
@@ -2050,7 +2084,20 @@ function buildCity(scene: THREE.Scene, track: Track) {
       dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.12), 3.22, p.z + rz * (side * depth + frontX - side * 0.12));
       dummy.scale.set(1, 1, deep * 0.72);
       dummy.updateMatrix();
-      shopSigns.setMatrixAt(signCount++, dummy.matrix);
+      const signIndex = Math.floor(hsh * 1000) % signMeshes.length;
+      signMeshes[signIndex].setMatrixAt(signCounts[signIndex]++, dummy.matrix);
+      signCount++;
+
+      // Full-height shop glazing and a distinct entrance door below the sign.
+      dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.1), 1.25, p.z + rz * (side * depth + frontX - side * 0.1));
+      dummy.scale.set(1, 1, deep * 0.78);
+      dummy.updateMatrix();
+      shopGlass.setMatrixAt(shopFrontCount, dummy.matrix);
+      dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.2), 1.08, p.z + rz * (side * depth + frontX - side * 0.2));
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      shopDoors.setMatrixAt(shopFrontCount, dummy.matrix);
+      shopFrontCount++;
     }
 
     if (hsh > 0.57) {
@@ -2069,11 +2116,18 @@ function buildCity(scene: THREE.Scene, track: Track) {
   });
   balconyMesh.count = balconyCount;
   railMesh.count = balconyCount;
-  shopSigns.count = signCount;
   balconyMesh.instanceMatrix.needsUpdate = true;
   railMesh.instanceMatrix.needsUpdate = true;
-  shopSigns.instanceMatrix.needsUpdate = true;
-  scene.add(balconyMesh, railMesh, shopSigns);
+  shopGlass.count = shopFrontCount;
+  shopDoors.count = shopFrontCount;
+  shopGlass.instanceMatrix.needsUpdate = true;
+  shopDoors.instanceMatrix.needsUpdate = true;
+  signMeshes.forEach((mesh, i) => {
+    mesh.count = signCounts[i];
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+  scene.add(balconyMesh, railMesh, shopGlass, shopDoors);
+  signMeshes.forEach((mesh) => scene.add(mesh));
   awnings.forEach((mesh, i) => {
     mesh.count = awningCounts[i];
     mesh.instanceMatrix.needsUpdate = true;
