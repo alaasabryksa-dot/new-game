@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const source = await readFile(new URL("../src/game/data/fayoum-route.ts", import.meta.url), "utf8");
-const match = source.match(/FAYOUM_ROUTE_COORDINATES[^=]*=\\s*(\\[\\[.*?\\]\\]);/s);
+const match = source.match(/FAYOUM_ROUTE_COORDINATES[^=]*=\s*(\[\[.*?\]\]);/s);
 assert.ok(match, "route coordinate export must remain parseable");
 const coordinates = JSON.parse(match[1]);
 assert.ok(coordinates.length >= 100, "mapped route should retain detailed geometry");
