@@ -1068,6 +1068,7 @@ export function mountGame(
       if (down("KeyS") || down("ArrowDown")) brake = 1;
       throttle = Math.max(throttle, touch.throttle);
       brake = Math.max(brake, touch.brake);
+      if (brake > 0) throttle = 0;
       steer = Math.max(-1, Math.min(1, steer));
     } else if (phase === "menu") {
       throttle = 0.62;
@@ -1090,12 +1091,12 @@ export function mountGame(
         const mag = Math.max(0, Math.abs(player.speed) - 3.2 * dt);
         player.speed = sign * mag;
       }
-      const cap = phase === "play" && fuel <= 0 ? 3.3 : spec.max;
+      const cap = phase === "play" && fuel <= 0 ? 2.8 : spec.max;
       player.speed = Math.max(-6, Math.min(cap, player.speed));
 
       const sp = Math.min(1, Math.abs(player.speed) / 7);
       const reverse = player.speed < -0.5 ? -1 : 1;
-      const turnMul = 0.35 + 0.65 * sp;
+      const turnMul = 0.28 + 0.72 * sp;
       player.yaw += steer * spec.turn * turnMul * reverse * dt;
 
       const fx = -Math.sin(player.yaw);
@@ -1114,7 +1115,7 @@ export function mountGame(
         player.z = proj.z + rz * clamped;
         const impact = Math.abs(proj.lat) - limit;
         if (impact > 0.08) {
-          player.speed *= 0.9;
+          player.speed *= impact > 0.65 ? 0.82 : 0.92;
           shake = Math.max(shake, 0.12);
         }
       }
@@ -1129,12 +1130,13 @@ export function mountGame(
         if (along > 0) km += (along * dt) / 1000;
         time += dt;
         const eff = 1 - save.upgrades.fuel * 0.18;
-        const moving = Math.abs(player.speed) > 0.35 ? 1 : 0.15;
-        fuel -= (0.38 * moving + throttle * 0.72) * eff * dt;
+        const moving = Math.abs(player.speed) > 0.35 ? 1 : 0.12;
+        const loadFactor = pax.length > 0 ? 1 + Math.min(0.18, pax.length * 0.035) : 1;
+        fuel -= (0.34 * moving + throttle * 0.68) * eff * loadFactor * dt;
         if (fuel < 0) fuel = 0;
         fuelBeep = Math.max(0, fuelBeep - dt);
-        if (fuel < 12 && fuelBeep <= 0) {
-          fuelBeep = 3.2;
+        if (fuel < 15 && fuelBeep <= 0) {
+          fuelBeep = 4.2;
           sfx.blip(540, 0.05, "square", 0.028);
         }
       }
@@ -1394,18 +1396,18 @@ export function mountGame(
   function collide(dist: number, dx: number, dz: number, otherSpeed: number) {
     const spec = specNow();
     const d = Math.max(0.001, dist);
-    const push = 0.8;
+    const push = 0.65;
     player.x += (dx / d) * push;
     player.z += (dz / d) * push;
     const rel = Math.abs(player.speed - otherSpeed);
-    player.speed *= 0.62;
-    hitCd = 0.65;
-    shake = 0.35;
-    if (rel > 5 && phase === "play") {
+    player.speed *= 0.58;
+    hitCd = 0.8;
+    shake = 0.3;
+    if (rel > 4.2 && phase === "play") {
       crashes += 1;
       player.yaw += (Math.random() - 0.5) * 0.35;
       if (cfg.mode === "shift") {
-        money = Math.max(0, money - 40);
+        money = Math.max(0, money - 35);
         if (pax.length) {
           pax.pop();
           say("راكب نزل غصب — غرامة");
@@ -1435,7 +1437,7 @@ export function mountGame(
       const reach = spec.length * 0.42 + vehicleById(n.kind).length * 0.4;
       const d = Math.hypot(player.x - x, player.z - z);
       if (d < reach) {
-        n.speed *= 0.75;
+        n.speed *= 0.68;
         collide(d, player.x - x, player.z - z, n.speed);
         break;
       }
@@ -1444,7 +1446,7 @@ export function mountGame(
     if (hornCd > 0.72) {
       for (const n of npcs) {
         const gap = wrapDelta(n.s, proj.s, track.total);
-        if (gap > 0 && gap < 22 && Math.abs(laneLat(n.lane) - proj.lat) < 4) {
+        if (gap > 0 && gap < 26 && Math.abs(laneLat(n.lane) - proj.lat) < 4.5) {
           n.laneTarget = proj.lat > laneLat(n.lane) ? Math.max(0, n.lane - 1) : Math.min(3, n.lane + 1);
         }
       }
@@ -1452,12 +1454,12 @@ export function mountGame(
 
     const nearStop = (index: number) => {
       const d = Math.abs(wrapDelta(track.stops[index].s, proj.s, track.total));
-      return d < 20 && proj.lat > 3.05 && Math.abs(player.speed) < 4.6;
+      return d < 17 && proj.lat > 3.2 && Math.abs(player.speed) < 2.8;
     };
 
     if (serviced >= 0) {
       const away = Math.abs(wrapDelta(track.stops[serviced].s, proj.s, track.total));
-      if (away > 36) {
+      if (away > 32) {
         if (waiting[serviced] <= 0) waiting[serviced] = 1 + Math.floor(Math.random() * 5);
         serviced = -1;
       }
@@ -1468,16 +1470,16 @@ export function mountGame(
         if (!nearStop(i) || serviced === i) continue;
         const dropping = pax.filter((person) => person.dest === i);
         if (dropping.length) {
-          const earned = Math.round(dropping.length * 36 * spec.fare);
+          const earned = Math.round(dropping.length * 40 * spec.fare);
           money += earned;
           pax = pax.filter((person) => person.dest !== i);
           say(`نزلوا — +${earned} ج`);
           flash("cash");
           sfx.cash();
         }
-        const free = spec.seats - pax.length;
+        const free = Math.max(0, spec.seats - pax.length);
         if (free > 0 && waiting[i] > 0) {
-          const n = Math.min(free, waiting[i]);
+          const n = Math.min(free, waiting[i], 3);
           let lastDest = i;
           for (let k = 0; k < n; k++) {
             const hop = 2 + Math.floor(Math.random() * 3);
@@ -1508,7 +1510,7 @@ export function mountGame(
 
     if (radarCd <= 0) {
       for (const rs of track.radarS) {
-        if (Math.abs(wrapDelta(rs, proj.s, track.total)) < 16 && Math.abs(player.speed) > RADAR_LIMIT) {
+        if (Math.abs(wrapDelta(rs, proj.s, track.total)) < 19 && Math.abs(player.speed) > RADAR_LIMIT) {
           radarCd = 8;
           flash("radar");
           sfx.radar();
@@ -1541,7 +1543,7 @@ export function mountGame(
     } else if (Math.abs(tollD) > 40) tollLatch = false;
 
     const gasD = Math.abs(wrapDelta(track.gasS, proj.s, track.total));
-    if (gasD < 16 && proj.lat > 2.5 && Math.abs(player.speed) < 3.8 && fuel < 96) {
+    if (gasD < 18 && proj.lat > 2.5 && Math.abs(player.speed) < 2.8 && fuel < 98) {
       if (!gasLatch) {
         if (pay(GAS_COST)) {
           fuel = 100;
@@ -1559,9 +1561,9 @@ export function mountGame(
 
     if (bumpCd <= 0) {
       for (const b of track.bumps) {
-        if (Math.abs(wrapDelta(b, proj.s, track.total)) < 2.5 && Math.abs(player.speed) > 8) {
+        if (Math.abs(wrapDelta(b, proj.s, track.total)) < 3.2 && Math.abs(player.speed) > 9) {
           bumpCd = 1.15;
-          player.speed *= 0.55;
+          player.speed *= 0.48;
           shake = Math.max(shake, reduceMotion ? 0 : 0.3);
           if (messageT <= 0) say("مطب!");
           sfx.blip(120, 0.07, "triangle", 0.04);
