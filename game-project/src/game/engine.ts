@@ -42,6 +42,8 @@ type Npc = {
   speed: number;
   cruise: number;
   brake: number;
+  stopTimer: number;
+  stopAt: number;
   color: THREE.Color;
   nextLane: number;
 };
@@ -739,6 +741,8 @@ export function mountGame(
         speed: spec.max * (0.45 + (i % 5) * 0.08),
         cruise: spec.max * (0.42 + (i % 4) * 0.1),
         brake: 0,
+        stopTimer: 0,
+        stopAt: -1,
         color: col,
         nextLane: 4 + (i % 6),
       });
@@ -1163,9 +1167,20 @@ export function mountGame(
       let target = n.cruise;
       const ahead = wrapDelta(n.s, proj.s, track.total);
       if (n.kind === "micro") {
-        for (const stop of track.stops) {
-          const d = wrapDelta(stop.s, n.s, track.total);
-          if (d > 0 && d < 36 && n.lane > 1.5) target = Math.min(target, 3.5);
+        n.stopTimer = Math.max(0, n.stopTimer - dt);
+        for (let i = 0; i < track.stops.length; i++) {
+          const d = wrapDelta(track.stops[i].s, n.s, track.total);
+          // Microbuses in the curb-side lanes slow down and briefly wait at stops.
+          if (n.lane > 1.5 && d > -10 && d < 34) {
+            target = Math.min(target, d < 8 ? 1.4 : 3.2);
+            if (d < 2.2 && d > -1.5 && n.stopAt !== i && n.stopTimer <= 0) {
+              n.stopAt = i;
+              n.stopTimer = 1.8 + Math.random() * 1.8;
+            }
+            if (n.stopTimer > 0 && n.stopAt === i) target = 0.45;
+          } else if (n.stopAt === i && d < -10) {
+            n.stopAt = -1;
+          }
         }
         n.brake -= dt;
         if (n.brake <= 0 && Math.random() < dt * 0.15) n.brake = 1.3;
