@@ -549,6 +549,7 @@ export function mountGame(
   scene.add(ground);
 
   buildRoad(scene, track);
+  buildCrosswalks(scene, track);
   buildStreetSigns(scene, track);
   buildElectricalPoles(scene, track);
   const buildings = buildCity(scene, track);
@@ -1976,6 +1977,66 @@ function buildRoad(scene: THREE.Scene, track: Track) {
   eg.setAttribute("position", new THREE.Float32BufferAttribute(edges, 3));
   eg.computeVertexNormals();
   scene.add(new THREE.Mesh(eg, edgeMat));
+}
+
+function buildCrosswalks(scene: THREE.Scene, track: Track) {
+  const paint = new THREE.MeshStandardMaterial({
+    color: "#eee9dc",
+    roughness: 0.78,
+    metalness: 0,
+  });
+  const stripes: THREE.Matrix4[] = [];
+  const stops: THREE.Matrix4[] = [];
+  const o = new THREE.Object3D();
+
+  // Zebra crossings at the existing stop locations, aligned to the curved road.
+  for (const stop of track.stops) {
+    const p = track.sample(stop.s);
+    const forwardX = -Math.sin(p.yaw);
+    const forwardZ = -Math.cos(p.yaw);
+    for (let stripe = -3; stripe <= 3; stripe++) {
+      const offset = stripe * 0.72;
+      o.position.set(
+        p.x + forwardX * offset,
+        0.066,
+        p.z + forwardZ * offset,
+      );
+      o.rotation.set(0, p.yaw, 0);
+      o.scale.set(1, 1, 1);
+      o.updateMatrix();
+      stripes.push(o.matrix.clone());
+    }
+
+    // A pair of short stop bars gives drivers a clear visual cue before each crossing.
+    for (const offset of [-3.35, 3.35]) {
+      o.position.set(
+        p.x + forwardX * offset,
+        0.067,
+        p.z + forwardZ * offset,
+      );
+      o.rotation.set(0, p.yaw, 0);
+      o.scale.set(1, 1, 1);
+      o.updateMatrix();
+      stops.push(o.matrix.clone());
+    }
+  }
+
+  const stripeMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.34, 0.025, ROAD_HALF * 2 - 1.1),
+    paint,
+    stripes.length,
+  );
+  stripes.forEach((matrix, index) => stripeMesh.setMatrixAt(index, matrix));
+  stripeMesh.instanceMatrix.needsUpdate = true;
+
+  const stopMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.18, 0.028, ROAD_HALF * 2 - 0.8),
+    paint,
+    stops.length,
+  );
+  stops.forEach((matrix, index) => stopMesh.setMatrixAt(index, matrix));
+  stopMesh.instanceMatrix.needsUpdate = true;
+  scene.add(stripeMesh, stopMesh);
 }
 
 function buildStreetSigns(scene: THREE.Scene, track: Track) {
