@@ -159,7 +159,7 @@ export type Hud = {
   km: number;
   time: number;
   crashes: number;
-  passengers: { dest: string }[];
+  passengers: { dest: string; fare: number }[];
   seats: number;
   stopName: string;
   stopDist: number;
