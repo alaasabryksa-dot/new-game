@@ -1981,7 +1981,30 @@ export function mountGame(
         delete window.__controlsTest;
       }
       sfx.stop();
+      const geometries = new Set<THREE.BufferGeometry>();
+      const materials = new Set<THREE.Material>();
+      const textures = new Set<THREE.Texture>();
+      scene.traverse((object) => {
+        const mesh = object as THREE.Mesh;
+        if (!mesh.isMesh && !(mesh as THREE.InstancedMesh).isInstancedMesh) return;
+        if (mesh.geometry) geometries.add(mesh.geometry);
+        const material = mesh.material;
+        for (const mat of Array.isArray(material) ? material : material ? [material] : []) {
+          materials.add(mat);
+          for (const value of Object.values(mat)) {
+            if (value && typeof value === "object" && (value as THREE.Texture).isTexture) {
+              textures.add(value as THREE.Texture);
+            }
+          }
+        }
+      });
+      for (const texture of textures) texture.dispose();
+      for (const material of materials) material.dispose();
+      for (const geometry of geometries) geometry.dispose();
+      renderer.renderLists.dispose();
       renderer.dispose();
+      const loseContext = renderer.getContext().getExtension("WEBGL_lose_context");
+      loseContext?.loseContext();
     },
   };
 }
