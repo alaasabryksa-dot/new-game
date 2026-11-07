@@ -1021,7 +1021,7 @@ export function mountGame(
       km: Math.round(km * 10) / 10,
       time,
       crashes,
-      passengers: pax.map((person) => ({ dest: track.stops[person.dest].name })),
+      passengers: pax.map((person) => ({ dest: track.stops[person.dest].name, fare: person.fare })),
       seats: spec.seats,
       stopName: stop?.name ?? "",
       stopDist: Math.max(0, Math.round(targetD)),
