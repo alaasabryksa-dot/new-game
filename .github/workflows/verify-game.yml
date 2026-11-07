@@ -1,0 +1,36 @@
+name: Verify extracted game
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "game-project/**"
+      - ".github/workflows/verify-game.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game-project
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: game-project/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: Run tests
+        run: npm test
+      - name: Production build
+        run: npm run build
