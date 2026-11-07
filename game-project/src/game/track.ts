@@ -91,6 +91,7 @@ export function buildTrack(): Track {
   }
   const total = s;
 
+  // These are evenly spaced gameplay pickup points, not surveyed or named street stops.
   const stops = STOP_NAMES.map((name, i) => ({
     name,
     s: ((i + 0.06) / STOP_NAMES.length) * total,
