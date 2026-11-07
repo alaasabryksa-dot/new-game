@@ -364,7 +364,7 @@ function PlayHud({
           {snap.seats > 0 && !rush ? (
             <p className="mt-1 truncate text-xs text-muted">
               ركاب {snap.passengers.length}/{snap.seats}
-              {snap.passengers[0] ? ` · ${snap.passengers[0].dest}` : ""}
+              {snap.passengers[0] ? ` · ${snap.passengers[0].dest} · ${snap.passengers[0].fare} ج` : ""}
             </p>
           ) : null}
         </div>
