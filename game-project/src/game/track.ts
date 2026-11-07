@@ -1,4 +1,5 @@
 import { STOP_NAMES } from "./types";
+import { FAYOUM_ROUTE_COORDINATES } from "./data/fayoum-route";
 
 export const LANE_W = 3.45;
 export const ROAD_HALF = 8.15;
@@ -46,17 +47,36 @@ export function wrapAngle(d: number) {
 }
 
 export function buildTrack(): Track {
-  const raw: { x: number; z: number }[] = [];
-  const N = 440;
-  for (let i = 0; i < N; i++) {
-    const t = i / N;
-    const ang = t * Math.PI * 2;
-    const wob = 1 + 0.1 * Math.sin(ang * 2) + 0.055 * Math.sin(ang * 3 + 0.6);
-    const x = Math.cos(ang) * 188 * wob + 26 * Math.sin(ang * 2);
-    const z = -Math.sin(ang) * 132 * (1 + 0.07 * Math.sin(ang * 2 + 0.8)) + 16 * Math.cos(ang * 3);
-    raw.push({ x, z });
+  // Convert the mapped lon/lat route into a local metric game coordinate system.
+  // The candidate is a closed, direction-aware loop; keep its mapped order.
+  const origin = FAYOUM_ROUTE_COORDINATES[0];
+  const lat0 = (origin[1] * Math.PI) / 180;
+  const metersPerLon = 111320 * Math.cos(lat0);
+  const metersPerLat = 110540;
+  const mapped = FAYOUM_ROUTE_COORDINATES.map(([lon, lat]) => ({
+    x: (lon - origin[0]) * metersPerLon,
+    z: -(lat - origin[1]) * metersPerLat,
+  }));
+  if (mapped.length > 2) {
+    const first = mapped[0];
+    const last = mapped[mapped.length - 1];
+    if (Math.hypot(first.x - last.x, first.z - last.z) < 0.5) mapped.pop();
   }
 
+  // Resample long OSM edges to keep road meshes, collision and projection smooth.
+  const raw: { x: number; z: number }[] = [];
+  const spacing = 4.5;
+  for (let i = 0; i < mapped.length; i++) {
+    const a = mapped[i];
+    const b = mapped[(i + 1) % mapped.length];
+    const length = Math.hypot(b.x - a.x, b.z - a.z);
+    const steps = Math.max(1, Math.ceil(length / spacing));
+    for (let step = 0; step < steps; step++) {
+      const t = step / steps;
+      raw.push({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t });
+    }
+  }
+  const N = raw.length;
   const pts: Sample[] = [];
   let s = 0;
   for (let i = 0; i < N; i++) {
