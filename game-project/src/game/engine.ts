@@ -3158,9 +3158,12 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, play
   armsR.count = walkers.length;
   scene.add(skin, legsL, legsR, armsL, armsR);
 
+  // Reuse one transform helper for every frame; avoid allocating a new Object3D
+  // on each animation tick, which creates needless garbage on mobile devices.
+  const leg = new THREE.Object3D();
+
   // Reposition each walker along the sidewalk and animate a coordinated arm/leg stride.
   return (time: number, playerX: number, playerZ: number) => {
-    const leg = new THREE.Object3D();
     walkers.forEach((walker, i) => {
       const p = track.sample(walker.s + time * walker.speed * walker.direction);
       const rx = Math.cos(p.yaw);
