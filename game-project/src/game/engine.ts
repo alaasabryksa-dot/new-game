@@ -649,6 +649,7 @@ export function mountGame(
   let crashes = 0;
   let pax: Pax[] = [];
   let waiting = track.stops.map(() => 2 + Math.floor(Math.random() * 3));
+  let queueClock = 0;
   let serviced = -1;
   let message = "";
   let messageT = 0;
@@ -916,7 +917,8 @@ export function mountGame(
     halfWarned = false;
     bumpCd = 0;
     pax = [];
-    waiting = track.stops.map(() => 1 + Math.floor(Math.random() * 4));
+    waiting = track.stops.map(() => 2 + Math.floor(Math.random() * 3));
+    queueClock = 0;
     serviced = -1;
     hitCd = 0;
     radarCd = 0;
@@ -1429,6 +1431,17 @@ export function mountGame(
   }
 
   function gameplay(dt: number) {
+    // Passenger demand keeps evolving while the shift is active, even when the player
+    // is away from a stop. Busy hubs attract queues faster than quieter side stops.
+    queueClock += dt;
+    while (queueClock >= 9) {
+      queueClock -= 9;
+      const demand = [0.9, 1, 0.78, 0.72, 0.42, 0.62, 0.58, 0.92, 0.76, 0.5];
+      for (let i = 0; i < waiting.length; i++) {
+        if (waiting[i] >= 8 || Math.random() > demand[i % demand.length]) continue;
+        waiting[i] = Math.min(8, waiting[i] + 1 + (Math.random() < 0.16 ? 1 : 0));
+      }
+    }
     const spec = specNow();
     const proj = track.project(player.x, player.z, player.hint);
     for (const n of npcs) {
@@ -1465,7 +1478,7 @@ export function mountGame(
     if (serviced >= 0) {
       const away = Math.abs(wrapDelta(track.stops[serviced].s, proj.s, track.total));
       if (away > 32) {
-        waiting[serviced] = Math.min(6, waiting[serviced] + 1 + Math.floor(Math.random() * 3));
+        waiting[serviced] = Math.min(8, waiting[serviced] + 1 + Math.floor(Math.random() * 3));
         serviced = -1;
       }
     }
