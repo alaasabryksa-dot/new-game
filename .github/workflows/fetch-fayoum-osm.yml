@@ -1,6 +1,11 @@
 name: Fetch Fayoum Street OSM data
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "game-project/scripts/fetch-fayoum-osm.mjs"
+      - ".github/workflows/fetch-fayoum-osm.yml"
   workflow_dispatch:
     inputs:
       way_id:
