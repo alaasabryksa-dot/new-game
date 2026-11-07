@@ -2325,7 +2325,7 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
 }
 
 function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => void {
-  type Walker = { s: number; side: number; direction: number; speed: number; phase: number; shirt: number };
+  type Walker = { s: number; side: number; direction: number; speed: number; phase: number; shirt: number; shirtSlot: number };
   const walkers: Walker[] = [];
   const shirts = ["#344e72", "#8b493b", "#526b50", "#b18a45", "#5d526d"];
   const shirtMeshes = shirts.map((color) => new THREE.InstancedMesh(
@@ -2357,6 +2357,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => v
       speed: 0.55 + (index % 4) * 0.12,
       phase: index * 1.73,
       shirt: index % shirts.length,
+      shirtSlot: shirtCounts[index % shirts.length]++,
     });
   }
 
@@ -2376,7 +2377,6 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => v
     mesh.setMatrixAt(index, o.matrix);
   };
 
-  const shirtIndex = shirts.map(() => 0);
   walkers.forEach((walker, i) => {
     const p = track.sample(walker.s);
     const rx = Math.cos(p.yaw);
@@ -2387,7 +2387,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => v
     const localRightX = Math.cos(yaw);
     const localRightZ = -Math.sin(yaw);
     const mesh = shirtMeshes[walker.shirt];
-    setTransform(mesh, shirtIndex[walker.shirt]++, x, 1.13, z, yaw);
+    setTransform(mesh, walker.shirtSlot, x, 1.13, z, yaw);
     setTransform(skin, i, x, 1.66, z, yaw);
     setTransform(legsL, i, x - localRightX * 0.13, 0.52, z - localRightZ * 0.13, yaw);
     setTransform(legsR, i, x + localRightX * 0.13, 0.52, z + localRightZ * 0.13, yaw);
@@ -2396,7 +2396,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => v
   });
 
   shirtMeshes.forEach((mesh, i) => {
-    mesh.count = shirtIndex[i];
+    mesh.count = shirtCounts[i];
     mesh.instanceMatrix.needsUpdate = true;
     scene.add(mesh);
   });
@@ -2428,8 +2428,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => v
         mesh.setMatrixAt(i, leg.matrix);
       };
 
-      setTransform(shirtMeshes[walker.shirt], shirtIndex[walker.shirt] > 0
-        ? walkers.slice(0, i).filter((w) => w.shirt === walker.shirt).length : i,
+      setTransform(shirtMeshes[walker.shirt], walker.shirtSlot,
         x, 1.13, z, yaw, Math.sin(time * 5 + walker.phase) * 0.025);
       setTransform(skin, i, x, 1.66 + Math.abs(swing) * 0.025, z, yaw);
       setLimb(legsL, x - rightX * 0.13, z - rightZ * 0.13, 0.52, swing);
