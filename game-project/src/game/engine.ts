@@ -645,6 +645,7 @@ export function mountGame(
   let money = 0;
   let km = 0;
   let time = 0;
+  let trafficClock = 0;
   let crashes = 0;
   let pax: Pax[] = [];
   let waiting = track.stops.map(() => 2 + Math.floor(Math.random() * 4));
@@ -1049,6 +1050,7 @@ export function mountGame(
   }
 
   function step(dt: number) {
+    trafficClock += dt;
     const spec = specNow();
     const down = (code: string) => (probeKeys ? probeKeys.has(code) : keys.has(code));
 
@@ -1185,6 +1187,23 @@ export function mountGame(
         n.brake -= dt;
         if (n.brake <= 0 && Math.random() < dt * 0.15) n.brake = 1.3;
         if (n.brake > 0) target = Math.min(target, 2.2);
+      }
+      // Obey the same 14-second cycle shown by the signal heads.
+      // Red: 0-7s, amber: 7-8.2s, green: remainder.
+      const signalCycle = trafficClock % 14;
+      const redLight = signalCycle < 7;
+      const amberLight = signalCycle >= 7 && signalCycle < 8.2;
+      for (const stop of track.stops) {
+        const distanceToLine = wrapDelta(stop.s, n.s, track.total);
+        if (distanceToLine <= 0 || distanceToLine > 30) continue;
+        if (redLight) {
+          const approachSpeed = distanceToLine > 5
+            ? Math.max(0.8, (distanceToLine - 2.4) * 0.72)
+            : 0.35;
+          target = Math.min(target, approachSpeed);
+        } else if (amberLight && distanceToLine > 9) {
+          target = Math.min(target, 4.2);
+        }
       }
       // Follow traffic with a longer buffer for large vehicles and higher closing speeds.
       let leadGap = Infinity;
@@ -1742,7 +1761,7 @@ export function mountGame(
       steps++;
     }
     animatePedestrians(now / 1000, player.x, player.z);
-    animateTrafficSignals(now / 1000);
+    animateTrafficSignals(trafficClock);
     render(dt);
     hudAcc += dt;
     if (hudAcc > 0.12) {
