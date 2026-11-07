@@ -1240,7 +1240,31 @@ export function mountGame(
               && !(rearGap > 0 && rearGap < 9 + vehicleById(o.kind).length * 0.35);
           });
         };
-        if (desiredLane !== Math.round(n.lane) && laneIsSafe(desiredLane)) {
+        // Tuk-tuks are more willing to use a clear neighboring lane when boxed in,
+        // but only after the same front/rear safety checks as other traffic.
+        if (n.kind === "tuktuk" && leadGap < 24) {
+          const candidates = [0, 1, 2, 3]
+            .filter((lane) => Math.abs(lane - Math.round(n.lane)) === 1 && laneIsSafe(lane))
+            .map((lane) => {
+              let front = 42;
+              for (const o of npcs) {
+                if (o === n || !o.alive || Math.abs(o.lane - lane) > 0.68) continue;
+                const gap = wrapDelta(o.s, n.s, track.total);
+                if (gap > 0) front = Math.min(front, gap);
+              }
+              if (lane === playerLane) {
+                const gap = wrapDelta(proj.s, n.s, track.total);
+                if (gap > 0) front = Math.min(front, gap);
+              }
+              return { lane, score: front - Math.abs(lane - n.lane) * 2 };
+            })
+            .sort((a, b) => b.score - a.score);
+          if (candidates.length && candidates[0].score > 13) {
+            n.laneTarget = candidates[0].lane;
+          } else {
+            n.laneTarget = Math.round(n.lane);
+          }
+        } else if (desiredLane !== Math.round(n.lane) && laneIsSafe(desiredLane)) {
           n.laneTarget = desiredLane;
         } else {
           n.laneTarget = Math.round(n.lane);
