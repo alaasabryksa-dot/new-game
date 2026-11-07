@@ -1473,7 +1473,7 @@ export function mountGame(
         if (!nearStop(i) || serviced === i) continue;
         const dropping = pax.filter((person) => person.dest === i);
         if (dropping.length) {
-          const earned = Math.round(dropping.length * 40 * spec.fare);
+          const earned = Math.round(dropping.reduce((sum, person) => sum + person.fare, 0));
           money += earned;
           pax = pax.filter((person) => person.dest !== i);
           say(`نزلوا — +${earned} ج`);
@@ -1487,7 +1487,10 @@ export function mountGame(
           for (let k = 0; k < n; k++) {
             const hop = 2 + Math.floor(Math.random() * 3);
             lastDest = (i + hop) % track.stops.length;
-            pax.push({ dest: lastDest });
+            // Fare is fixed when boarding, based on the number of stop-to-stop legs.
+            // This rewards longer trips while keeping the existing seat upgrade multiplier.
+            const fare = Math.round((24 + hop * 12) * spec.fare);
+            pax.push({ dest: lastDest, fare });
           }
           waiting[i] -= n;
           say(`ركّبت ${n} · ${track.stops[lastDest].name}`);
