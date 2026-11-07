@@ -2325,12 +2325,8 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
 }
 
 function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => void {
-  const pts = track.pts;
-  const walkData: { x: number; z: number; yaw: number; phase: number }[] = [];
-  const torsos: THREE.Matrix4[] = [];
-  const heads: THREE.Matrix4[] = [];
-  const leftLegs: THREE.Matrix4[] = [];
-  const rightLegs: THREE.Matrix4[] = [];
+  type Walker = { s: number; side: number; direction: number; speed: number; phase: number; shirt: number };
+  const walkers: Walker[] = [];
   const shirts = ["#344e72", "#8b493b", "#526b50", "#b18a45", "#5d526d"];
   const shirtMeshes = shirts.map((color) => new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.2, 0.25, 0.72, 7),
@@ -2345,82 +2341,108 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => v
   const trousers = new THREE.MeshStandardMaterial({ color: "#34343a", roughness: 0.95 });
   const legsL = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.075, 0.085, 0.62, 6), trousers, 32);
   const legsR = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.075, 0.085, 0.62, 6), trousers, 32);
+  const armsL = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.065, 0.075, 0.58, 6), trousers, 32);
+  const armsR = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.065, 0.075, 0.58, 6), trousers, 32);
+  const shirtCounts = shirts.map(() => 0);
   const o = new THREE.Object3D();
-  let count = 0;
 
-  // Low-poly sidewalk pedestrians, spaced apart and kept off the driving lanes.
-  for (let i = 22; i < pts.length && count < 32; i += 31) {
-    const p = pts[i];
-    const rx = Math.cos(p.yaw);
-    const rz = -Math.sin(p.yaw);
-    const side = count % 2 === 0 ? 1 : -1;
-    const lat = side * (ROAD_HALF + 3.65);
-    const x = p.x + rx * lat;
-    const z = p.z + rz * lat;
-    const yaw = p.yaw + (side > 0 ? Math.PI / 2 : -Math.PI / 2);
-    walkData.push({ x, z, yaw, phase: count * 1.73 });
-    o.rotation.set(0, yaw, 0);
-    o.position.set(x, 1.13, z);
-    o.scale.set(1, 1, 1);
-    o.updateMatrix();
-    torsos.push(o.matrix.clone());
-    o.position.set(x, 1.66, z);
-    o.scale.set(1, 1, 1);
-    o.updateMatrix();
-    heads.push(o.matrix.clone());
-    o.position.set(x - Math.cos(yaw) * 0.13, 0.52, z + Math.sin(yaw) * 0.13);
-    o.scale.set(1, 1, 1);
-    o.updateMatrix();
-    leftLegs.push(o.matrix.clone());
-    o.position.set(x + Math.cos(yaw) * 0.13, 0.52, z - Math.sin(yaw) * 0.13);
-    o.updateMatrix();
-    rightLegs.push(o.matrix.clone());
-    count++;
+  // Walkers follow the curved sidewalk loop, alternating direction and pace.
+  for (let i = 22; i < track.pts.length && walkers.length < 32; i += 31) {
+    const p = track.pts[i];
+    const index = walkers.length;
+    walkers.push({
+      s: p.s,
+      side: index % 2 === 0 ? 1 : -1,
+      direction: index % 3 === 0 ? -1 : 1,
+      speed: 0.55 + (index % 4) * 0.12,
+      phase: index * 1.73,
+      shirt: index % shirts.length,
+    });
   }
 
-  // Each shirt color mesh uses its own compact index.
-  const shirtCounts = shirts.map(() => 0);
-  torsos.forEach((m, i) => {
-    const k = i % shirts.length;
-    shirtMeshes[k].setMatrixAt(shirtCounts[k]++, m);
+  const setTransform = (
+    mesh: THREE.InstancedMesh,
+    index: number,
+    x: number,
+    y: number,
+    z: number,
+    yaw: number,
+    tilt = 0,
+  ) => {
+    o.position.set(x, y, z);
+    o.rotation.set(tilt, yaw, 0);
+    o.scale.set(1, 1, 1);
+    o.updateMatrix();
+    mesh.setMatrixAt(index, o.matrix);
+  };
+
+  const shirtIndex = shirts.map(() => 0);
+  walkers.forEach((walker, i) => {
+    const p = track.sample(walker.s);
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const x = p.x + rx * walker.side * (ROAD_HALF + 3.65);
+    const z = p.z + rz * walker.side * (ROAD_HALF + 3.65);
+    const yaw = p.yaw + (walker.direction < 0 ? Math.PI : 0);
+    const localRightX = Math.cos(yaw);
+    const localRightZ = -Math.sin(yaw);
+    const mesh = shirtMeshes[walker.shirt];
+    setTransform(mesh, shirtIndex[walker.shirt]++, x, 1.13, z, yaw);
+    setTransform(skin, i, x, 1.66, z, yaw);
+    setTransform(legsL, i, x - localRightX * 0.13, 0.52, z - localRightZ * 0.13, yaw);
+    setTransform(legsR, i, x + localRightX * 0.13, 0.52, z + localRightZ * 0.13, yaw);
+    setTransform(armsL, i, x - localRightX * 0.25, 1.18, z - localRightZ * 0.25, yaw);
+    setTransform(armsR, i, x + localRightX * 0.25, 1.18, z + localRightZ * 0.25, yaw);
   });
+
   shirtMeshes.forEach((mesh, i) => {
-    mesh.count = shirtCounts[i];
+    mesh.count = shirtIndex[i];
     mesh.instanceMatrix.needsUpdate = true;
     scene.add(mesh);
   });
-  heads.forEach((m, i) => skin.setMatrixAt(i, m));
-  leftLegs.forEach((m, i) => legsL.setMatrixAt(i, m));
-  rightLegs.forEach((m, i) => legsR.setMatrixAt(i, m));
-  skin.count = count;
-  legsL.count = count;
-  legsR.count = count;
-  skin.instanceMatrix.needsUpdate = true;
-  legsL.instanceMatrix.needsUpdate = true;
-  legsR.instanceMatrix.needsUpdate = true;
-  scene.add(skin, legsL, legsR);
+  skin.count = walkers.length;
+  legsL.count = walkers.length;
+  legsR.count = walkers.length;
+  armsL.count = walkers.length;
+  armsR.count = walkers.length;
+  scene.add(skin, legsL, legsR, armsL, armsR);
 
-  // Animate a restrained alternating step cycle without moving pedestrians off the pavement.
-  const leg = new THREE.Object3D();
+  // Reposition each walker along the sidewalk and animate a coordinated arm/leg stride.
   return (time: number) => {
-    walkData.forEach((person, i) => {
-      const swing = Math.sin(time * 2.7 + person.phase) * 0.34;
-      const setLeg = (mesh: THREE.InstancedMesh, angle: number, offset: number) => {
-        leg.position.set(
-          person.x + Math.cos(person.yaw) * offset,
-          0.52,
-          person.z - Math.sin(person.yaw) * offset,
-        );
-        leg.rotation.set(angle, person.yaw, 0);
+    const leg = new THREE.Object3D();
+    walkers.forEach((walker, i) => {
+      const p = track.sample(walker.s + time * walker.speed * walker.direction);
+      const rx = Math.cos(p.yaw);
+      const rz = -Math.sin(p.yaw);
+      const x = p.x + rx * walker.side * (ROAD_HALF + 3.65);
+      const z = p.z + rz * walker.side * (ROAD_HALF + 3.65);
+      const yaw = p.yaw + (walker.direction < 0 ? Math.PI : 0);
+      const rightX = Math.cos(yaw);
+      const rightZ = -Math.sin(yaw);
+      const swing = Math.sin(time * 5 + walker.phase) * 0.34;
+      const setLimb = (mesh: THREE.InstancedMesh, px: number, pz: number, y: number, tilt: number) => {
+        leg.position.set(px, y, pz);
+        leg.rotation.set(tilt, yaw, 0);
         leg.scale.set(1, 1, 1);
         leg.updateMatrix();
         mesh.setMatrixAt(i, leg.matrix);
       };
-      setLeg(legsL, swing, -0.13);
-      setLeg(legsR, -swing, 0.13);
+
+      setTransform(shirtMeshes[walker.shirt], shirtIndex[walker.shirt] > 0
+        ? walkers.slice(0, i).filter((w) => w.shirt === walker.shirt).length : i,
+        x, 1.13, z, yaw, Math.sin(time * 5 + walker.phase) * 0.025);
+      setTransform(skin, i, x, 1.66 + Math.abs(swing) * 0.025, z, yaw);
+      setLimb(legsL, x - rightX * 0.13, z - rightZ * 0.13, 0.52, swing);
+      setLimb(legsR, x + rightX * 0.13, z + rightZ * 0.13, 0.52, -swing);
+      setLimb(armsL, x - rightX * 0.25, z - rightZ * 0.25, 1.18, -swing * 0.72);
+      setLimb(armsR, x + rightX * 0.25, z + rightZ * 0.25, 1.18, swing * 0.72);
     });
+    shirtMeshes.forEach((mesh) => { mesh.instanceMatrix.needsUpdate = true; });
+    skin.instanceMatrix.needsUpdate = true;
     legsL.instanceMatrix.needsUpdate = true;
     legsR.instanceMatrix.needsUpdate = true;
+    armsL.instanceMatrix.needsUpdate = true;
+    armsR.instanceMatrix.needsUpdate = true;
   };
 }
 
