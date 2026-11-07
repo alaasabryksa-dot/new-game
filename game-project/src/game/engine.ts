@@ -1657,7 +1657,7 @@ export function mountGame(
       acc -= 1 / 60;
       steps++;
     }
-    animatePedestrians(now / 1000);
+    animatePedestrians(now / 1000, player.x, player.z);
     render(dt);
     hudAcc += dt;
     if (hudAcc > 0.12) {
@@ -2431,7 +2431,7 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   scene.add(trunk, canopy, bins, bollards);
 }
 
-function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => void {
+function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, playerX: number, playerZ: number) => void {
   type Walker = { s: number; side: number; direction: number; speed: number; phase: number; shirt: number; shirtSlot: number };
   const walkers: Walker[] = [];
   const shirts = ["#344e72", "#8b493b", "#526b50", "#b18a45", "#5d526d"];
@@ -2521,8 +2521,16 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => v
       const p = track.sample(walker.s + time * walker.speed * walker.direction);
       const rx = Math.cos(p.yaw);
       const rz = -Math.sin(p.yaw);
-      const x = p.x + rx * walker.side * (ROAD_HALF + 3.65);
-      const z = p.z + rz * walker.side * (ROAD_HALF + 3.65);
+      const baseOffset = ROAD_HALF + 3.65;
+      const baseX = p.x + rx * walker.side * baseOffset;
+      const baseZ = p.z + rz * walker.side * baseOffset;
+      const distanceToPlayer = Math.hypot(playerX - baseX, playerZ - baseZ);
+      // Give the player vehicle a little extra room by moving walkers outward,
+      // never toward the traffic lanes.
+      const avoidance = Math.max(0, 1 - distanceToPlayer / 9) * 1.15;
+      const sidewalkOffset = baseOffset + avoidance;
+      const x = p.x + rx * walker.side * sidewalkOffset;
+      const z = p.z + rz * walker.side * sidewalkOffset;
       const yaw = p.yaw + (walker.direction < 0 ? Math.PI : 0);
       const rightX = Math.cos(yaw);
       const rightZ = -Math.sin(yaw);
