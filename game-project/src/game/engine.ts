@@ -552,6 +552,7 @@ export function mountGame(
   const buildings = buildCity(scene, track);
   const lamps = buildLamps(scene, track);
   buildStreetFurniture(scene, track);
+  buildPedestrians(scene, track);
   buildGantries(scene, track);
   buildQuarter(scene, track);
   const signs: THREE.Mesh[] = [];
@@ -2020,6 +2021,14 @@ function buildCity(scene: THREE.Scene, track: Track) {
   const shopDoorGeo = new THREE.BoxGeometry(0.14, 1.9, 0.72);
   const shopDoorMat = new THREE.MeshStandardMaterial({ color: "#4b4540", roughness: 0.55 });
   const shopDoors = new THREE.InstancedMesh(shopDoorGeo, shopDoorMat, 100);
+  // Exterior split AC condensers mounted beside upper-floor windows.
+  const acGeo = new THREE.BoxGeometry(0.72, 0.48, 0.42);
+  const acMat = new THREE.MeshStandardMaterial({ color: "#d9d9d2", roughness: 0.78 });
+  const acUnits = new THREE.InstancedMesh(acGeo, acMat, 220);
+  const acGrilleGeo = new THREE.BoxGeometry(0.035, 0.3, 0.32);
+  const acGrilleMat = new THREE.MeshStandardMaterial({ color: "#737b7c", roughness: 0.82 });
+  const acGrilles = new THREE.InstancedMesh(acGrilleGeo, acGrilleMat, 220);
+  let acCount = 0;
   let balconyCount = 0;
   let awningCount = 0;
   let signCount = 0;
@@ -2047,6 +2056,29 @@ function buildCity(scene: THREE.Scene, track: Track) {
     dummy.scale.set(width, height, deep);
     dummy.updateMatrix();
     meshes[idx].setMatrixAt(counts[idx]++, dummy.matrix);
+
+    // Wall-mounted AC units on selected apartment floors.
+    if (!shop && hsh > 0.18 && acCount < 220) {
+      const frontX = -side * (width / 2 + 0.28);
+      const acFloors = Math.min(3, floors);
+      for (let floor = 1; floor <= acFloors && acCount < 220; floor++) {
+        const y = 2.05 + floor * 2.65 + (hsh > 0.62 ? 0.48 : -0.28);
+        const zOffset = (floor % 2 === 0 ? -1 : 1) * Math.min(2.2, deep * 0.24);
+        dummy.position.set(p.x + rx * (side * depth + frontX), y, p.z + rz * (side * depth + frontX) + zOffset);
+        dummy.rotation.set(0, p.yaw, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        acUnits.setMatrixAt(acCount, dummy.matrix);
+        dummy.position.set(
+          p.x + rx * (side * depth + frontX - side * 0.22),
+          y,
+          p.z + rz * (side * depth + frontX - side * 0.22) + zOffset,
+        );
+        dummy.updateMatrix();
+        acGrilles.setMatrixAt(acCount, dummy.matrix);
+        acCount++;
+      }
+    }
 
     // Balconies face the road; their local X side is the street-facing wall.
     if (!shop && balconyCount < 260) {
@@ -2116,6 +2148,10 @@ function buildCity(scene: THREE.Scene, track: Track) {
   });
   balconyMesh.count = balconyCount;
   railMesh.count = balconyCount;
+  acUnits.count = acCount;
+  acGrilles.count = acCount;
+  acUnits.instanceMatrix.needsUpdate = true;
+  acGrilles.instanceMatrix.needsUpdate = true;
   balconyMesh.instanceMatrix.needsUpdate = true;
   railMesh.instanceMatrix.needsUpdate = true;
   shopGlass.count = shopFrontCount;
@@ -2126,7 +2162,7 @@ function buildCity(scene: THREE.Scene, track: Track) {
     mesh.count = signCounts[i];
     mesh.instanceMatrix.needsUpdate = true;
   });
-  scene.add(balconyMesh, railMesh, shopGlass, shopDoors);
+  scene.add(balconyMesh, railMesh, shopGlass, shopDoors, acUnits, acGrilles);
   signMeshes.forEach((mesh) => scene.add(mesh));
   awnings.forEach((mesh, i) => {
     mesh.count = awningCounts[i];
@@ -2285,6 +2321,84 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   );
   bollardMatrices.forEach((m, i) => bollards.setMatrixAt(i, m));
   scene.add(trunk, canopy, bins, bollards);
+}
+
+function buildPedestrians(scene: THREE.Scene, track: Track) {
+  const pts = track.pts;
+  const torsos: THREE.Matrix4[] = [];
+  const heads: THREE.Matrix4[] = [];
+  const leftLegs: THREE.Matrix4[] = [];
+  const rightLegs: THREE.Matrix4[] = [];
+  const shirts = ["#344e72", "#8b493b", "#526b50", "#b18a45", "#5d526d"];
+  const shirtMeshes = shirts.map((color) => new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.2, 0.25, 0.72, 7),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.9 }),
+    32,
+  ));
+  const skin = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.17, 7, 6),
+    new THREE.MeshStandardMaterial({ color: "#b98261", roughness: 0.95 }),
+    32,
+  );
+  const trousers = new THREE.MeshStandardMaterial({ color: "#34343a", roughness: 0.95 });
+  const legsL = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.075, 0.085, 0.62, 6), trousers, 32);
+  const legsR = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.075, 0.085, 0.62, 6), trousers, 32);
+  const o = new THREE.Object3D();
+  let count = 0;
+
+  // Low-poly sidewalk pedestrians, spaced apart and kept off the driving lanes.
+  for (let i = 22; i < pts.length && count < 32; i += 31) {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const side = count % 2 === 0 ? 1 : -1;
+    const lat = side * (ROAD_HALF + 3.65);
+    const x = p.x + rx * lat;
+    const z = p.z + rz * lat;
+    const yaw = p.yaw + (side > 0 ? Math.PI / 2 : -Math.PI / 2);
+    o.rotation.set(0, yaw, 0);
+    o.position.set(x, 1.13, z);
+    o.scale.set(1, 1, 1);
+    o.updateMatrix();
+    torsos.push(o.matrix.clone());
+    o.position.set(x, 1.66, z);
+    o.scale.set(1, 1, 1);
+    o.updateMatrix();
+    heads.push(o.matrix.clone());
+    o.position.set(x - Math.cos(yaw) * 0.13, 0.52, z + Math.sin(yaw) * 0.13);
+    o.scale.set(1, 1, 1);
+    o.updateMatrix();
+    leftLegs.push(o.matrix.clone());
+    o.position.set(x + Math.cos(yaw) * 0.13, 0.52, z - Math.sin(yaw) * 0.13);
+    o.updateMatrix();
+    rightLegs.push(o.matrix.clone());
+    count++;
+  }
+
+  torsos.forEach((m, i) => shirtMeshes[i % shirtMeshes.length].setMatrixAt(
+    Math.floor(i / shirtMeshes.length) < 0 ? 0 : i % shirtMeshes.length, m,
+  ));
+  // Each shirt color mesh uses its own compact index.
+  const shirtCounts = shirts.map(() => 0);
+  torsos.forEach((m, i) => {
+    const k = i % shirts.length;
+    shirtMeshes[k].setMatrixAt(shirtCounts[k]++, m);
+  });
+  shirtMeshes.forEach((mesh, i) => {
+    mesh.count = shirtCounts[i];
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  });
+  heads.forEach((m, i) => skin.setMatrixAt(i, m));
+  leftLegs.forEach((m, i) => legsL.setMatrixAt(i, m));
+  rightLegs.forEach((m, i) => legsR.setMatrixAt(i, m));
+  skin.count = count;
+  legsL.count = count;
+  legsR.count = count;
+  skin.instanceMatrix.needsUpdate = true;
+  legsL.instanceMatrix.needsUpdate = true;
+  legsR.instanceMatrix.needsUpdate = true;
+  scene.add(skin, legsL, legsR);
 }
 
 function buildGantries(scene: THREE.Scene, track: Track) {
