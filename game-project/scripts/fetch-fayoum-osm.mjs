@@ -81,6 +81,64 @@ const seedGeometry = seed.nodes.map((nodeId) => {
 const seedWithGeometry = { ...seed, geometry: seedGeometry };
 const endpointIds = [seed.nodes[0], seed.nodes[seed.nodes.length - 1]];
 const ways = new Map([[WAY_ID, seedWithGeometry]]);
+
+// Capture the nearby public-road network so a later route review can find a
+// legal return corridor instead of looping against the mapped one-way street.
+const lons = seedGeometry.map(({ lon }) => lon);
+const lats = seedGeometry.map(({ lat }) => lat);
+const margin = 0.0045;
+const bounds = {
+  west: Math.min(...lons) - margin,
+  south: Math.min(...lats) - margin,
+  east: Math.max(...lons) + margin,
+  north: Math.max(...lats) + margin,
+};
+try {
+  const bbox = [
+    bounds.west,
+    bounds.south,
+    bounds.east,
+    bounds.north,
+  ].join(",");
+  const mapResponse = await fetch(
+    `https://api.openstreetmap.org/api/0.6/map.json?bbox=${bbox}`,
+    {
+      headers: {
+        "user-agent": "NewGame-FayoumStreetResearch/1.0 (OSM data attribution included)",
+        accept: "application/json",
+      },
+      signal: AbortSignal.timeout(30000),
+    },
+  );
+  if (!mapResponse.ok) {
+    throw new Error(`OpenStreetMap map API HTTP ${mapResponse.status}`);
+  }
+  const mapData = await mapResponse.json();
+  const mapNodes = new Map(
+    (mapData.elements ?? [])
+      .filter((element) => element.type === "node")
+      .map((node) => [node.id, node]),
+  );
+  for (const way of mapData.elements ?? []) {
+    if (
+      way.type !== "way" ||
+      !way.tags?.highway ||
+      !Array.isArray(way.nodes)
+    ) continue;
+    const geometry = way.nodes.map((nodeId) => mapNodes.get(nodeId));
+    if (geometry.some((node) =>
+      !node || !Number.isFinite(node.lat) || !Number.isFinite(node.lon)
+    )) continue;
+    ways.set(way.id, {
+      ...way,
+      geometry: geometry.map(({ lat, lon }) => ({ lat, lon })),
+    });
+  }
+} catch (error) {
+  warnings.push(
+    `Nearby road network was not fetched: ${error instanceof Error ? error.message : String(error)}`,
+  );
+}
 try {
   const connectedQuery =
     `[out:json][timeout:25];node(id:${endpointIds.join(",")});` +
@@ -105,6 +163,7 @@ const output = {
   seedWayId: WAY_ID,
   seedNodeIds: seed.nodes,
   endpointNodeIds: endpointIds,
+  networkBounds: bounds,
   warnings,
   note:
     "Raw mapped ways only. Review names, direction, continuity and coverage before using as the playable route.",
