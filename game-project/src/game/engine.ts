@@ -1913,18 +1913,18 @@ function buildCity(scene: THREE.Scene, track: Track) {
   const pts = track.pts;
 
   // Repeated low-cost details add visible street-facing depth without hundreds of draw calls.
-  const balconyGeo = new THREE.BoxGeometry(1, 0.16, 1.15);
+  const balconyGeo = new THREE.BoxGeometry(1.15, 0.16, 1);
   const balconyMat = new THREE.MeshStandardMaterial({ color: "#c9c0b2", roughness: 0.86 });
   const balconyMesh = new THREE.InstancedMesh(balconyGeo, balconyMat, 260);
-  const railGeo = new THREE.BoxGeometry(1, 0.72, 0.09);
+  const railGeo = new THREE.BoxGeometry(0.09, 0.72, 1.15);
   const railMat = new THREE.MeshStandardMaterial({ color: "#aeb6b5", metalness: 0.28, roughness: 0.58 });
   const railMesh = new THREE.InstancedMesh(railGeo, railMat, 260);
-  const awningGeo = new THREE.BoxGeometry(1, 0.18, 1.1);
+  const awningGeo = new THREE.BoxGeometry(1.1, 0.18, 1);
   const awningMats = ["#b84f3d", "#d6a23b", "#397f7a", "#e7e0d2"].map(
     (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.76 }),
   );
   const awnings = awningMats.map((mat) => new THREE.InstancedMesh(awningGeo, mat, 100));
-  const signGeo = new THREE.BoxGeometry(1, 0.72, 0.16);
+  const signGeo = new THREE.BoxGeometry(0.16, 0.72, 1);
   const signMat = new THREE.MeshStandardMaterial({ color: "#174b70", roughness: 0.68 });
   const shopSigns = new THREE.InstancedMesh(signGeo, signMat, 100);
   let balconyCount = 0;
@@ -1961,7 +1961,7 @@ function buildCity(scene: THREE.Scene, track: Track) {
         const y = 2.2 + floor * 2.65;
         dummy.position.set(p.x + rx * (side * depth + frontX), y, p.z + rz * (side * depth + frontX));
         dummy.rotation.set(0, p.yaw, 0);
-        dummy.scale.set(1, 1, 1);
+        dummy.scale.set(1, 1, deep * 0.62);
         dummy.updateMatrix();
         balconyMesh.setMatrixAt(balconyCount, dummy.matrix);
         dummy.position.set(
@@ -1969,7 +1969,7 @@ function buildCity(scene: THREE.Scene, track: Track) {
           y + 0.42,
           p.z + rz * (side * depth + frontX - side * 0.56),
         );
-        dummy.scale.set(1, 1, 1);
+        dummy.scale.set(1, 1, deep * 0.62);
         dummy.updateMatrix();
         railMesh.setMatrixAt(balconyCount, dummy.matrix);
         balconyCount++;
@@ -1981,13 +1981,13 @@ function buildCity(scene: THREE.Scene, track: Track) {
       const awningIndex = Math.floor(hsh * 1000) % awnings.length;
       dummy.position.set(p.x + rx * (side * depth + frontX), 2.55, p.z + rz * (side * depth + frontX));
       dummy.rotation.set(0, p.yaw, 0);
-      dummy.scale.set(width * 0.92, 1, 1);
+      dummy.scale.set(1, 1, deep * 0.92);
       dummy.updateMatrix();
       awnings[awningIndex].setMatrixAt(awningCounts[awningIndex]++, dummy.matrix);
       awningCount++;
 
       dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.12), 3.22, p.z + rz * (side * depth + frontX - side * 0.12));
-      dummy.scale.set(width * 0.72, 1, 1);
+      dummy.scale.set(1, 1, deep * 0.72);
       dummy.updateMatrix();
       shopSigns.setMatrixAt(signCount++, dummy.matrix);
     }
