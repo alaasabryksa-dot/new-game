@@ -2059,6 +2059,22 @@ function buildCity(scene: THREE.Scene, track: Track) {
   const acGrilleGeo = new THREE.BoxGeometry(0.035, 0.3, 0.32);
   const acGrilleMat = new THREE.MeshStandardMaterial({ color: "#737b7c", roughness: 0.82 });
   const acGrilles = new THREE.InstancedMesh(acGrilleGeo, acGrilleMat, 220);
+  // Street-facing apartment entrances: recessed-looking door panels, stone steps and lamps.
+  const entryDoorGeo = new THREE.BoxGeometry(0.16, 2.25, 1.12);
+  const entryDoorMat = new THREE.MeshStandardMaterial({ color: "#4a3930", roughness: 0.68 });
+  const entryDoors = new THREE.InstancedMesh(entryDoorGeo, entryDoorMat, 140);
+  const entryFrameGeo = new THREE.BoxGeometry(0.2, 2.48, 1.42);
+  const entryFrameMat = new THREE.MeshStandardMaterial({ color: "#c3aa83", roughness: 0.82 });
+  const entryFrames = new THREE.InstancedMesh(entryFrameGeo, entryFrameMat, 140);
+  const entryStepGeo = new THREE.BoxGeometry(0.62, 0.18, 1.62);
+  const entryStepMat = new THREE.MeshStandardMaterial({ color: "#77736c", roughness: 0.9 });
+  const entrySteps = new THREE.InstancedMesh(entryStepGeo, entryStepMat, 140);
+  const entryLampGeo = new THREE.BoxGeometry(0.18, 0.3, 0.22);
+  const entryLampMat = new THREE.MeshStandardMaterial({
+    color: "#f5d69a", emissive: "#ffbd62", emissiveIntensity: 0.65, roughness: 0.45,
+  });
+  const entryLamps = new THREE.InstancedMesh(entryLampGeo, entryLampMat, 140);
+  let entryCount = 0;
   let acCount = 0;
   let balconyCount = 0;
   let awningCount = 0;
@@ -2109,6 +2125,41 @@ function buildCity(scene: THREE.Scene, track: Track) {
         acGrilles.setMatrixAt(acCount, dummy.matrix);
         acCount++;
       }
+    }
+
+    // Give selected residential buildings a clearly readable street entrance.
+    if (!shop && hsh > 0.24 && entryCount < 140) {
+      const frontX = -side * (width / 2 + 0.24);
+      const entryX = p.x + rx * (side * depth + frontX);
+      const entryZ = p.z + rz * (side * depth + frontX);
+      dummy.rotation.set(0, p.yaw, 0);
+      dummy.position.set(entryX, 1.22, entryZ);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      entryFrames.setMatrixAt(entryCount, dummy.matrix);
+      dummy.position.set(
+        p.x + rx * (side * depth + frontX - side * 0.12),
+        1.12,
+        p.z + rz * (side * depth + frontX - side * 0.12),
+      );
+      dummy.updateMatrix();
+      entryDoors.setMatrixAt(entryCount, dummy.matrix);
+      dummy.position.set(
+        p.x + rx * (side * depth + frontX - side * 0.36),
+        0.12,
+        p.z + rz * (side * depth + frontX - side * 0.36),
+      );
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      entrySteps.setMatrixAt(entryCount, dummy.matrix);
+      dummy.position.set(
+        p.x + rx * (side * depth + frontX - side * 0.2),
+        2.62,
+        p.z + rz * (side * depth + frontX - side * 0.2) - rz * 0.82,
+      );
+      dummy.updateMatrix();
+      entryLamps.setMatrixAt(entryCount, dummy.matrix);
+      entryCount++;
     }
 
     // Balconies face the road; their local X side is the street-facing wall.
@@ -2181,6 +2232,14 @@ function buildCity(scene: THREE.Scene, track: Track) {
   railMesh.count = balconyCount;
   acUnits.count = acCount;
   acGrilles.count = acCount;
+  entryDoors.count = entryCount;
+  entryFrames.count = entryCount;
+  entrySteps.count = entryCount;
+  entryLamps.count = entryCount;
+  entryDoors.instanceMatrix.needsUpdate = true;
+  entryFrames.instanceMatrix.needsUpdate = true;
+  entrySteps.instanceMatrix.needsUpdate = true;
+  entryLamps.instanceMatrix.needsUpdate = true;
   acUnits.instanceMatrix.needsUpdate = true;
   acGrilles.instanceMatrix.needsUpdate = true;
   balconyMesh.instanceMatrix.needsUpdate = true;
@@ -2193,7 +2252,7 @@ function buildCity(scene: THREE.Scene, track: Track) {
     mesh.count = signCounts[i];
     mesh.instanceMatrix.needsUpdate = true;
   });
-  scene.add(balconyMesh, railMesh, shopGlass, shopDoors, acUnits, acGrilles);
+  scene.add(balconyMesh, railMesh, shopGlass, shopDoors, acUnits, acGrilles, entryDoors, entryFrames, entrySteps, entryLamps);
   signMeshes.forEach((mesh) => scene.add(mesh));
   awnings.forEach((mesh, i) => {
     mesh.count = awningCounts[i];
@@ -2515,7 +2574,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, play
   scene.add(skin, legsL, legsR, armsL, armsR);
 
   // Reposition each walker along the sidewalk and animate a coordinated arm/leg stride.
-  return (time: number) => {
+  return (time: number, playerX: number, playerZ: number) => {
     const leg = new THREE.Object3D();
     walkers.forEach((walker, i) => {
       const p = track.sample(walker.s + time * walker.speed * walker.direction);
