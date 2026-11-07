@@ -1167,32 +1167,61 @@ export function mountGame(
         if (n.brake <= 0 && Math.random() < dt * 0.15) n.brake = 1.3;
         if (n.brake > 0) target = Math.min(target, 2.2);
       }
+      // Follow traffic with a longer buffer for large vehicles and higher closing speeds.
+      let leadGap = Infinity;
+      let leadSpeed = target;
       for (const o of npcs) {
-        if (o === n || !o.alive) continue;
-        if (Math.abs(o.lane - n.lane) > 0.75) continue;
+        if (o === n || !o.alive || Math.abs(o.lane - n.lane) > 0.72) continue;
         const gap = wrapDelta(o.s, n.s, track.total);
-        if (gap > 0 && gap < 14) target = Math.min(target, o.speed * 0.92);
-      }
-      n.speed += (target - n.speed) * Math.min(1, dt * 1.4);
-      n.speed = Math.max(2, n.speed);
-      n.s += n.speed * dt;
-      n.nextLane -= dt;
-      if (n.nextLane <= 0) {
-        n.nextLane = 3 + Math.random() * 5;
-        const dir = Math.random() < 0.5 ? -1 : 1;
-        n.laneTarget = Math.max(0, Math.min(3, Math.round(n.lane + dir)));
-        if (n.kind === "tuktuk" && Math.random() < 0.4) {
-          n.laneTarget = Math.random() < 0.5 ? 0 : 3;
+        if (gap > 0 && gap < leadGap) {
+          leadGap = gap;
+          leadSpeed = o.speed;
         }
       }
-      const blocked = npcs.some((o) => {
-        if (o === n) return false;
-        return Math.abs(o.lane - n.laneTarget) < 0.4 && Math.abs(wrapDelta(o.s, n.s, track.total)) < 8;
+      const safeGap = 5.5 + spec.length * 0.72 + Math.max(0, n.speed - leadSpeed) * 0.9;
+      if (leadGap < safeGap + 10) {
+        const followFactor = Math.max(0.28, Math.min(1, (leadGap - safeGap) / 10));
+        target = Math.min(target, leadSpeed * followFactor + 1.1);
+      }
+      n.speed += (target - n.speed) * Math.min(1, dt * (target < n.speed ? 3.2 : 1.25));
+      n.speed = Math.max(1.2, n.speed);
+      n.s += n.speed * dt;
+
+      n.nextLane -= dt;
+      if (n.nextLane <= 0) {
+        n.nextLane = 4 + Math.random() * 5;
+        const dir = Math.random() < 0.5 ? -1 : 1;
+        let desiredLane = Math.max(0, Math.min(3, Math.round(n.lane + dir)));
+        if (n.kind === "tuktuk" && Math.random() < 0.28) {
+          desiredLane = Math.random() < 0.5 ? 0 : 3;
+        }
+        const laneIsSafe = (lane: number) => npcs.every((o) => {
+          if (o === n || !o.alive || Math.abs(o.lane - lane) > 0.68) return true;
+          const frontGap = wrapDelta(o.s, n.s, track.total);
+          const rearGap = wrapDelta(n.s, o.s, track.total);
+          return !(frontGap > 0 && frontGap < 13 + spec.length * 0.45)
+            && !(rearGap > 0 && rearGap < 9 + vehicleById(o.kind).length * 0.35);
+        });
+        if (desiredLane !== Math.round(n.lane) && laneIsSafe(desiredLane)) {
+          n.laneTarget = desiredLane;
+        } else {
+          n.laneTarget = Math.round(n.lane);
+        }
+      }
+
+      const targetLaneSafe = npcs.every((o) => {
+        if (o === n || !o.alive || Math.abs(o.lane - n.laneTarget) > 0.68) return true;
+        const frontGap = wrapDelta(o.s, n.s, track.total);
+        const rearGap = wrapDelta(n.s, o.s, track.total);
+        return !(frontGap > 0 && frontGap < 10 + spec.length * 0.4)
+          && !(rearGap > 0 && rearGap < 8 + vehicleById(o.kind).length * 0.3);
       });
-      if (!blocked) {
+      if (targetLaneSafe) {
         const diff = n.laneTarget - n.lane;
-        const stepL = Math.max(-1, Math.min(1, diff)) * dt * 0.85;
+        const stepL = Math.max(-1, Math.min(1, diff)) * dt * 0.62;
         n.lane += stepL;
+      } else {
+        n.laneTarget = Math.round(n.lane);
       }
       if (ahead < -30 || ahead > 340) {
         n.s = proj.s + 180 + Math.random() * 150;
