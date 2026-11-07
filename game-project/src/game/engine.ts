@@ -1174,17 +1174,15 @@ export function mountGame(
           const d = wrapDelta(track.stops[i].s, n.s, track.total);
           // Microbuses in the curb-side lanes slow down and briefly wait at stops.
           if (n.lane > 1.5 && d > -10 && d < 34) {
-            const stopApproachSpeed = d < 8
-              ? Math.max(0, (d - 1.2) * 0.62)
-              : 3.2;
+            const stopApproachSpeed = Math.min(3.2, Math.max(0, (d - 1.8) * 0.5));
             target = Math.min(target, stopApproachSpeed);
-            if (d < 2.2 && d > -1.5 && n.stopAt !== i && n.stopTimer <= 0) {
+            if (d < 2.4 && d > -1.2 && n.stopAt !== i && n.stopTimer <= 0 && n.speed < 4.2) {
               n.stopAt = i;
               n.stopTimer = 1.8 + Math.random() * 1.8;
             }
             // A bus fully stops while boarding/alighting instead of crawling forward.
             if (n.stopTimer > 0 && n.stopAt === i) target = 0;
-          } else if (n.stopAt === i && d < -10) {
+          } else if (n.stopAt === i && d < -6) {
             n.stopAt = -1;
           }
         }
@@ -1209,12 +1207,13 @@ export function mountGame(
         }
         if (redLight) {
           redStopDistance = Math.min(redStopDistance, distanceToLine);
-          const approachSpeed = distanceToLine > 2.4
-            ? Math.max(0, (distanceToLine - 2.4) * 0.82)
+          const approachSpeed = distanceToLine > 2.8
+            ? Math.max(0, (distanceToLine - 2.8) * 0.72)
             : 0;
           target = Math.min(target, approachSpeed);
-        } else if (amberLight && distanceToLine > 9) {
-          target = Math.min(target, 4.2);
+        } else if (amberLight && distanceToLine > 7) {
+          const amberApproach = Math.max(2.8, Math.min(5.2, (distanceToLine - 2.4) * 0.58));
+          target = Math.min(target, amberApproach);
         }
       }
       // Release a queue in sequence after green: vehicles closest to the line
@@ -1228,7 +1227,7 @@ export function mountGame(
             queueAhead++;
           }
         }
-        const releaseAt = Math.min(13.2, 8.2 + queueAhead * 0.42);
+        const releaseAt = Math.min(13.35, 8.2 + queueAhead * 0.5);
         const greenElapsed = Math.max(0, signalCycle - releaseAt);
         target = Math.min(target, greenElapsed <= 0 ? 0 : greenElapsed * 2.6);
       }
@@ -1262,9 +1261,9 @@ export function mountGame(
         : n.kind === "taxi" ? 1.04 : 0.94;
       const safeGap = (5.5 + spec.length * 0.72
         + Math.max(0, n.speed - leadSpeed) * 0.9) * gapFactor;
-      if (leadGap < safeGap + 10) {
-        const followFactor = Math.max(0, Math.min(1, (leadGap - safeGap) / 10));
-        const queueCreep = Math.max(0, leadGap - safeGap) * 0.16;
+      if (leadGap < safeGap + 12) {
+        const followFactor = Math.max(0, Math.min(1, (leadGap - safeGap) / 12));
+        const queueCreep = leadSpeed < 0.5 ? 0 : Math.max(0, leadGap - safeGap) * 0.12;
         target = Math.min(target, leadSpeed * followFactor + queueCreep);
       }
       const brakeResponse = n.kind === "truck" ? 2.35 : n.kind === "micro" ? 2.8 : 3.5;
@@ -1275,7 +1274,7 @@ export function mountGame(
       // physical buffer before the line so vehicles do not creep through it.
       n.speed = Math.max(0, n.speed);
       if (redStopDistance < Infinity) {
-        const room = Math.max(0, redStopDistance - 2.4);
+        const room = Math.max(0, redStopDistance - 2.8);
         if (n.speed * dt > room) n.speed = room / Math.max(dt, 0.0001);
       }
       n.s += n.speed * dt;
@@ -1336,7 +1335,7 @@ export function mountGame(
 
       // Keep vehicles committed to their approach lane close to a signal.
       // This prevents late lane changes from cutting around a stopped queue.
-      if (nearestSignalDistance < 22) {
+      if (nearestSignalDistance < 26) {
         n.laneTarget = Math.round(n.lane);
       }
 
@@ -1355,6 +1354,9 @@ export function mountGame(
             && !(rearGap > 0 && rearGap < 8 + vehicleById(o.kind).length * 0.3);
         });
       })();
+      if (leadGap < safeGap + 5 && n.speed < 3.5) {
+        n.laneTarget = Math.round(n.lane);
+      }
       if (targetLaneSafe) {
         const diff = n.laneTarget - n.lane;
         const laneRate = n.kind === "truck" ? 0.34
