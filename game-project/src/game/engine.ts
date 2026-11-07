@@ -2286,6 +2286,8 @@ function buildCity(scene: THREE.Scene, track: Track) {
     const p = pts[i];
     const rx = Math.cos(p.yaw);
     const rz = -Math.sin(p.yaw);
+    const fx = -Math.sin(p.yaw);
+    const fz = -Math.cos(p.yaw);
     const hsh = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
     const side = i % 12 === 0 ? -1 : 1;
     const shop = hsh > 0.68;
