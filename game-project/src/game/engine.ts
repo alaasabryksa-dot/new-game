@@ -2213,6 +2213,11 @@ function buildCity(scene: THREE.Scene, track: Track) {
   const shopDoorGeo = new THREE.BoxGeometry(0.14, 1.9, 0.72);
   const shopDoorMat = new THREE.MeshStandardMaterial({ color: "#4b4540", roughness: 0.55 });
   const shopDoors = new THREE.InstancedMesh(shopDoorGeo, shopDoorMat, 100);
+  const shopLightGeo = new THREE.BoxGeometry(0.1, 0.12, 1.2);
+  const shopLightMat = new THREE.MeshStandardMaterial({
+    color: "#ffe0a0", emissive: "#ffbd55", emissiveIntensity: 0.75, roughness: 0.42,
+  });
+  const shopLights = new THREE.InstancedMesh(shopLightGeo, shopLightMat, 100);
   const shopShelfGeo = new THREE.BoxGeometry(0.48, 0.72, 1.55);
   const shopShelfMat = new THREE.MeshStandardMaterial({ color: "#8a6544", roughness: 0.88 });
   const shopShelves = new THREE.InstancedMesh(shopShelfGeo, shopShelfMat, 100);
@@ -2422,6 +2427,15 @@ function buildCity(scene: THREE.Scene, track: Track) {
       dummy.scale.set(1, 1, 1);
       dummy.updateMatrix();
       shopDoors.setMatrixAt(shopFrontCount, dummy.matrix);
+      dummy.position.set(
+        p.x + rx * (side * depth + frontX - side * 0.54),
+        2.43,
+        p.z + rz * (side * depth + frontX - side * 0.54),
+      );
+      dummy.rotation.set(0, p.yaw, 0);
+      dummy.scale.set(1, 1, deep * 0.58);
+      dummy.updateMatrix();
+      shopLights.setMatrixAt(shopFrontCount, dummy.matrix);
 
       // Simple shelves and colorful packaged goods behind the storefront glazing.
       const inside = frontX + side * 0.58;
@@ -2487,6 +2501,8 @@ function buildCity(scene: THREE.Scene, track: Track) {
   railMesh.instanceMatrix.needsUpdate = true;
   shopGlass.count = shopFrontCount;
   shopDoors.count = shopFrontCount;
+  shopLights.count = shopFrontCount;
+  shopLights.instanceMatrix.needsUpdate = true;
   shopShelves.count = shopDisplayCount;
   shopShelves.instanceMatrix.needsUpdate = true;
   shopGoods.forEach((mesh, index) => {
@@ -2500,7 +2516,7 @@ function buildCity(scene: THREE.Scene, track: Track) {
     mesh.count = signCounts[i];
     mesh.instanceMatrix.needsUpdate = true;
   });
-  scene.add(balconyMesh, railMesh, shopGlass, shopDoors, shopShelves, acUnits, acGrilles, entryDoors, entryFrames, entrySteps, entryLamps);
+  scene.add(balconyMesh, railMesh, shopGlass, shopDoors, shopLights, shopShelves, acUnits, acGrilles, entryDoors, entryFrames, entrySteps, entryLamps);
   signMeshes.forEach((mesh) => scene.add(mesh));
   awnings.forEach((mesh, i) => {
     mesh.count = awningCounts[i];
