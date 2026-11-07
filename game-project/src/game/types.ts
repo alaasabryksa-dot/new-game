@@ -160,6 +160,8 @@ export type Hud = {
   time: number;
   crashes: number;
   passengers: { dest: string; fare: number }[];
+  onboardFareTotal: number;
+  waitingPassengers: number;
   seats: number;
   stopName: string;
   stopDist: number;
