@@ -1608,24 +1608,10 @@ export function mountGame(
     }
   };
   const onUp = (e: KeyboardEvent) => keys.delete(e.code);
-  const pauseForInterruption = () => {
-    keys.clear();
-    touch.steer = 0;
-    touch.throttle = 0;
-    touch.brake = 0;
-    if (phase === "play") {
-      phase = "pause";
-      publish();
-    }
-  };
-  const onBlur = () => pauseForInterruption();
-  const onVisibilityChange = () => {
-    if (document.visibilityState === "hidden") pauseForInterruption();
-  };
+  const onBlur = () => keys.clear();
   window.addEventListener("keydown", onDown);
   window.addEventListener("keyup", onUp);
   window.addEventListener("blur", onBlur);
-  document.addEventListener("visibilitychange", onVisibilityChange);
 
   function honk() {
     if (hornCd > 0) return;
@@ -1729,7 +1715,6 @@ export function mountGame(
       window.removeEventListener("keydown", onDown);
       window.removeEventListener("keyup", onUp);
       window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
       if (window.__controlsTest?.getYaw === (() => player.yaw) || window.__controlsTest) {
         delete window.__controlsTest;
       }
