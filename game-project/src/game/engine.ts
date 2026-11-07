@@ -549,6 +549,7 @@ export function mountGame(
   scene.add(ground);
 
   buildRoad(scene, track);
+  buildStreetSigns(scene, track);
   buildElectricalPoles(scene, track);
   const buildings = buildCity(scene, track);
   buildRooftopLife(scene, track);
@@ -1975,6 +1976,69 @@ function buildRoad(scene: THREE.Scene, track: Track) {
   eg.setAttribute("position", new THREE.Float32BufferAttribute(edges, 3));
   eg.computeVertexNormals();
   scene.add(new THREE.Mesh(eg, edgeMat));
+}
+
+function buildStreetSigns(scene: THREE.Scene, track: Track) {
+  const postMat = new THREE.MeshStandardMaterial({ color: "#777b7c", roughness: 0.78, metalness: 0.35 });
+  const frameMat = new THREE.MeshStandardMaterial({ color: "#d4bd8a", roughness: 0.7, metalness: 0.12 });
+  const labels = [
+    { title: "شارع الفيوم", subtitle: "دار السلام", color: "#174b68" },
+    { title: "منطقة سكنية", subtitle: "خفف السرعة", color: "#286044" },
+    { title: "اتجاه السوق", subtitle: "يرجى الانتباه", color: "#8b4b2d" },
+    { title: "دار السلام", subtitle: "أهلاً بيك", color: "#174b68" },
+    { title: "محطة وقود", subtitle: "على الطريق", color: "#286044" },
+    { title: "شارع الفيوم", subtitle: "طريق رئيسي", color: "#174b68" },
+  ];
+  const postGeo = new THREE.CylinderGeometry(0.075, 0.11, 3.4, 7);
+  const boardGeo = new THREE.PlaneGeometry(3.15, 1.12);
+  const frameGeo = new THREE.BoxGeometry(3.28, 1.25, 0.09);
+
+  labels.forEach((label, index) => {
+    const s = track.stops[index % track.stops.length].s + (index >= track.stops.length ? 38 : 0);
+    const p = track.sample(s);
+    const side = index % 2 === 0 ? 1 : -1;
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const x = p.x + rx * side * (ROAD_HALF + 5.15);
+    const z = p.z + rz * side * (ROAD_HALF + 5.15);
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+    group.rotation.y = p.yaw + (side < 0 ? Math.PI : 0);
+
+    const post = new THREE.Mesh(postGeo, postMat);
+    post.position.y = 1.7;
+    const frame = new THREE.Mesh(frameGeo, frameMat);
+    frame.position.set(0, 3.05, 0);
+    const canvas = document.createElement("canvas");
+    canvas.width = 768;
+    canvas.height = 272;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = label.color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#e5cf9d";
+      ctx.lineWidth = 12;
+      ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+      ctx.direction = "rtl";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#fff4d9";
+      ctx.font = "bold 76px Tajawal, sans-serif";
+      ctx.fillText(label.title, 384, 112);
+      ctx.fillStyle = "#f0d79f";
+      ctx.font = "bold 43px Tajawal, sans-serif";
+      ctx.fillText(label.subtitle, 384, 207);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const boardMat = new THREE.MeshStandardMaterial({
+      map: texture, roughness: 0.68, side: THREE.DoubleSide,
+    });
+    const board = new THREE.Mesh(boardGeo, boardMat);
+    board.position.set(0, 3.05, 0.055);
+    group.add(post, frame, board);
+    scene.add(group);
+  });
 }
 
 function buildElectricalPoles(scene: THREE.Scene, track: Track) {
