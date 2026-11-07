@@ -1193,13 +1193,15 @@ export function mountGame(
       const signalCycle = trafficClock % 14;
       const redLight = signalCycle < 7;
       const amberLight = signalCycle >= 7 && signalCycle < 8.2;
+      let redStopDistance = Infinity;
       for (const stop of track.stops) {
         const distanceToLine = wrapDelta(stop.s, n.s, track.total);
         if (distanceToLine <= 0 || distanceToLine > 30) continue;
         if (redLight) {
+          redStopDistance = Math.min(redStopDistance, distanceToLine);
           const approachSpeed = distanceToLine > 5
-            ? Math.max(0.8, (distanceToLine - 2.4) * 0.72)
-            : 0.35;
+            ? Math.max(0, (distanceToLine - 2.4) * 0.72)
+            : 0;
           target = Math.min(target, approachSpeed);
         } else if (amberLight && distanceToLine > 9) {
           target = Math.min(target, 4.2);
@@ -1243,7 +1245,13 @@ export function mountGame(
       const accelResponse = n.kind === "truck" ? 0.72 : n.kind === "tuktuk" ? 1.55 : n.kind === "taxi" ? 1.35 : 1.2;
       n.speed += (target - n.speed) * Math.min(1,
         dt * (target < n.speed ? brakeResponse : accelResponse));
-      n.speed = Math.max(1.2, n.speed);
+      // Allow a true standstill at red lights and in queues. Keep a small
+      // physical buffer before the line so vehicles do not creep through it.
+      n.speed = Math.max(0, n.speed);
+      if (redStopDistance < Infinity) {
+        const room = Math.max(0, redStopDistance - 2.4);
+        if (n.speed * dt > room) n.speed = room / Math.max(dt, 0.0001);
+      }
       n.s += n.speed * dt;
 
       n.nextLane -= dt;
