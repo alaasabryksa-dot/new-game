@@ -552,7 +552,7 @@ export function mountGame(
   const buildings = buildCity(scene, track);
   const lamps = buildLamps(scene, track);
   buildStreetFurniture(scene, track);
-  buildPedestrians(scene, track);
+  const animatePedestrians = buildPedestrians(scene, track);
   buildGantries(scene, track);
   buildQuarter(scene, track);
   const signs: THREE.Mesh[] = [];
@@ -1627,6 +1627,7 @@ export function mountGame(
       acc -= 1 / 60;
       steps++;
     }
+    animatePedestrians(now / 1000);
     render(dt);
     hudAcc += dt;
     if (hudAcc > 0.12) {
@@ -2323,8 +2324,9 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   scene.add(trunk, canopy, bins, bollards);
 }
 
-function buildPedestrians(scene: THREE.Scene, track: Track) {
+function buildPedestrians(scene: THREE.Scene, track: Track): (time: number) => void {
   const pts = track.pts;
+  const walkData: { x: number; z: number; yaw: number; phase: number }[] = [];
   const torsos: THREE.Matrix4[] = [];
   const heads: THREE.Matrix4[] = [];
   const leftLegs: THREE.Matrix4[] = [];
@@ -2356,6 +2358,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track) {
     const x = p.x + rx * lat;
     const z = p.z + rz * lat;
     const yaw = p.yaw + (side > 0 ? Math.PI / 2 : -Math.PI / 2);
+    walkData.push({ x, z, yaw, phase: count * 1.73 });
     o.rotation.set(0, yaw, 0);
     o.position.set(x, 1.13, z);
     o.scale.set(1, 1, 1);
@@ -2396,6 +2399,29 @@ function buildPedestrians(scene: THREE.Scene, track: Track) {
   legsL.instanceMatrix.needsUpdate = true;
   legsR.instanceMatrix.needsUpdate = true;
   scene.add(skin, legsL, legsR);
+
+  // Animate a restrained alternating step cycle without moving pedestrians off the pavement.
+  const leg = new THREE.Object3D();
+  return (time: number) => {
+    walkData.forEach((person, i) => {
+      const swing = Math.sin(time * 2.7 + person.phase) * 0.34;
+      const setLeg = (mesh: THREE.InstancedMesh, angle: number, offset: number) => {
+        leg.position.set(
+          person.x + Math.cos(person.yaw) * offset,
+          0.52,
+          person.z - Math.sin(person.yaw) * offset,
+        );
+        leg.rotation.set(angle, person.yaw, 0);
+        leg.scale.set(1, 1, 1);
+        leg.updateMatrix();
+        mesh.setMatrixAt(i, leg.matrix);
+      };
+      setLeg(legsL, swing, -0.13);
+      setLeg(legsR, -swing, 0.13);
+    });
+    legsL.instanceMatrix.needsUpdate = true;
+    legsR.instanceMatrix.needsUpdate = true;
+  };
 }
 
 function buildGantries(scene: THREE.Scene, track: Track) {
