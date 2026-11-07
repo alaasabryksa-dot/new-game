@@ -1195,10 +1195,14 @@ export function mountGame(
       const amberLight = signalCycle >= 7 && signalCycle < 8.2;
       let redStopDistance = Infinity;
       let nearestSignalDistance = Infinity;
+      let nearestSignalStopS = -1;
       for (const stop of track.stops) {
         const distanceToLine = wrapDelta(stop.s, n.s, track.total);
         if (distanceToLine <= 0 || distanceToLine > 30) continue;
-        nearestSignalDistance = Math.min(nearestSignalDistance, distanceToLine);
+        if (distanceToLine < nearestSignalDistance) {
+          nearestSignalDistance = distanceToLine;
+          nearestSignalStopS = stop.s;
+        }
         if (redLight) {
           redStopDistance = Math.min(redStopDistance, distanceToLine);
           const approachSpeed = distanceToLine > 5
@@ -1215,14 +1219,7 @@ export function mountGame(
         let queueAhead = 0;
         for (const other of npcs) {
           if (other === n || !other.alive || Math.abs(other.lane - n.lane) > 0.72) continue;
-          const otherDistance = wrapDelta(
-            track.stops.reduce((best, stop) => {
-              const d = wrapDelta(stop.s, other.s, track.total);
-              return d > 0 && d < best ? d : best;
-            }, Infinity) === Infinity ? n.s : track.stops[0].s,
-            other.s,
-            track.total,
-          );
+          const otherDistance = wrapDelta(nearestSignalStopS, other.s, track.total);
           if (otherDistance > 0 && otherDistance < nearestSignalDistance && otherDistance <= 30) {
             queueAhead++;
           }
