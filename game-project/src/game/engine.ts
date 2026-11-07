@@ -1329,6 +1329,12 @@ export function mountGame(
         }
       }
 
+      // Keep vehicles committed to their approach lane close to a signal.
+      // This prevents late lane changes from cutting around a stopped queue.
+      if (nearestSignalDistance < 18) {
+        n.laneTarget = Math.round(n.lane);
+      }
+
       const targetLaneSafe = (() => {
         if (n.laneTarget === playerLane) {
           const frontGap = wrapDelta(proj.s, n.s, track.total);
