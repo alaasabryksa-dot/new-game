@@ -313,19 +313,71 @@ function buildPlayer(kind: VehicleId, hex: string) {
 
 function facadeTexture(base: string) {
   const c = document.createElement("canvas");
-  c.width = 128;
-  c.height = 256;
+  c.width = 256;
+  c.height = 512;
   const g = c.getContext("2d");
   if (!g) return null;
+
   g.fillStyle = base;
-  g.fillRect(0, 0, 128, 256);
-  g.fillStyle = "rgba(0,0,0,0.06)";
-  for (let y = 0; y < 256; y += 18) g.fillRect(0, y, 128, 2);
-  for (let y = 14; y < 248; y += 28) {
-    for (let x = 10; x < 118; x += 22) {
-      g.fillStyle = Math.sin(x * 12.3 + y) > 0 ? "#d5e2ea" : "#8aa0ad";
-      g.fillRect(x, y, 12, 16);
+  g.fillRect(0, 0, c.width, c.height);
+
+  // Subtle plaster variation and horizontal floor bands.
+  for (let y = 0; y < c.height; y += 4) {
+    const shade = Math.sin(y * 0.17) * 3;
+    g.fillStyle = shade > 0 ? "rgba(255,255,255,0.035)" : "rgba(45,35,25,0.025)";
+    g.fillRect(0, y, c.width, 2);
+  }
+  for (let y = 0; y <= c.height; y += 128) {
+    g.fillStyle = "rgba(70,55,42,0.16)";
+    g.fillRect(0, y, c.width, 5);
+    g.fillStyle = "rgba(255,255,255,0.22)";
+    g.fillRect(0, y + 5, c.width, 2);
+  }
+
+  // Repeated apartment windows with frames, recessed glass and occasional balconies.
+  for (let floor = 0; floor < 4; floor++) {
+    const y = 20 + floor * 124;
+    for (let col = 0; col < 4; col++) {
+      const x = 12 + col * 62;
+      const warm = (floor * 7 + col * 11 + base.length) % 5 === 0;
+      g.fillStyle = "rgba(65,52,42,0.28)";
+      g.fillRect(x - 4, y - 4, 43, 76);
+      g.fillStyle = "#d7d0c2";
+      g.fillRect(x - 2, y - 2, 39, 72);
+      g.fillStyle = warm ? "#b6a17e" : "#8299a3";
+      g.fillRect(x + 2, y + 2, 31, 64);
+      g.fillStyle = "rgba(245,248,238,0.72)";
+      g.fillRect(x + 4, y + 4, 4, 58);
+      g.fillStyle = "rgba(35,48,54,0.55)";
+      g.fillRect(x + 17, y + 2, 2, 64);
+      g.fillRect(x + 2, y + 32, 31, 2);
+
+      if ((floor + col) % 3 === 0) {
+        g.fillStyle = "#b9b2a5";
+        g.fillRect(x - 7, y + 68, 45, 5);
+        g.fillStyle = "#6e7778";
+        g.fillRect(x - 7, y + 73, 45, 3);
+        g.fillStyle = "#aeb9b8";
+        g.fillRect(x - 5, y + 57, 2, 15);
+        g.fillRect(x + 36, y + 57, 2, 15);
+        g.fillRect(x + 8, y + 57, 2, 15);
+        g.fillRect(x + 20, y + 57, 2, 15);
+      }
+      if ((floor * 3 + col) % 4 === 0) {
+        g.fillStyle = "#e7e2d8";
+        g.fillRect(x + 35, y + 20, 10, 16);
+        g.fillStyle = "#737b7d";
+        g.fillRect(x + 33, y + 36, 14, 3);
+      }
     }
+  }
+
+  // Weathering near the lower edge and small facade details.
+  g.fillStyle = "rgba(80,65,50,0.13)";
+  g.fillRect(0, 480, 256, 32);
+  for (let x = 8; x < 250; x += 31) {
+    g.fillStyle = "rgba(45,45,42,0.18)";
+    g.fillRect(x, 486 + (x % 3) * 3, 12, 3);
   }
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -1845,50 +1897,128 @@ function buildCity(scene: THREE.Scene, track: Track) {
       emissive: "#ffcc77",
       emissiveMap: emissive ?? undefined,
       emissiveIntensity: 0,
-      roughness: 0.86,
+      roughness: 0.9,
     });
     mats.push(mat);
-    const mesh = new THREE.InstancedMesh(geos, mat, 160);
+    const mesh = new THREE.InstancedMesh(geos, mat, 180);
     mesh.count = 0;
     scene.add(mesh);
     meshes.push(mesh);
   });
+
   const counts = bases.map(() => 0);
   const dummy = new THREE.Object3D();
   const tanks: THREE.Matrix4[] = [];
   const tankO = new THREE.Object3D();
   const pts = track.pts;
-  for (let i = 0; i < pts.length; i += 5) {
+
+  // Repeated low-cost details add visible street-facing depth without hundreds of draw calls.
+  const balconyGeo = new THREE.BoxGeometry(1, 0.16, 1.15);
+  const balconyMat = new THREE.MeshStandardMaterial({ color: "#c9c0b2", roughness: 0.86 });
+  const balconyMesh = new THREE.InstancedMesh(balconyGeo, balconyMat, 260);
+  const railGeo = new THREE.BoxGeometry(1, 0.72, 0.09);
+  const railMat = new THREE.MeshStandardMaterial({ color: "#aeb6b5", metalness: 0.28, roughness: 0.58 });
+  const railMesh = new THREE.InstancedMesh(railGeo, railMat, 260);
+  const awningGeo = new THREE.BoxGeometry(1, 0.18, 1.1);
+  const awningMats = ["#b84f3d", "#d6a23b", "#397f7a", "#e7e0d2"].map(
+    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.76 }),
+  );
+  const awnings = awningMats.map((mat) => new THREE.InstancedMesh(awningGeo, mat, 100));
+  const signGeo = new THREE.BoxGeometry(1, 0.72, 0.16);
+  const signMat = new THREE.MeshStandardMaterial({ color: "#174b70", roughness: 0.68 });
+  const shopSigns = new THREE.InstancedMesh(signGeo, signMat, 100);
+  let balconyCount = 0;
+  let awningCount = 0;
+  let signCount = 0;
+  const awningCounts = [0, 0, 0, 0];
+
+  for (let i = 0; i < pts.length; i += 4) {
     const p = pts[i];
     const rx = Math.cos(p.yaw);
     const rz = -Math.sin(p.yaw);
     const hsh = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
-    const side = i % 14 === 0 ? -1 : 1;
-    const shop = hsh > 0.72;
-    const depth = 15 + hsh * 4;
-    const height = shop ? 3.4 : 5 + hsh * 12;
-    const width = 7 + hsh * 4;
-    const deep = 6 + (1 - hsh) * 4;
-    const idx = i % meshes.length;
-    if (counts[idx] >= 160) continue;
+    const side = i % 12 === 0 ? -1 : 1;
+    const shop = hsh > 0.68;
+    const depth = 15.5 + hsh * 5.5;
+    const floors = shop ? 1 : 2 + Math.floor(hsh * 4.5);
+    const height = shop ? 3.8 : 5.2 + floors * 2.65;
+    const width = 8 + hsh * 5;
+    const deep = 7 + (1 - hsh) * 4;
+    const idx = (i / 4) % meshes.length;
+    if (counts[idx] >= 180) continue;
+
     dummy.position.set(p.x + rx * side * depth, height / 2, p.z + rz * side * depth);
     dummy.rotation.set(0, p.yaw, 0);
     dummy.scale.set(width, height, deep);
     dummy.updateMatrix();
     meshes[idx].setMatrixAt(counts[idx]++, dummy.matrix);
-    if (hsh > 0.55) {
-      tankO.position.set(p.x + rx * side * depth, height + 0.7, p.z + rz * side * depth);
+
+    // Balconies face the road; their local X side is the street-facing wall.
+    if (!shop && balconyCount < 260) {
+      const frontX = -side * (width / 2 + 0.22);
+      const balconyFloors = Math.min(3, Math.max(1, floors - 1));
+      for (let floor = 1; floor <= balconyFloors && balconyCount < 260; floor++) {
+        const y = 2.2 + floor * 2.65;
+        dummy.position.set(p.x + rx * (side * depth + frontX), y, p.z + rz * (side * depth + frontX));
+        dummy.rotation.set(0, p.yaw, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        balconyMesh.setMatrixAt(balconyCount, dummy.matrix);
+        dummy.position.set(
+          p.x + rx * (side * depth + frontX - side * 0.56),
+          y + 0.42,
+          p.z + rz * (side * depth + frontX - side * 0.56),
+        );
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        railMesh.setMatrixAt(balconyCount, dummy.matrix);
+        balconyCount++;
+      }
+    }
+
+    if (shop && awningCount < 100 && signCount < 100) {
+      const frontX = -side * (width / 2 + 0.45);
+      const awningIndex = Math.floor(hsh * 1000) % awnings.length;
+      dummy.position.set(p.x + rx * (side * depth + frontX), 2.55, p.z + rz * (side * depth + frontX));
+      dummy.rotation.set(0, p.yaw, 0);
+      dummy.scale.set(width * 0.92, 1, 1);
+      dummy.updateMatrix();
+      awnings[awningIndex].setMatrixAt(awningCounts[awningIndex]++, dummy.matrix);
+      awningCount++;
+
+      dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.12), 3.22, p.z + rz * (side * depth + frontX - side * 0.12));
+      dummy.scale.set(width * 0.72, 1, 1);
+      dummy.updateMatrix();
+      shopSigns.setMatrixAt(signCount++, dummy.matrix);
+    }
+
+    if (hsh > 0.57) {
+      tankO.position.set(p.x + rx * side * depth, height + 0.72, p.z + rz * side * depth);
       tankO.scale.set(1, 1, 1);
       tankO.rotation.set(0, 0, 0);
       tankO.updateMatrix();
       tanks.push(tankO.matrix.clone());
     }
   }
+
   meshes.forEach((m, i) => {
     m.count = counts[i];
     m.instanceMatrix.needsUpdate = true;
     m.computeBoundingSphere();
   });
+  balconyMesh.count = balconyCount;
+  railMesh.count = balconyCount;
+  shopSigns.count = signCount;
+  balconyMesh.instanceMatrix.needsUpdate = true;
+  railMesh.instanceMatrix.needsUpdate = true;
+  shopSigns.instanceMatrix.needsUpdate = true;
+  scene.add(balconyMesh, railMesh, shopSigns);
+  awnings.forEach((mesh, i) => {
+    mesh.count = awningCounts[i];
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  });
+
   if (tanks.length) {
     const tankMesh = new THREE.InstancedMesh(
       new THREE.CylinderGeometry(0.8, 0.8, 1.3, 8),
