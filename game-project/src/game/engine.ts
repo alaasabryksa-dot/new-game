@@ -859,6 +859,9 @@ export function mountGame(
   void document.fonts?.ready.then(() => drawSigns());
 
   function persist() {
+    money = Number.isFinite(money) ? Math.max(0, money) : 0;
+    km = Number.isFinite(km) ? Math.max(0, km) : 0;
+    fuel = Number.isFinite(fuel) ? Math.max(0, Math.min(100, fuel)) : 0;
     if (Number.isFinite(money) && money > save.bestMoney) save.bestMoney = money;
     if (Number.isFinite(km) && km > save.bestKm) save.bestKm = km;
     save.sound = sfx.on;
@@ -1794,7 +1797,7 @@ export function mountGame(
 
   function frame(now: number) {
     if (!running) return;
-    const dt = Math.min(0.05, (now - last) / 1000);
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     acc += dt;
     let steps = 0;
@@ -1816,9 +1819,10 @@ export function mountGame(
   }
 
   function resize() {
-    const w = canvas.clientWidth || 1;
-    const h = canvas.clientHeight || 1;
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+    if (!running) return;
+    const w = Math.max(1, canvas.clientWidth || 1);
+    const h = Math.max(1, canvas.clientHeight || 1);
+    const dpr = Math.min(window.devicePixelRatio || 1, window.matchMedia('(pointer: coarse)').matches ? 1.35 : 1.6);
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
@@ -1848,6 +1852,8 @@ export function mountGame(
     touch.brake = 0;
     if (phase === "play") {
       phase = "pause";
+      last = performance.now();
+      acc = 0;
       publish();
     }
   };
@@ -1901,18 +1907,26 @@ export function mountGame(
     },
     start,
     pause: () => {
+      keys.clear();
+      touch.steer = touch.throttle = touch.brake = 0;
       if (phase === "play") {
         phase = "pause";
         publish();
       }
     },
     resume: () => {
+      keys.clear();
+      touch.steer = touch.throttle = touch.brake = 0;
+      last = performance.now();
+      acc = 0;
       if (phase === "pause") {
         phase = "play";
         publish();
       }
     },
     quit: () => {
+      keys.clear();
+      touch.steer = touch.throttle = touch.brake = 0;
       persist();
       phase = "menu";
       probeKeys = null;
@@ -1941,9 +1955,9 @@ export function mountGame(
       publish();
     },
     setTouch: (t) => {
-      touch.steer = t.steer;
-      touch.throttle = t.throttle;
-      touch.brake = t.brake;
+      touch.steer = Number.isFinite(t.steer) ? Math.max(-1, Math.min(1, t.steer)) : 0;
+      touch.throttle = Number.isFinite(t.throttle) ? Math.max(0, Math.min(1, t.throttle)) : 0;
+      touch.brake = Number.isFinite(t.brake) ? Math.max(0, Math.min(1, t.brake)) : 0;
     },
     horn: honk,
     cycleCam,
