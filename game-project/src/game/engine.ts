@@ -1862,15 +1862,28 @@ export function mountGame(
   ro.observe(canvas);
 
   const onDown = (e: KeyboardEvent) => {
+    const target = e.target;
+    if (
+      target instanceof HTMLElement &&
+      (target.isContentEditable || target.closest("input, textarea, select, button, [contenteditable='true']"))
+    ) return;
     if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
     keys.add(e.code);
     if (e.repeat) return;
     if (e.code === "Space" || e.code === "KeyH") honk();
     if (e.code === "KeyC") cycleCam();
     if (e.code === "Escape") {
-      if (phase === "play") phase = "pause";
-      else if (phase === "pause") phase = "play";
-      publish();
+      e.preventDefault();
+      if (phase === "play") {
+        pauseForInterruption();
+      } else if (phase === "pause") {
+        keys.clear();
+        touch.steer = touch.throttle = touch.brake = 0;
+        last = performance.now();
+        acc = 0;
+        phase = "play";
+        publish();
+      }
     }
   };
   const onUp = (e: KeyboardEvent) => keys.delete(e.code);

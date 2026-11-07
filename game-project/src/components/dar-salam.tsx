@@ -265,6 +265,17 @@ export function DarSalam() {
                 <br />
                 الإيجار {RENT} ج في ٣ دقايق · التانك {GAS_COST} ج يمين الشارع
               </p>
+              <p className="mt-3 text-center text-[10px] text-muted">
+                بيانات الطريق © مساهمو OpenStreetMap ·
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  ترخيص ODbL
+                </a>
+              </p>
             </div>
             <div className="border-t border-line p-3">
               <button
@@ -442,12 +453,13 @@ function PlayHud({
           </button>
         </div>
         <div className="flex gap-2">
-          <button type="button" className="h-16 w-20 touch-none rounded-2xl bg-panel-2 text-sm font-extrabold" {...hold("b")}>
+          <button type="button" aria-label="فرامل" className="h-16 w-20 touch-none rounded-2xl bg-panel-2 text-sm font-extrabold" {...hold("b")}>
             فرامل
           </button>
           <button
             type="button"
             className="h-16 w-20 touch-none rounded-2xl bg-amber text-sm font-extrabold text-amber-ink"
+            aria-label="بنزين"
             {...hold("g")}
           >
             بنزين
