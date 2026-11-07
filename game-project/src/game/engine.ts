@@ -551,6 +551,7 @@ export function mountGame(
   buildRoad(scene, track);
   const buildings = buildCity(scene, track);
   const lamps = buildLamps(scene, track);
+  buildStreetFurniture(scene, track);
   buildGantries(scene, track);
   buildQuarter(scene, track);
   const signs: THREE.Mesh[] = [];
@@ -2152,6 +2153,84 @@ function buildLamps(scene: THREE.Scene, track: Track) {
   fixtures.forEach((m, i) => fixtureMesh.setMatrixAt(i, m));
   scene.add(bulbs, armMesh, fixtureMesh);
   return bulbMat;
+}
+
+function buildStreetFurniture(scene: THREE.Scene, track: Track) {
+  const pts = track.pts;
+  const trunkMatrices: THREE.Matrix4[] = [];
+  const canopyMatrices: THREE.Matrix4[] = [];
+  const binMatrices: THREE.Matrix4[] = [];
+  const bollardMatrices: THREE.Matrix4[] = [];
+  const o = new THREE.Object3D();
+
+  // Small street trees on the quieter sidewalk; keep clear of the lamp line.
+  for (let i = 12; i < pts.length; i += 28) {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const jitter = Math.sin(i * 2.17) * 0.42;
+    const lat = -(ROAD_HALF + 2.55 + jitter);
+    o.position.set(p.x + rx * lat, 1.05, p.z + rz * lat);
+    o.rotation.set(0, 0, 0);
+    o.scale.set(0.22, 1.05, 0.22);
+    o.updateMatrix();
+    trunkMatrices.push(o.matrix.clone());
+    o.position.set(p.x + rx * lat, 2.65, p.z + rz * lat);
+    o.scale.set(1.05, 1.28, 1.05);
+    o.updateMatrix();
+    canopyMatrices.push(o.matrix.clone());
+  }
+
+  // Waste bins and short protective bollards make the pavement feel inhabited.
+  for (let i = 18; i < pts.length; i += 44) {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const lat = ROAD_HALF + 2.65;
+    o.position.set(p.x + rx * lat, 0.52, p.z + rz * lat);
+    o.rotation.set(0, p.yaw, 0);
+    o.scale.set(1, 1, 1);
+    o.updateMatrix();
+    binMatrices.push(o.matrix.clone());
+  }
+  for (let i = 0; i < pts.length; i += 18) {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    for (const side of [-1, 1]) {
+      o.position.set(p.x + rx * side * (ROAD_HALF + 0.98), 0.48, p.z + rz * side * (ROAD_HALF + 0.98));
+      o.rotation.set(0, 0, 0);
+      o.scale.set(1, 1, 1);
+      o.updateMatrix();
+      bollardMatrices.push(o.matrix.clone());
+    }
+  }
+
+  const trunk = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.16, 0.22, 2.1, 7),
+    new THREE.MeshStandardMaterial({ color: "#725039", roughness: 1 }),
+    trunkMatrices.length,
+  );
+  trunkMatrices.forEach((m, i) => trunk.setMatrixAt(i, m));
+  const canopy = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(1, 7, 6),
+    new THREE.MeshStandardMaterial({ color: "#47734a", roughness: 1 }),
+    canopyMatrices.length,
+  );
+  canopyMatrices.forEach((m, i) => canopy.setMatrixAt(i, m));
+  const bins = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.32, 0.36, 0.9, 8),
+    new THREE.MeshStandardMaterial({ color: "#526b68", roughness: 0.82, metalness: 0.08 }),
+    binMatrices.length,
+  );
+  binMatrices.forEach((m, i) => bins.setMatrixAt(i, m));
+  const bollards = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.12, 0.15, 0.9, 6),
+    new THREE.MeshStandardMaterial({ color: "#d5c9ae", roughness: 0.8 }),
+    bollardMatrices.length,
+  );
+  bollardMatrices.forEach((m, i) => bollards.setMatrixAt(i, m));
+  scene.add(trunk, canopy, bins, bollards);
 }
 
 function buildGantries(scene: THREE.Scene, track: Track) {
