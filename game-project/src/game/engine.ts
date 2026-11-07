@@ -2213,6 +2213,16 @@ function buildCity(scene: THREE.Scene, track: Track) {
   const shopDoorGeo = new THREE.BoxGeometry(0.14, 1.9, 0.72);
   const shopDoorMat = new THREE.MeshStandardMaterial({ color: "#4b4540", roughness: 0.55 });
   const shopDoors = new THREE.InstancedMesh(shopDoorGeo, shopDoorMat, 100);
+  const shopShelfGeo = new THREE.BoxGeometry(0.48, 0.72, 1.55);
+  const shopShelfMat = new THREE.MeshStandardMaterial({ color: "#8a6544", roughness: 0.88 });
+  const shopShelves = new THREE.InstancedMesh(shopShelfGeo, shopShelfMat, 100);
+  const shopGoodsGeo = new THREE.BoxGeometry(0.28, 0.32, 0.28);
+  const shopGoodsMats = ["#d7a83d", "#a84f3c", "#4c8b72", "#d8d4c8"].map(
+    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.68 }),
+  );
+  const shopGoods = shopGoodsMats.map((mat) => new THREE.InstancedMesh(shopGoodsGeo, mat, 300));
+  const shopGoodsCounts = shopGoodsMats.map(() => 0);
+  let shopDisplayCount = 0;
   // Exterior split AC condensers mounted beside upper-floor windows.
   const acGeo = new THREE.BoxGeometry(0.72, 0.48, 0.42);
   const acMat = new THREE.MeshStandardMaterial({ color: "#d9d9d2", roughness: 0.78 });
@@ -2410,6 +2420,31 @@ function buildCity(scene: THREE.Scene, track: Track) {
       dummy.scale.set(1, 1, 1);
       dummy.updateMatrix();
       shopDoors.setMatrixAt(shopFrontCount, dummy.matrix);
+
+      // Simple shelves and colorful packaged goods behind the storefront glazing.
+      const inside = frontX + side * 0.58;
+      const shelfZ = p.z + rz * (side * depth + inside);
+      const shelfX = p.x + rx * (side * depth + inside);
+      dummy.position.set(shelfX, 0.72, shelfZ);
+      dummy.rotation.set(0, p.yaw, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      if (shopDisplayCount < 100) shopShelves.setMatrixAt(shopDisplayCount, dummy.matrix);
+      for (let item = 0; item < 6; item++) {
+        const goodsIndex = (item + Math.floor(hsh * 10)) % shopGoods.length;
+        const tangent = (item % 3 - 1) * 0.38;
+        const row = Math.floor(item / 3);
+        dummy.position.set(
+          shelfX + fx * tangent,
+          0.62 + row * 0.36,
+          shelfZ + fz * tangent,
+        );
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        const goodsSlot = shopGoodsCounts[goodsIndex]++;
+        if (goodsSlot < 300) shopGoods[goodsIndex].setMatrixAt(goodsSlot, dummy.matrix);
+      }
+      shopDisplayCount++;
       shopFrontCount++;
     }
 
@@ -2450,13 +2485,20 @@ function buildCity(scene: THREE.Scene, track: Track) {
   railMesh.instanceMatrix.needsUpdate = true;
   shopGlass.count = shopFrontCount;
   shopDoors.count = shopFrontCount;
+  shopShelves.count = shopDisplayCount;
+  shopShelves.instanceMatrix.needsUpdate = true;
+  shopGoods.forEach((mesh, index) => {
+    mesh.count = shopGoodsCounts[index];
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  });
   shopGlass.instanceMatrix.needsUpdate = true;
   shopDoors.instanceMatrix.needsUpdate = true;
   signMeshes.forEach((mesh, i) => {
     mesh.count = signCounts[i];
     mesh.instanceMatrix.needsUpdate = true;
   });
-  scene.add(balconyMesh, railMesh, shopGlass, shopDoors, acUnits, acGrilles, entryDoors, entryFrames, entrySteps, entryLamps);
+  scene.add(balconyMesh, railMesh, shopGlass, shopDoors, shopShelves, acUnits, acGrilles, entryDoors, entryFrames, entrySteps, entryLamps);
   signMeshes.forEach((mesh) => scene.add(mesh));
   awnings.forEach((mesh, i) => {
     mesh.count = awningCounts[i];
