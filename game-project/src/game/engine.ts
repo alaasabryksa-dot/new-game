@@ -550,6 +550,7 @@ export function mountGame(
 
   buildRoad(scene, track);
   buildCrosswalks(scene, track);
+  const animateTrafficSignals = buildTrafficSignals(scene, track);
   buildStreetSigns(scene, track);
   buildElectricalPoles(scene, track);
   const buildings = buildCity(scene, track);
@@ -1661,6 +1662,7 @@ export function mountGame(
       steps++;
     }
     animatePedestrians(now / 1000, player.x, player.z);
+    animateTrafficSignals(now / 1000);
     render(dt);
     hudAcc += dt;
     if (hudAcc > 0.12) {
@@ -2037,6 +2039,55 @@ function buildCrosswalks(scene: THREE.Scene, track: Track) {
   stops.forEach((matrix, index) => stopMesh.setMatrixAt(index, matrix));
   stopMesh.instanceMatrix.needsUpdate = true;
   scene.add(stripeMesh, stopMesh);
+}
+
+function buildTrafficSignals(scene: THREE.Scene, track: Track) {
+  const poleMat = new THREE.MeshStandardMaterial({ color: "#555b60", roughness: 0.72, metalness: 0.55 });
+  const housingMat = new THREE.MeshStandardMaterial({ color: "#202428", roughness: 0.62, metalness: 0.25 });
+  const bulbMats = [
+    new THREE.MeshStandardMaterial({ color: "#e52d32", emissive: "#ff1717", emissiveIntensity: 1.8 }),
+    new THREE.MeshStandardMaterial({ color: "#e6a52c", emissive: "#ffad19", emissiveIntensity: 0.08 }),
+    new THREE.MeshStandardMaterial({ color: "#36a85a", emissive: "#16e65a", emissiveIntensity: 0.08 }),
+  ];
+  const heads: THREE.Mesh[][] = [];
+  const poleGeo = new THREE.CylinderGeometry(0.075, 0.09, 4.2, 7);
+  const housingGeo = new THREE.BoxGeometry(0.48, 1.35, 0.42);
+  const bulbGeo = new THREE.SphereGeometry(0.135, 10, 8);
+
+  for (const stop of track.stops) {
+    const p = track.sample(stop.s);
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    for (const side of [-1, 1]) {
+      const x = p.x + rx * side * (ROAD_HALF + 1.05);
+      const z = p.z + rz * side * (ROAD_HALF + 1.05);
+      const pole = new THREE.Mesh(poleGeo, poleMat);
+      pole.position.set(x, 2.1, z);
+      scene.add(pole);
+      const housing = new THREE.Mesh(housingGeo, housingMat);
+      housing.position.set(x, 3.55, z);
+      scene.add(housing);
+      const bulbs: THREE.Mesh[] = [];
+      for (let i = 0; i < 3; i++) {
+        const bulb = new THREE.Mesh(bulbGeo, bulbMats[i]);
+        bulb.position.set(x, 3.98 - i * 0.43, z + 0.225);
+        scene.add(bulb);
+        bulbs.push(bulb);
+      }
+      heads.push(bulbs);
+    }
+  }
+
+  return (time: number) => {
+    const cycle = time % 14;
+    const active = cycle < 7 ? 0 : cycle < 8.2 ? 1 : 2;
+    for (const bulbs of heads) {
+      bulbs.forEach((bulb, index) => {
+        const material = bulb.material as THREE.MeshStandardMaterial;
+        material.emissiveIntensity = index === active ? 1.8 : 0.06;
+      });
+    }
+  };
 }
 
 function buildStreetSigns(scene: THREE.Scene, track: Track) {
