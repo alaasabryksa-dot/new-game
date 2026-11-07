@@ -1174,6 +1174,17 @@ export function mountGame(
       // Follow traffic with a longer buffer for large vehicles and higher closing speeds.
       let leadGap = Infinity;
       let leadSpeed = target;
+      // Treat the player as part of traffic so NPCs naturally slow down instead of
+      // driving into the player's rear when both occupy the same lane.
+      const playerLane = Math.round(Math.max(0, Math.min(3,
+        [0, 1, 2, 3].reduce((best, lane) =>
+          Math.abs(laneLat(lane) - proj.lat) < Math.abs(laneLat(best) - proj.lat) ? lane : best, 0),
+      )));
+      const playerGap = wrapDelta(proj.s, n.s, track.total);
+      if (playerGap > 0 && playerGap < leadGap && Math.abs(playerLane - n.lane) < 0.72) {
+        leadGap = playerGap;
+        leadSpeed = Math.max(0, player.speed);
+      }
       for (const o of npcs) {
         if (o === n || !o.alive || Math.abs(o.lane - n.lane) > 0.72) continue;
         const gap = wrapDelta(o.s, n.s, track.total);
@@ -1199,13 +1210,21 @@ export function mountGame(
         if (n.kind === "tuktuk" && Math.random() < 0.28) {
           desiredLane = Math.random() < 0.5 ? 0 : 3;
         }
-        const laneIsSafe = (lane: number) => npcs.every((o) => {
-          if (o === n || !o.alive || Math.abs(o.lane - lane) > 0.68) return true;
-          const frontGap = wrapDelta(o.s, n.s, track.total);
-          const rearGap = wrapDelta(n.s, o.s, track.total);
-          return !(frontGap > 0 && frontGap < 13 + spec.length * 0.45)
-            && !(rearGap > 0 && rearGap < 9 + vehicleById(o.kind).length * 0.35);
-        });
+        const laneIsSafe = (lane: number) => {
+          if (lane === playerLane) {
+            const frontGap = wrapDelta(proj.s, n.s, track.total);
+            const rearGap = wrapDelta(n.s, proj.s, track.total);
+            if ((frontGap > 0 && frontGap < 13 + spec.length * 0.45)
+              || (rearGap > 0 && rearGap < 11)) return false;
+          }
+          return npcs.every((o) => {
+            if (o === n || !o.alive || Math.abs(o.lane - lane) > 0.68) return true;
+            const frontGap = wrapDelta(o.s, n.s, track.total);
+            const rearGap = wrapDelta(n.s, o.s, track.total);
+            return !(frontGap > 0 && frontGap < 13 + spec.length * 0.45)
+              && !(rearGap > 0 && rearGap < 9 + vehicleById(o.kind).length * 0.35);
+          });
+        };
         if (desiredLane !== Math.round(n.lane) && laneIsSafe(desiredLane)) {
           n.laneTarget = desiredLane;
         } else {
@@ -1213,13 +1232,21 @@ export function mountGame(
         }
       }
 
-      const targetLaneSafe = npcs.every((o) => {
-        if (o === n || !o.alive || Math.abs(o.lane - n.laneTarget) > 0.68) return true;
-        const frontGap = wrapDelta(o.s, n.s, track.total);
-        const rearGap = wrapDelta(n.s, o.s, track.total);
-        return !(frontGap > 0 && frontGap < 10 + spec.length * 0.4)
-          && !(rearGap > 0 && rearGap < 8 + vehicleById(o.kind).length * 0.3);
-      });
+      const targetLaneSafe = (() => {
+        if (n.laneTarget === playerLane) {
+          const frontGap = wrapDelta(proj.s, n.s, track.total);
+          const rearGap = wrapDelta(n.s, proj.s, track.total);
+          if ((frontGap > 0 && frontGap < 11 + spec.length * 0.4)
+            || (rearGap > 0 && rearGap < 9)) return false;
+        }
+        return npcs.every((o) => {
+          if (o === n || !o.alive || Math.abs(o.lane - n.laneTarget) > 0.68) return true;
+          const frontGap = wrapDelta(o.s, n.s, track.total);
+          const rearGap = wrapDelta(n.s, o.s, track.total);
+          return !(frontGap > 0 && frontGap < 10 + spec.length * 0.4)
+            && !(rearGap > 0 && rearGap < 8 + vehicleById(o.kind).length * 0.3);
+        });
+      })();
       if (targetLaneSafe) {
         const diff = n.laneTarget - n.lane;
         const stepL = Math.max(-1, Math.min(1, diff)) * dt * 0.62;
