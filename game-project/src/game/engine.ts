@@ -2375,9 +2375,6 @@ function buildPedestrians(scene: THREE.Scene, track: Track) {
     count++;
   }
 
-  torsos.forEach((m, i) => shirtMeshes[i % shirtMeshes.length].setMatrixAt(
-    Math.floor(i / shirtMeshes.length) < 0 ? 0 : i % shirtMeshes.length, m,
-  ));
   // Each shirt color mesh uses its own compact index.
   const shirtCounts = shirts.map(() => 0);
   torsos.forEach((m, i) => {
