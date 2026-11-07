@@ -1,0 +1,44 @@
+{
+  "title": "Fayoum Street, Dar El Salam — photo reference catalog",
+  "purpose": "Visual research only. These press photographs are reference material; do not bundle or redistribute them as game textures without permission from the rights holders.",
+  "references": [
+    {
+      "id": "sawt-alsalam-2024",
+      "source": "صوت السلام / باشكاتب",
+      "date": "2024-08-03",
+      "article": "https://www.bashkatibnews.com/sawtelsalam/dep/reports/172267263629030573",
+      "images": [
+        "https://bashkatibnews.com/public/uploads/attachments/1722672449.png",
+        "https://www.bashkatibnews.com/public/uploads/attachments/1747216706.png"
+      ],
+      "verified_context": "Report explicitly identifies the main Fayoum Street in Dar El Salam; photographs show street congestion, sidewalks, and shopfront context.",
+      "use": "Reference for street width, shopfront density, sidewalk encroachment, and traffic composition."
+    },
+    {
+      "id": "youm7-2016",
+      "source": "اليوم السابع",
+      "date": "2016-06-03",
+      "article": "https://www.youm7.com/story/2016/6/3/صحافة-المواطن-سكان-شارع-الفيوم-بدار-السلام-يستغيثون-من-الباعة/2746322",
+      "images": [
+        "https://img.youm7.com/ArticleImgs/2016/6/3/79070-26168356_1801253843279683_9219076726495872127_n.jpg"
+      ],
+      "verified_context": "Article explicitly says the photographs depict Fayoum Street in Dar El Salam; page exposes four related image links.",
+      "use": "Reference for street vendors, storefronts, and sidewalk occupation."
+    },
+    {
+      "id": "youm7-2015",
+      "source": "اليوم السابع",
+      "date": "2015-08-20",
+      "article": "https://www.youm7.com/story/2015/8/20/بالصور-حى-دار-السلام-والمرافق-يشنان-حملة-لإزالة-الإشغالات-بشارع/2313480",
+      "images": [],
+      "verified_context": "Article explicitly documents an enforcement campaign on Fayoum Street and contains a multi-image gallery.",
+      "use": "Historical reference for street stalls and shopfront encroachment; inspect individual gallery images before modeling."
+    }
+  ],
+  "caveats": [
+    "Photographs are historical and may not represent current storefront names, signs, or building conditions.",
+    "Do not infer exact shop identities from low-resolution or ambiguous images.",
+    "Create original in-game meshes/textures based on observed geometry; do not reproduce protected press photos as shipped textures without permission.",
+    "Only mark a facade as field-verified when its exact position and appearance are independently confirmed."
+  ]
+}
