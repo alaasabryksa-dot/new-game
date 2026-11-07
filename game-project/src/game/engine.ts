@@ -1208,12 +1208,22 @@ export function mountGame(
           leadSpeed = o.speed;
         }
       }
-      const safeGap = 5.5 + spec.length * 0.72 + Math.max(0, n.speed - leadSpeed) * 0.9;
+      // Vehicle-specific driving profiles: long/heavy vehicles leave more room,
+      // while small agile vehicles can react and merge more readily.
+      const gapFactor = n.kind === "truck" ? 1.3
+        : n.kind === "micro" ? 1.12
+        : n.kind === "tuktuk" ? 0.82
+        : n.kind === "taxi" ? 1.04 : 0.94;
+      const safeGap = (5.5 + spec.length * 0.72
+        + Math.max(0, n.speed - leadSpeed) * 0.9) * gapFactor;
       if (leadGap < safeGap + 10) {
         const followFactor = Math.max(0.28, Math.min(1, (leadGap - safeGap) / 10));
         target = Math.min(target, leadSpeed * followFactor + 1.1);
       }
-      n.speed += (target - n.speed) * Math.min(1, dt * (target < n.speed ? 3.2 : 1.25));
+      const brakeResponse = n.kind === "truck" ? 2.35 : n.kind === "micro" ? 2.8 : 3.5;
+      const accelResponse = n.kind === "truck" ? 0.72 : n.kind === "tuktuk" ? 1.55 : n.kind === "taxi" ? 1.35 : 1.2;
+      n.speed += (target - n.speed) * Math.min(1,
+        dt * (target < n.speed ? brakeResponse : accelResponse));
       n.speed = Math.max(1.2, n.speed);
       n.s += n.speed * dt;
 
@@ -1288,7 +1298,11 @@ export function mountGame(
       })();
       if (targetLaneSafe) {
         const diff = n.laneTarget - n.lane;
-        const stepL = Math.max(-1, Math.min(1, diff)) * dt * 0.62;
+        const laneRate = n.kind === "truck" ? 0.34
+          : n.kind === "micro" ? 0.46
+          : n.kind === "tuktuk" ? 0.78
+          : n.kind === "taxi" ? 0.58 : 0.64;
+        const stepL = Math.max(-1, Math.min(1, diff)) * dt * laneRate;
         n.lane += stepL;
       } else {
         n.laneTarget = Math.round(n.lane);
