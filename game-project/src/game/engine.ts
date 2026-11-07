@@ -1823,6 +1823,66 @@ function buildRoad(scene: THREE.Scene, track: Track) {
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0 });
   scene.add(new THREE.Mesh(geo, mat));
 
+  // Raised pedestrian sidewalks with a continuous curb on both sides.
+  const walkPositions: number[] = [];
+  const curbPositions: number[] = [];
+  const walkEdge = (i: number, lat: number, y: number) => {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    return [p.x + rx * lat, y, p.z + rz * lat] as const;
+  };
+  for (let i = 0; i < n; i++) {
+    for (const side of [-1, 1]) {
+      const inner = side * (half + 0.85);
+      const outer = side * (half + 4.7);
+      const a = walkEdge(i, inner, 0.035);
+      const b = walkEdge(i, outer, 0.035);
+      const c = walkEdge((i + 1) % n, inner, 0.035);
+      const d = walkEdge((i + 1) % n, outer, 0.035);
+      walkPositions.push(...a, ...b, ...d, ...a, ...d, ...c);
+      const ci = walkEdge(i, side * (half + 0.55), 0.12);
+      const co = walkEdge(i, side * (half + 0.82), 0.12);
+      const ni = walkEdge((i + 1) % n, side * (half + 0.55), 0.12);
+      const no = walkEdge((i + 1) % n, side * (half + 0.82), 0.12);
+      curbPositions.push(...ci, ...co, ...no, ...ci, ...no, ...ni);
+    }
+  }
+  const sidewalkGeo = new THREE.BufferGeometry();
+  sidewalkGeo.setAttribute("position", new THREE.Float32BufferAttribute(walkPositions, 3));
+  sidewalkGeo.computeVertexNormals();
+  scene.add(new THREE.Mesh(sidewalkGeo, new THREE.MeshStandardMaterial({
+    color: "#aaa69b", roughness: 0.96, metalness: 0,
+    polygonOffset: true, polygonOffsetFactor: -1,
+  })));
+  const curbGeo = new THREE.BufferGeometry();
+  curbGeo.setAttribute("position", new THREE.Float32BufferAttribute(curbPositions, 3));
+  curbGeo.computeVertexNormals();
+  scene.add(new THREE.Mesh(curbGeo, new THREE.MeshStandardMaterial({ color: "#d4cbb9", roughness: 0.88 })));
+
+  // Subtle transverse paving joints, instanced to keep draw calls low.
+  const joints: THREE.Matrix4[] = [];
+  const joint = new THREE.Object3D();
+  for (let i = 0; i < n; i += 8) {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    for (const side of [-1, 1]) {
+      joint.position.set(p.x + rx * side * (half + 2.75), 0.052, p.z + rz * side * (half + 2.75));
+      joint.rotation.set(0, p.yaw, 0);
+      joint.scale.set(1, 1, 1);
+      joint.updateMatrix();
+      joints.push(joint.matrix.clone());
+    }
+  }
+  const jointMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(3.7, 0.018, 0.045),
+    new THREE.MeshStandardMaterial({ color: "#85847e", roughness: 1 }),
+    joints.length,
+  );
+  joints.forEach((m, i) => jointMesh.setMatrixAt(i, m));
+  scene.add(jointMesh);
+
   const dashes: THREE.Matrix4[] = [];
   const dash = new THREE.Object3D();
   for (let i = 0; i < n; i += 3) {
@@ -2034,6 +2094,8 @@ function buildCity(scene: THREE.Scene, track: Track) {
 function buildLamps(scene: THREE.Scene, track: Track) {
   const mats: THREE.Matrix4[] = [];
   const heads: THREE.Matrix4[] = [];
+  const arms: THREE.Matrix4[] = [];
+  const fixtures: THREE.Matrix4[] = [];
   const o = new THREE.Object3D();
   const pts = track.pts;
   for (let i = 0; i < pts.length; i += 8) {
@@ -2048,6 +2110,16 @@ function buildLamps(scene: THREE.Scene, track: Track) {
     o.position.y = 6.3;
     o.updateMatrix();
     heads.push(o.matrix.clone());
+    // Short cantilever arm and a flattened fixture facing over the roadway.
+    o.position.set(p.x + rx * 11.4 - rx * 0.72, 6.05, p.z + rz * 11.4 - rz * 0.72);
+    o.rotation.set(0, p.yaw, 0);
+    o.scale.set(1, 1, 1);
+    o.updateMatrix();
+    arms.push(o.matrix.clone());
+    o.position.set(p.x + rx * 11.4 - rx * 1.42, 5.92, p.z + rz * 11.4 - rz * 1.42);
+    o.scale.set(1.25, 1, 0.72);
+    o.updateMatrix();
+    fixtures.push(o.matrix.clone());
   }
   const pole = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.12, 0.16, 6.2, 6),
@@ -2061,9 +2133,24 @@ function buildLamps(scene: THREE.Scene, track: Track) {
     emissive: "#ffd78a",
     emissiveIntensity: 0.05,
   });
-  const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(0.28, 8, 8), bulbMat, heads.length);
+  const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 8, 8), bulbMat, heads.length);
   heads.forEach((m, i) => bulbs.setMatrixAt(i, m));
-  scene.add(bulbs);
+  const armMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.55, 0.13, 0.13),
+    new THREE.MeshStandardMaterial({ color: "#343a40", roughness: 0.48, metalness: 0.35 }),
+    arms.length,
+  );
+  arms.forEach((m, i) => armMesh.setMatrixAt(i, m));
+  const fixtureMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.92, 0.16, 0.48),
+    new THREE.MeshStandardMaterial({
+      color: "#e7e1d2", roughness: 0.52,
+      emissive: "#ffd78a", emissiveIntensity: 0.08,
+    }),
+    fixtures.length,
+  );
+  fixtures.forEach((m, i) => fixtureMesh.setMatrixAt(i, m));
+  scene.add(bulbs, armMesh, fixtureMesh);
   return bulbMat;
 }
 
