@@ -69,7 +69,7 @@ function blankUpgrades(): Upgrades {
 }
 
 function clampLvl(n: unknown) {
-  const v = Math.floor(Number(n) || 0);
+  const v = Math.floor(Number.isFinite(Number(n)) ? Number(n) : 0);
   return Math.max(0, Math.min(3, v));
 }
 
@@ -91,9 +91,9 @@ function loadSave(): Save {
     const u = (p.upgrades ?? {}) as Partial<Upgrades>;
     return {
       v: 2,
-      bestMoney: Number(p.bestMoney) || 0,
-      bestKm: Number(p.bestKm) || 0,
-      bestTrial: typeof p.bestTrial === "number" ? p.bestTrial : null,
+      bestMoney: Math.max(0, Number(p.bestMoney) || 0),
+      bestKm: Math.max(0, Number(p.bestKm) || 0),
+      bestTrial: typeof p.bestTrial === "number" && Number.isFinite(p.bestTrial) && p.bestTrial >= 0 ? p.bestTrial : null,
       sound: p.sound !== false,
       wallet: Math.max(0, Math.floor(Number(p.wallet) || 0)),
       upgrades: {
@@ -199,24 +199,24 @@ function trafficGeoms(kind: VehicleId) {
 function buildPlayer(kind: VehicleId, hex: string) {
   const g = new THREE.Group();
   g.rotation.order = "YXZ";
-  const paint = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.46, metalness: 0.12 });
+  const paint = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.4, metalness: 0.18 });
   const glass = new THREE.MeshStandardMaterial({
     color: "#b7dbe3",
-    roughness: 0.08,
-    metalness: 0.35,
+    roughness: 0.12,
+    metalness: 0.28,
     transparent: true,
-    opacity: 0.78,
+    opacity: 0.84,
   });
-  const dark = new THREE.MeshStandardMaterial({ color: "#17191d", roughness: 0.62 });
+  const dark = new THREE.MeshStandardMaterial({ color: "#17191d", roughness: 0.7 });
   const tail = new THREE.MeshStandardMaterial({
     color: "#ff3b3b",
     emissive: "#ff2020",
-    emissiveIntensity: 0.9,
+    emissiveIntensity: 1.05,
   });
   const head = new THREE.MeshStandardMaterial({
     color: "#fff6d8",
     emissive: "#ffe7a8",
-    emissiveIntensity: 0.35,
+    emissiveIntensity: 0.48,
   });
   const wheels: THREE.Mesh[] = [];
   const put = (geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number) => {
@@ -226,7 +226,7 @@ function buildPlayer(kind: VehicleId, hex: string) {
     return m;
   };
   const addWheels = (x: number, z: number, r: number) => {
-    const geo = new THREE.CylinderGeometry(r, r, r * 0.7, 12);
+    const geo = new THREE.CylinderGeometry(r, r, r * 0.7, 16);
     geo.rotateZ(Math.PI / 2);
     for (const sx of [-1, 1]) {
       const m = new THREE.Mesh(geo, dark);
@@ -237,9 +237,9 @@ function buildPlayer(kind: VehicleId, hex: string) {
   };
 
   if (kind === "micro") {
-    put(new THREE.BoxGeometry(2.05, 1.15, 4.9), paint, 0, 1.05, 0.05);
-    put(new THREE.BoxGeometry(1.9, 0.48, 1.35), glass, 0, 1.78, -0.95);
-    put(new THREE.BoxGeometry(1.75, 0.4, 2.1), glass, 0, 1.72, 0.9);
+    put(new THREE.BoxGeometry(2.08, 1.18, 4.9), paint, 0, 1.05, 0.05);
+    put(new THREE.BoxGeometry(1.92, 0.5, 1.35), glass, 0, 1.78, -0.95);
+    put(new THREE.BoxGeometry(1.78, 0.42, 2.1), glass, 0, 1.72, 0.9);
     put(new THREE.BoxGeometry(0.22, 0.26, 0.08), tail, -0.72, 0.95, 2.52);
     put(new THREE.BoxGeometry(0.22, 0.26, 0.08), tail, 0.72, 0.95, 2.52);
     put(new THREE.BoxGeometry(0.42, 0.22, 0.08), head, -0.65, 0.95, -2.42);
@@ -247,8 +247,8 @@ function buildPlayer(kind: VehicleId, hex: string) {
     addWheels(1.02, -1.55, 0.38);
     addWheels(1.02, 1.5, 0.38);
   } else if (kind === "tuktuk") {
-    put(new THREE.BoxGeometry(1.28, 0.9, 2.1), paint, 0, 0.85, 0.05);
-    put(new THREE.BoxGeometry(1.4, 0.08, 1.55), paint, 0, 1.55, 0.1);
+    put(new THREE.BoxGeometry(1.32, 0.92, 2.1), paint, 0, 0.85, 0.05);
+    put(new THREE.BoxGeometry(1.44, 0.09, 1.58), paint, 0, 1.55, 0.1);
     put(new THREE.BoxGeometry(1.48, 0.05, 1.64), dark, 0, 1.62, 0.1);
     put(new THREE.BoxGeometry(1.12, 0.48, 0.85), glass, 0, 1.15, -0.1);
     put(new THREE.BoxGeometry(0.12, 0.12, 0.06), tail, -0.42, 0.62, 1.12);
@@ -262,8 +262,8 @@ function buildPlayer(kind: VehicleId, hex: string) {
     g.add(m);
     wheels.push(m);
   } else if (kind === "truck") {
-    put(new THREE.BoxGeometry(2.4, 1.45, 7.1), paint, 0, 1.2, 1.4);
-    put(new THREE.BoxGeometry(2.15, 1.55, 2.35), paint, 0, 1.4, -3.1);
+    put(new THREE.BoxGeometry(2.42, 1.48, 7.1), paint, 0, 1.2, 1.4);
+    put(new THREE.BoxGeometry(2.18, 1.58, 2.35), paint, 0, 1.4, -3.1);
     put(new THREE.BoxGeometry(1.85, 0.5, 0.85), glass, 0, 1.9, -3.5);
     put(new THREE.BoxGeometry(0.24, 0.18, 0.08), tail, -0.85, 0.8, 4.95);
     put(new THREE.BoxGeometry(0.24, 0.18, 0.08), tail, 0.85, 0.8, 4.95);
@@ -273,8 +273,8 @@ function buildPlayer(kind: VehicleId, hex: string) {
     addWheels(1.15, 1.15, 0.42);
     addWheels(1.15, 3.45, 0.42);
   } else {
-    put(new THREE.BoxGeometry(1.72, 0.46, 4.3), paint, 0, 0.62, 0);
-    put(new THREE.BoxGeometry(1.52, 0.4, 1.9), paint, 0, 1.02, 0.32);
+    put(new THREE.BoxGeometry(1.74, 0.48, 4.3), paint, 0, 0.62, 0);
+    put(new THREE.BoxGeometry(1.55, 0.42, 1.9), paint, 0, 1.02, 0.32);
     put(new THREE.BoxGeometry(1.35, 0.34, 1.05), glass, 0, 1.05, -0.2);
     if (kind === "taxi") {
       const lamp = new THREE.MeshStandardMaterial({
@@ -292,7 +292,7 @@ function buildPlayer(kind: VehicleId, hex: string) {
     addWheels(0.78, 1.28, 0.32);
   }
 
-  const spotL = new THREE.SpotLight("#fff1cc", 0, 46, Math.PI / 8, 0.45, 1);
+  const spotL = new THREE.SpotLight("#fff1cc", 0, 52, Math.PI / 9, 0.42, 1);
   spotL.position.set(-0.45, 0.9, -1.6);
   const spotR = new THREE.SpotLight("#fff1cc", 0, 46, Math.PI / 8, 0.45, 1);
   spotR.position.set(0.45, 0.9, -1.6);
@@ -303,7 +303,7 @@ function buildPlayer(kind: VehicleId, hex: string) {
   spotR.target = target;
 
   const rider = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.2, 0.38, 3, 8),
+    new THREE.CapsuleGeometry(0.2, 0.4, 4, 10),
     new THREE.MeshStandardMaterial({ color: "#1d3557", roughness: 0.7 }),
   );
   rider.position.set(0.02, 1.22, 0.28);
@@ -315,7 +315,7 @@ function buildPlayer(kind: VehicleId, hex: string) {
 
 function facadeTexture(base: string) {
   const c = document.createElement("canvas");
-  c.width = 256;
+  c.width = 384;
   c.height = 512;
   const g = c.getContext("2d");
   if (!g) return null;
@@ -324,10 +324,10 @@ function facadeTexture(base: string) {
   g.fillRect(0, 0, c.width, c.height);
 
   // Subtle plaster variation and horizontal floor bands.
-  for (let y = 0; y < c.height; y += 4) {
+  for (let y = 0; y < c.height; y += 3) {
     const shade = Math.sin(y * 0.17) * 3;
     g.fillStyle = shade > 0 ? "rgba(255,255,255,0.035)" : "rgba(45,35,25,0.025)";
-    g.fillRect(0, y, c.width, 2);
+    g.fillRect(0, y, c.width, 1.5);
   }
   for (let y = 0; y <= c.height; y += 128) {
     g.fillStyle = "rgba(70,55,42,0.16)";
@@ -340,25 +340,25 @@ function facadeTexture(base: string) {
   for (let floor = 0; floor < 4; floor++) {
     const y = 20 + floor * 124;
     for (let col = 0; col < 4; col++) {
-      const x = 12 + col * 62;
+      const x = 12 + col * 88;
       const warm = (floor * 7 + col * 11 + base.length) % 5 === 0;
       g.fillStyle = "rgba(65,52,42,0.28)";
-      g.fillRect(x - 4, y - 4, 43, 76);
+      g.fillRect(x - 4, y - 4, 45, 78);
       g.fillStyle = "#d7d0c2";
-      g.fillRect(x - 2, y - 2, 39, 72);
+      g.fillRect(x - 2, y - 2, 41, 74);
       g.fillStyle = warm ? "#b6a17e" : "#8299a3";
-      g.fillRect(x + 2, y + 2, 31, 64);
+      g.fillRect(x + 2, y + 2, 33, 66);
       g.fillStyle = "rgba(245,248,238,0.72)";
       g.fillRect(x + 4, y + 4, 4, 58);
       g.fillStyle = "rgba(35,48,54,0.55)";
-      g.fillRect(x + 17, y + 2, 2, 64);
-      g.fillRect(x + 2, y + 32, 31, 2);
+      g.fillRect(x + 18, y + 2, 2, 66);
+      g.fillRect(x + 2, y + 33, 33, 2);
 
       if ((floor + col) % 3 === 0) {
         g.fillStyle = "#b9b2a5";
-        g.fillRect(x - 7, y + 68, 45, 5);
+        g.fillRect(x - 7, y + 70, 47, 5);
         g.fillStyle = "#6e7778";
-        g.fillRect(x - 7, y + 73, 45, 3);
+        g.fillRect(x - 7, y + 75, 47, 3);
         g.fillStyle = "#aeb9b8";
         g.fillRect(x - 5, y + 57, 2, 15);
         g.fillRect(x + 36, y + 57, 2, 15);
@@ -376,7 +376,7 @@ function facadeTexture(base: string) {
 
   // Weathering near the lower edge and small facade details.
   g.fillStyle = "rgba(80,65,50,0.13)";
-  g.fillRect(0, 480, 256, 32);
+  g.fillRect(0, 478, c.width, 34);
   for (let x = 8; x < 250; x += 31) {
     g.fillStyle = "rgba(45,45,42,0.18)";
     g.fillRect(x, 486 + (x % 3) * 3, 12, 3);
@@ -389,14 +389,14 @@ function facadeTexture(base: string) {
 
 function emissiveWindows() {
   const c = document.createElement("canvas");
-  c.width = 128;
+  c.width = 160;
   c.height = 256;
   const g = c.getContext("2d");
   if (!g) return null;
   g.fillStyle = "#000";
   g.fillRect(0, 0, 128, 256);
-  for (let y = 14; y < 248; y += 28) {
-    for (let x = 10; x < 118; x += 22) {
+  for (let y = 12; y < 248; y += 27) {
+    for (let x = 10; x < 150; x += 24) {
       if (Math.sin(x * 3.1 + y * 1.7) > 0.15) {
         g.fillStyle = "#ffcc77";
         g.fillRect(x, y, 12, 16);
@@ -445,10 +445,10 @@ class Sfx {
       gain.gain.value = 0.0001;
       const filter = ctx.createBiquadFilter();
       filter.type = "lowpass";
-      filter.frequency.value = 240;
+      filter.frequency.value = 260;
       const osc = ctx.createOscillator();
       osc.type = "sawtooth";
-      osc.frequency.value = 46;
+      osc.frequency.value = 44;
       osc.connect(filter);
       filter.connect(gain);
       gain.connect(ctx.destination);
@@ -467,9 +467,9 @@ class Sfx {
       return;
     }
     const k = Math.abs(speed);
-    this.osc.frequency.value = 42 + k * 3.1 + throttle * 18;
-    this.filter.frequency.value = 180 + k * 18;
-    this.gain.gain.value = 0.018 + Math.min(0.04, k * 0.0015);
+    this.osc.frequency.value = 40 + k * 3.25 + throttle * 20;
+    this.filter.frequency.value = 190 + k * 19;
+    this.gain.gain.value = 0.016 + Math.min(0.045, k * 0.0016);
   }
 
   blip(freq: number, dur: number, type: OscillatorType, vol: number) {
@@ -534,12 +534,12 @@ export function mountGame(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor("#9ec9e8");
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog("#b7d4ea", 70, 620);
-  const camera = new THREE.PerspectiveCamera(70, 1, 0.15, 900);
+  scene.fog = new THREE.Fog("#b7d4ea", 76, 650);
+  const camera = new THREE.PerspectiveCamera(69, 1, 0.12, 1000);
 
-  const hemi = new THREE.HemisphereLight("#d5ecf8", "#b7a07a", 1.05);
-  const sun = new THREE.DirectionalLight("#fff2d2", 1.45);
-  sun.position.set(-120, 180, 60);
+  const hemi = new THREE.HemisphereLight("#d5ecf8", "#b7a07a", 1.1);
+  const sun = new THREE.DirectionalLight("#fff2d2", 1.5);
+  sun.position.set(-135, 190, 72);
   scene.add(hemi, sun);
 
   const ground = new THREE.Mesh(
@@ -565,7 +565,7 @@ export function mountGame(
   const signs: THREE.Mesh[] = [];
 
   const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh }>();
-  const POOL = 56;
+  const POOL = 64;
   const glassMat = new THREE.MeshStandardMaterial({ color: "#1c3c48", roughness: 0.18, metalness: 0.2 });
   const wheelMat = new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.7 });
   const lightMat = new THREE.MeshStandardMaterial({ color: "#ff3030", emissive: "#ff2020", emissiveIntensity: 0.85 });
@@ -589,9 +589,9 @@ export function mountGame(
 
   const dummy = new THREE.Object3D();
   const tukColor = new THREE.Color("#d4654a");
-  const PEOPLE = 30;
+  const PEOPLE = 36;
   const people = new THREE.InstancedMesh(
-    new THREE.CapsuleGeometry(0.22, 0.48, 3, 6),
+    new THREE.CapsuleGeometry(0.22, 0.5, 4, 7),
     new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.78 }),
     PEOPLE,
   );
@@ -709,7 +709,7 @@ export function mountGame(
   bootCinematic();
 
   function densityCount() {
-    return cfg.density === 0 ? 16 : cfg.density === 2 ? 40 : 28;
+    return cfg.density === 0 ? 18 : cfg.density === 2 ? 44 : 30;
   }
 
   function spawnTraffic(around: number) {
@@ -736,16 +736,16 @@ export function mountGame(
       npcs.push({
         alive: true,
         kind,
-        s: around + 18 + (i * 260) / n + (i % 5) * 6,
+        s: around + 18 + (i * 280) / n + (i % 5) * 7,
         lane: i % 4,
         laneTarget: i % 4,
-        speed: spec.max * (0.45 + (i % 5) * 0.08),
-        cruise: spec.max * (0.42 + (i % 4) * 0.1),
+        speed: spec.max * (0.42 + (i % 5) * 0.075),
+        cruise: spec.max * (0.4 + (i % 4) * 0.095),
         brake: 0,
         stopTimer: 0,
         stopAt: -1,
         color: col,
-        nextLane: 4 + (i % 6),
+        nextLane: 5 + (i % 7),
       });
     }
     for (const pool of pools.values()) {
@@ -859,8 +859,8 @@ export function mountGame(
   void document.fonts?.ready.then(() => drawSigns());
 
   function persist() {
-    if (money > save.bestMoney) save.bestMoney = money;
-    if (km > save.bestKm) save.bestKm = km;
+    if (Number.isFinite(money) && money > save.bestMoney) save.bestMoney = money;
+    if (Number.isFinite(km) && km > save.bestKm) save.bestKm = km;
     save.sound = sfx.on;
     writeSave(save);
   }
@@ -879,11 +879,11 @@ export function mountGame(
   }
 
   function pay(cost: number) {
-    if (money >= cost) {
+    if (Number.isFinite(cost) && cost >= 0 && money >= cost) {
       money -= cost;
       return true;
     }
-    if (money + save.wallet >= cost) {
+    if (Number.isFinite(cost) && cost >= 0 && money + save.wallet >= cost) {
       save.wallet -= cost - money;
       money = 0;
       return true;
@@ -1082,22 +1082,22 @@ export function mountGame(
     steerVis = steer;
 
     if (phase === "play" || phase === "menu") {
-      if (throttle > 0 && brake === 0) player.speed += spec.accel * throttle * dt;
+      if (throttle > 0 && brake === 0) player.speed += spec.accel * throttle * (fuel <= 0 ? 0.35 : 1) * dt;
       else if (brake > 0) {
-        if (player.speed > 0.5) player.speed -= spec.brake * dt;
-        else player.speed -= spec.accel * 0.45 * dt;
+        if (player.speed > 0.5) player.speed -= spec.brake * 1.08 * dt;
+        else player.speed -= spec.accel * 0.42 * dt;
       } else {
         const sign = Math.sign(player.speed);
-        const mag = Math.max(0, Math.abs(player.speed) - 3.0 * dt);
+        const mag = Math.max(0, Math.abs(player.speed) - 3.2 * dt);
         player.speed = sign * mag;
       }
       const cap = phase === "play" && fuel <= 0 ? 2.8 : spec.max;
-      player.speed = Math.max(-5.5, Math.min(cap, player.speed));
+      player.speed = Math.max(-5, Math.min(cap, player.speed));
 
       const sp = Math.min(1, Math.abs(player.speed) / 8);
       const reverse = player.speed < -0.5 ? -1 : 1;
-      const turnMul = 0.32 + 0.68 * sp;
-      player.yaw += steer * spec.turn * turnMul * reverse * dt;
+      const turnMul = 0.3 + 0.7 * sp;
+      player.yaw += steer * spec.turn * turnMul * reverse * dt * (Math.abs(player.speed) < 1 ? 0.82 : 1);
 
       const fx = -Math.sin(player.yaw);
       const fz = -Math.cos(player.yaw);
@@ -1106,7 +1106,7 @@ export function mountGame(
 
       const proj = track.project(player.x, player.z, player.hint);
       player.hint = proj.i;
-      const limit = ROAD_HALF - spec.width * 0.5;
+      const limit = ROAD_HALF - spec.width * 0.5 - 0.08;
       if (Math.abs(proj.lat) > limit) {
         const clamped = Math.sign(proj.lat) * limit;
         const rx = Math.cos(proj.yaw);
@@ -1115,8 +1115,8 @@ export function mountGame(
         player.z = proj.z + rz * clamped;
         const impact = Math.abs(proj.lat) - limit;
         if (impact > 0.06) {
-          player.speed *= impact > 0.65 ? 0.78 : 0.9;
-          shake = Math.max(shake, 0.12);
+          player.speed *= impact > 0.65 ? 0.74 : 0.88;
+          shake = Math.max(shake, 0.14);
         }
       }
 
@@ -1129,15 +1129,15 @@ export function mountGame(
       if (phase === "play") {
         if (along > 0) km += (along * dt) / 1000;
         time += dt;
-        const eff = 1 - save.upgrades.fuel * 0.18;
-        const moving = Math.abs(player.speed) > 0.35 ? 1 : 0.1;
-        const loadFactor = pax.length > 0 ? 1 + Math.min(0.22, pax.length * 0.04) : 1;
-        fuel -= (0.32 * moving + throttle * 0.64) * eff * loadFactor * dt;
-        if (fuel < 0) fuel = 0;
+        const eff = Math.max(0.42, 1 - save.upgrades.fuel * 0.19);
+        const moving = Math.abs(player.speed) > 0.35 ? 1 : 0.08;
+        const loadFactor = pax.length > 0 ? 1 + Math.min(0.24, pax.length * 0.045) : 1;
+        fuel -= (0.3 * moving + throttle * 0.62) * eff * loadFactor * dt;
+        if (fuel < 0 || !Number.isFinite(fuel)) fuel = 0;
         fuelBeep = Math.max(0, fuelBeep - dt);
-        if (fuel < 18 && fuelBeep <= 0) {
-          fuelBeep = 4.8;
-          sfx.blip(540, 0.05, "square", 0.028);
+        if (fuel < 20 && fuelBeep <= 0) {
+          fuelBeep = 5;
+          sfx.blip(560, 0.06, "sine", 0.025);
         }
       }
     }
@@ -1176,11 +1176,11 @@ export function mountGame(
           const d = wrapDelta(track.stops[i].s, n.s, track.total);
           // Microbuses in the curb-side lanes slow down and briefly wait at stops.
           if (n.lane > 1.5 && d > -12 && d < 38) {
-            const stopApproachSpeed = Math.min(3.2, Math.max(0, (d - 2.2) * 0.48));
+            const stopApproachSpeed = Math.min(3, Math.max(0, (d - 2.5) * 0.46));
             target = Math.min(target, stopApproachSpeed);
-            if (d < 3 && d > -1.2 && n.stopAt !== i && n.stopTimer <= 0 && n.speed < 4.2) {
+            if (d < 3.5 && d > -1.2 && n.stopAt !== i && n.stopTimer <= 0 && n.speed < 4.5) {
               n.stopAt = i;
-              n.stopTimer = 2 + Math.random() * 1.8;
+              n.stopTimer = 2.2 + Math.random() * 1.9;
             }
             // A bus fully stops while boarding/alighting instead of crawling forward.
             if (n.stopTimer > 0 && n.stopAt === i) target = 0;
@@ -1189,28 +1189,28 @@ export function mountGame(
           }
         }
         n.brake -= dt;
-        if (n.brake <= 0 && Math.random() < dt * 0.12) n.brake = 1.5;
-        if (n.brake > 0) target = Math.min(target, 1.8);
+        if (n.brake <= 0 && Math.random() < dt * 0.1) n.brake = 1.35;
+        if (n.brake > 0) target = Math.min(target, 1.6);
       }
       // Obey the same 14-second cycle shown by the signal heads.
       // Red: 0-7s, amber: 7-8.2s, green: remainder.
-      const signalCycle = trafficClock % 14;
-      const redLight = signalCycle < 7;
-      const amberLight = signalCycle >= 7 && signalCycle < 8.2;
+      const signalCycle = trafficClock % 15;
+      const redLight = signalCycle < 7.5;
+      const amberLight = signalCycle >= 7.5 && signalCycle < 8.8;
       let redStopDistance = Infinity;
       let nearestSignalDistance = Infinity;
       let nearestSignalStopS = -1;
       for (const stop of track.stops) {
         const distanceToLine = wrapDelta(stop.s, n.s, track.total);
-        if (distanceToLine <= 0 || distanceToLine > 34) continue;
+        if (distanceToLine <= 0 || distanceToLine > 38) continue;
         if (distanceToLine < nearestSignalDistance) {
           nearestSignalDistance = distanceToLine;
           nearestSignalStopS = stop.s;
         }
         if (redLight) {
           redStopDistance = Math.min(redStopDistance, distanceToLine);
-          const approachSpeed = distanceToLine > 3
-            ? Math.max(0, (distanceToLine - 3) * 0.68)
+          const approachSpeed = distanceToLine > 3.2
+            ? Math.max(0, (distanceToLine - 3.2) * 0.64)
             : 0;
           target = Math.min(target, approachSpeed);
         } else if (amberLight && distanceToLine > 8) {
@@ -1229,9 +1229,9 @@ export function mountGame(
             queueAhead++;
           }
         }
-        const releaseAt = Math.min(13.4, 8.2 + queueAhead * 0.55);
+        const releaseAt = Math.min(14.2, 8.8 + queueAhead * 0.52);
         const greenElapsed = Math.max(0, signalCycle - releaseAt);
-        target = Math.min(target, greenElapsed <= 0 ? 0 : greenElapsed * 2.8);
+        target = Math.min(target, greenElapsed <= 0 ? 0 : greenElapsed * 2.65);
       }
       // Follow traffic with a longer buffer for large vehicles and higher closing speeds.
       let leadGap = Infinity;
@@ -1261,15 +1261,15 @@ export function mountGame(
         : n.kind === "micro" ? 1.12
         : n.kind === "tuktuk" ? 0.82
         : n.kind === "taxi" ? 1.04 : 0.94;
-      const safeGap = (6 + spec.length * 0.78
-        + Math.max(0, n.speed - leadSpeed) * 1) * gapFactor;
-      if (leadGap < safeGap + 14) {
-        const followFactor = Math.max(0, Math.min(1, (leadGap - safeGap) / 14));
-        const queueCreep = leadSpeed < 0.5 ? 0 : Math.max(0, leadGap - safeGap) * 0.1;
+      const safeGap = (6.4 + spec.length * 0.8
+        + Math.max(0, n.speed - leadSpeed) * 1.05) * gapFactor;
+      if (leadGap < safeGap + 15) {
+        const followFactor = Math.max(0, Math.min(1, (leadGap - safeGap) / 15));
+        const queueCreep = leadSpeed < 0.5 ? 0 : Math.max(0, leadGap - safeGap) * 0.09;
         target = Math.min(target, leadSpeed * followFactor + queueCreep);
       }
-      const brakeResponse = n.kind === "truck" ? 2.5 : n.kind === "micro" ? 3 : 3.7;
-      const accelResponse = n.kind === "truck" ? 0.68 : n.kind === "tuktuk" ? 1.5 : n.kind === "taxi" ? 1.4 : 1.18;
+      const brakeResponse = n.kind === "truck" ? 2.65 : n.kind === "micro" ? 3.1 : 3.85;
+      const accelResponse = n.kind === "truck" ? 0.66 : n.kind === "tuktuk" ? 1.45 : n.kind === "taxi" ? 1.42 : 1.16;
       n.speed += (target - n.speed) * Math.min(1,
         dt * (target < n.speed ? brakeResponse : accelResponse));
       // Allow a true standstill at red lights and in queues. Keep a small
@@ -1283,17 +1283,17 @@ export function mountGame(
 
       n.nextLane -= dt;
       if (n.nextLane <= 0) {
-        n.nextLane = 5 + Math.random() * 5;
+        n.nextLane = 5.5 + Math.random() * 5.5;
         const dir = Math.random() < 0.5 ? -1 : 1;
         let desiredLane = Math.max(0, Math.min(3, Math.round(n.lane + dir)));
-        if (n.kind === "tuktuk" && Math.random() < 0.24) {
+        if (n.kind === "tuktuk" && Math.random() < 0.22) {
           desiredLane = Math.random() < 0.5 ? 0 : 3;
         }
         const laneIsSafe = (lane: number) => {
           if (lane === playerLane) {
             const frontGap = wrapDelta(proj.s, n.s, track.total);
             const rearGap = wrapDelta(n.s, proj.s, track.total);
-            if ((frontGap > 0 && frontGap < 15 + spec.length * 0.45)
+            if ((frontGap > 0 && frontGap < 16 + spec.length * 0.45)
               || (rearGap > 0 && rearGap < 12)) return false;
           }
           return npcs.every((o) => {
