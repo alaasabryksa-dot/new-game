@@ -1,0 +1,35 @@
+name: Fetch Fayoum Street OSM data
+
+on:
+  workflow_dispatch:
+    inputs:
+      way_id:
+        description: "OpenStreetMap way ID for the verified Fayoum Street seed segment"
+        required: true
+        default: "37195082"
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-osm:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game-project
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fetch mapped street geometry
+        run: node scripts/fetch-fayoum-osm.mjs "${{ inputs.way_id }}"
+      - name: Upload raw OSM geometry for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: fayoum-street-osm-review
+          path: game-project/src/game/data/fayoum-street-osm.json
+          if-no-files-found: error
+          retention-days: 14
