@@ -45,28 +45,56 @@ async function overpass(query) {
   throw lastError ?? new Error("All Overpass endpoints failed");
 }
 
-const seedQuery = `[out:json][timeout:40];way(${WAY_ID});out body;`;
-const seedData = await overpass(seedQuery);
-const seed = seedData.elements?.find(
+const warnings = [];
+const apiResponse = await fetch(
+  `https://api.openstreetmap.org/api/0.6/way/${WAY_ID}/full.json`,
+  {
+    headers: {
+      "user-agent": "NewGame-FayoumStreetResearch/1.0 (OSM data attribution included)",
+      accept: "application/json",
+    },
+    signal: AbortSignal.timeout(20000),
+  },
+);
+if (!apiResponse.ok) {
+  throw new Error(`OpenStreetMap API HTTP ${apiResponse.status}`);
+}
+const apiData = await apiResponse.json();
+const seed = apiData.elements?.find(
   (element) => element.type === "way" && element.id === WAY_ID,
+);
+const nodeById = new Map(
+  (apiData.elements ?? [])
+    .filter((element) => element.type === "node")
+    .map((node) => [node.id, node]),
 );
 if (!seed || !Array.isArray(seed.nodes) || seed.nodes.length < 2) {
   throw new Error(`OSM way ${WAY_ID} was not returned with its node references`);
 }
-
-const endpointIds = [seed.nodes[0], seed.nodes[seed.nodes.length - 1]];
-const connectedQuery =
-  `[out:json][timeout:40];node(id:${endpointIds.join(",")});` +
-  `way(bn)[highway];out geom;`;
-const connectedData = await overpass(connectedQuery);
-const ways = new Map();
-for (const element of [...seedData.elements, ...connectedData.elements]) {
-  if (element.type === "way" && Array.isArray(element.geometry)) {
-    ways.set(element.id, element);
+const seedGeometry = seed.nodes.map((nodeId) => {
+  const node = nodeById.get(nodeId);
+  if (!node || !Number.isFinite(node.lat) || !Number.isFinite(node.lon)) {
+    throw new Error(`Missing coordinates for OSM node ${nodeId}`);
   }
-}
-if (!ways.has(WAY_ID)) {
-  throw new Error("The seed way geometry could not be resolved");
+  return { lat: node.lat, lon: node.lon };
+});
+const seedWithGeometry = { ...seed, geometry: seedGeometry };
+const endpointIds = [seed.nodes[0], seed.nodes[seed.nodes.length - 1]];
+const ways = new Map([[WAY_ID, seedWithGeometry]]);
+try {
+  const connectedQuery =
+    `[out:json][timeout:25];node(id:${endpointIds.join(",")});` +
+    `way(bn)[highway];out geom;`;
+  const connectedData = await overpass(connectedQuery);
+  for (const element of connectedData.elements ?? []) {
+    if (element.type === "way" && Array.isArray(element.geometry)) {
+      ways.set(element.id, element);
+    }
+  }
+} catch (error) {
+  warnings.push(
+    `Endpoint-connected roads were not fetched: ${error instanceof Error ? error.message : String(error)}`,
+  );
 }
 
 const output = {
@@ -77,6 +105,7 @@ const output = {
   seedWayId: WAY_ID,
   seedNodeIds: seed.nodes,
   endpointNodeIds: endpointIds,
+  warnings,
   note:
     "Raw mapped ways only. Review names, direction, continuity and coverage before using as the playable route.",
   ways: [...ways.values()].map((way) => ({
