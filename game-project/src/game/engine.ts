@@ -2305,9 +2305,9 @@ function buildStreetSigns(scene: THREE.Scene, track: Track) {
   const labels = [
     { title: "شارع الفيوم", subtitle: "دار السلام", color: "#174b68" },
     { title: "منطقة سكنية", subtitle: "خفف السرعة", color: "#286044" },
-    { title: "اتجاه السوق", subtitle: "يرجى الانتباه", color: "#8b4b2d" },
+    { title: "تنبيه مروري", subtitle: "يرجى الانتباه", color: "#8b4b2d" },
     { title: "دار السلام", subtitle: "أهلاً بيك", color: "#174b68" },
-    { title: "محطة وقود", subtitle: "على الطريق", color: "#286044" },
+    { title: "خفف السرعة", subtitle: "قدامك عبور مشاة", color: "#286044" },
     { title: "شارع الفيوم", subtitle: "طريق رئيسي", color: "#174b68" },
   ];
   const postGeo = new THREE.CylinderGeometry(0.075, 0.11, 3.4, 7);
