@@ -148,3 +148,22 @@ test("vehicle audio exposes thirty bounded mobile-safe sound controls", () => {
   assert.ok(engine.includes("SFX_TUNING.crashProfile"));
   assert.ok(engine.includes("SFX_TUNING.radarProfile"));
 });
+
+test("rush delivery scheduling varies routes while keeping destinations distinct", () => {
+  const marker = "const JOB_ROUTE_TUNING = {";
+  const start = engine.indexOf(marker);
+  assert.notEqual(start, -1, "rush route tuning must remain explicit");
+  const end = engine.indexOf("} as const;", start);
+  assert.notEqual(end, -1, "rush route tuning must be closed");
+  const tuning = engine.slice(start, end);
+  const keys = [...tuning.matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
+  assert.equal(keys.length, 20, "rush route tuning must expose twenty controls");
+  for (const key of keys) {
+    assert.ok(engine.includes("JOB_ROUTE_TUNING." + key), "unused rush route tuning: " + key);
+  }
+  assert.match(engine, /const preferred = available\.filter/);
+  assert.match(engine, /const totalWeight = weighted\.reduce/);
+  assert.match(engine, /if \(hop === previousHop\)/);
+  assert.match(engine, /if \(sector !== previousSector\)/);
+  assert.match(engine, /if \(!available\.length\) break/);
+});
