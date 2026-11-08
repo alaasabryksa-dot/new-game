@@ -1850,8 +1850,11 @@ export function mountGame(
       queueClock -= PASSENGER_SYSTEM_TUNING.queueRefreshSeconds;
       const demand = [0.9, 1, 0.78, 0.72, 0.42, 0.62, 0.58, 0.92, 0.76, 0.5];
       for (let i = 0; i < waiting.length; i++) {
-        const hubChance = PASSENGER_SYSTEM_TUNING.baseSpawnChance + demand[i % demand.length] * PASSENGER_SYSTEM_TUNING.hubSpawnChanceBonus;\n        const stopChance = i % 5 === 4 ? hubChance * PASSENGER_SYSTEM_TUNING.quietStopSpawnScale : hubChance;\n        if (waiting[i] >= PASSENGER_SYSTEM_TUNING.maxWaitingAtStop || Math.random() > stopChance) continue;
-        const extra = Math.random() < PASSENGER_SYSTEM_TUNING.bonusSpawnChance ? PASSENGER_SYSTEM_TUNING.bonusSpawnCount : 0;\n        waiting[i] = Math.min(PASSENGER_SYSTEM_TUNING.maxWaitingAtStop, waiting[i] + 1 + extra);
+        const hubChance = PASSENGER_SYSTEM_TUNING.baseSpawnChance + demand[i % demand.length] * PASSENGER_SYSTEM_TUNING.hubSpawnChanceBonus;
+        const stopChance = i % 5 === 4 ? hubChance * PASSENGER_SYSTEM_TUNING.quietStopSpawnScale : hubChance;
+        if (waiting[i] >= PASSENGER_SYSTEM_TUNING.maxWaitingAtStop || Math.random() > stopChance) continue;
+        const extra = Math.random() < PASSENGER_SYSTEM_TUNING.bonusSpawnChance ? PASSENGER_SYSTEM_TUNING.bonusSpawnCount : 0;
+        waiting[i] = Math.min(PASSENGER_SYSTEM_TUNING.maxWaitingAtStop, waiting[i] + 1 + extra);
       }
     }
     const spec = specNow();
