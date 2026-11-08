@@ -86,6 +86,14 @@ test("the minimap redraw is throttled independently from the 3D frame rate", () 
   assert.ok(engine.includes("drawMap();"));
 });
 
+test("traffic collision checks longitudinal and lateral vehicle overlap separately", () => {
+  assert.ok(engine.includes("const longitudinalGap = Math.abs(wrapDelta(n.s, proj.s, track.total))"));
+  assert.ok(engine.includes("const lateralGap = Math.abs(laneLat(n.lane) - proj.lat)"));
+  assert.ok(engine.includes("const longitudinalReach = (spec.length + other.length) * 0.5"));
+  assert.ok(engine.includes("const lateralReach = (spec.width + other.width) * 0.5 + 0.18"));
+  assert.ok(engine.includes("if (longitudinalGap >= longitudinalReach || lateralGap >= lateralReach) continue"));
+});
+
 test("collision fine message matches the amount deducted", () => {
   assert.ok(engine.includes("money = Math.max(0, money - 35)"));
   assert.ok(engine.includes('say("خبطة! غرامة ٣٥ ج")'));
