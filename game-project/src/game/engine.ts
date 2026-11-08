@@ -241,10 +241,12 @@ function calculateFuelBurnRate(
   return (DRIVING_FEEDBACK_TUNING.fuelIdleRate * movingFactor + safeThrottle * DRIVING_FEEDBACK_TUNING.fuelThrottleRate) * efficiency * loadFactor * speedFactor;
 }
 
-function calculatePassengerFare(hopCount: number, fareMultiplier: number) {
-  const safeHops = Math.floor(finiteNonNegative(hopCount, 100));
+function calculatePassengerFare(distanceMeters: number, fareMultiplier: number, metersPerStop: number) {
+  const safeDistance = finiteNonNegative(distanceMeters, 100_000);
+  const safeStopLength = Math.max(1, finiteNonNegative(metersPerStop, 100_000));
+  const distanceSteps = Math.max(1, Math.ceil(safeDistance / safeStopLength));
   const safeMultiplier = Math.min(10, Math.max(0.1, Number.isFinite(fareMultiplier) ? fareMultiplier : 1));
-  return Math.max(1, Math.round((PASSENGER_SYSTEM_TUNING.baseFare + safeHops * PASSENGER_SYSTEM_TUNING.farePerStop) * safeMultiplier));
+  return Math.max(1, Math.round((PASSENGER_SYSTEM_TUNING.baseFare + distanceSteps * PASSENGER_SYSTEM_TUNING.farePerStop) * safeMultiplier));
 }
 
 function blankUpgrades(): Upgrades {
@@ -1767,13 +1769,13 @@ function rollJobs(fromStop: number) {
         const droppingHere = pax.some((person) => person.dest === targetI);
         const waitingHere = waiting[targetI] > 0;
         const relevant = waitingHere || droppingHere;
-        if (relevant && targetD < 90 && proj.lat < 3.2) hint = "خش يمين وهدّي";
-        else if (relevant && targetD < 40 && player.speed > 4.5) hint = "هدّي عند المحطة";
-        else if (droppingHere && waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا لتنزيل الركاب واستلام المنتظرين";
-        else if (droppingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا لتنزيل الركاب";
-        else if (waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المحطة لاستلام الركاب";
-        else if (droppingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "ثبّت لحظة لتنزيل الركاب";
-        else if (waitingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "ثبّت لحظة لاستلام الركاب";
+        if (relevant && targetD < 90 && proj.lat < 3.2) hint = "قرّب من مدخل الشارع وهدّي";
+        else if (relevant && targetD < 40 && player.speed > 4.5) hint = "هدّي عند مدخل الشارع";
+        else if (droppingHere && waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا عند المدخل لتنزيل الركاب واستلام المنتظرين";
+        else if (droppingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا عند المدخل لتنزيل الركاب";
+        else if (waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المدخل لاستلام الركاب";
+        else if (droppingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "اثبت لحظة عند المدخل لتنزيل الركاب";
+        else if (waitingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "اثبت لحظة عند المدخل لاستلام الركاب";
       }
     }
     return {
@@ -2413,7 +2415,8 @@ function rollJobs(fromStop: number) {
             const { hop, dest } = choice;
             assignedDestinations.add(dest);
             // Fare is fixed at pickup and scales with trip length and seat upgrades.
-            const fare = calculatePassengerFare(hop, spec.fare);
+            const tripDistance = (track.stops[dest].s - track.stops[i].s + track.total) % track.total;
+            const fare = calculatePassengerFare(tripDistance, spec.fare, track.total / track.stops.length);
             const passenger = { dest, fare };
             pax.push(passenger);
             boarded.push(passenger);
