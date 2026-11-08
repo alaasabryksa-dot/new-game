@@ -12,7 +12,9 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebView
+import android.widget.TextView
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 
@@ -43,6 +45,25 @@ class MainActivity : Activity() {
 
                 override fun onPageFinished(view: WebView, url: String) {
                     Log.i(TAG, "Page finished: " + url)
+                }
+
+                override fun onRenderProcessGone(
+                    view: WebView,
+                    detail: RenderProcessGoneDetail
+                ): Boolean {
+                    Log.e(TAG, "WebView renderer process gone; didCrash=" + detail.didCrash())
+                    view.removeJavascriptInterface("AndroidAds")
+                    (view.parent as? android.view.ViewGroup)?.removeView(view)
+                    view.destroy()
+                    setContentView(TextView(this@MainActivity).apply {
+                        text = "محرك عرض اللعبة توقف على هذا الجهاز. تم تسجيل العطل؛ لن نغلق التطبيق فجأة."
+                        textSize = 18f
+                        setPadding(32, 32, 32, 32)
+                        setTextColor(android.graphics.Color.WHITE)
+                        setBackgroundColor(android.graphics.Color.rgb(20, 24, 30))
+                        gravity = android.view.Gravity.CENTER
+                    })
+                    return true
                 }
             }
             webChromeClient = object : WebChromeClient() {
