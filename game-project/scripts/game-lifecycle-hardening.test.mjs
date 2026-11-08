@@ -4,6 +4,7 @@ import test from "node:test";
 
 const engine = await readFile(new URL("../src/game/engine.ts", import.meta.url), "utf8");
 const ui = await readFile(new URL("../src/components/dar-salam.tsx", import.meta.url), "utf8");
+const types = await readFile(new URL("../src/game/types.ts", import.meta.url), "utf8");
 
 test("mobile controls release individual pointers even when pointer capture is unavailable", () => {
   assert.match(ui, /holds = useRef\(\{ l: new Set<number>\(\), r: new Set<number>\(\), g: new Set<number>\(\), b: new Set<number>\(\) \}\)/);
@@ -118,4 +119,39 @@ test("pedestrian player-avoidance smoothing is frame-rate independent and delta-
   assert.match(engine, /THREE\.MathUtils\.clamp\(time - previousUpdateTime, 0, 0\.1\)/);
   assert.match(engine, /1 - Math\.exp\(-PEDESTRIAN_TUNING\.avoidanceResponse \* 60 \* elapsed\)/);
   assert.match(engine, /walker\.avoidanceOffset \+= \(targetAvoidance - walker\.avoidanceOffset\) \* avoidanceBlend/);
+});
+
+
+test("confirmed street directory preserves twelve ordered entrances on each side", () => {
+  const block = types.match(/export const STREET_ENTRANCES: readonly StreetEntrance\[\] = \[([\s\S]*?)\n\];/);
+  assert.ok(block, "player-confirmed street entrance data must remain explicit");
+  const left = [...block[1].matchAll(/side: "left" as const, sideOrder: index \+ 1/g)];
+  const right = [...block[1].matchAll(/side: "right" as const, sideOrder: index \+ 1/g)];
+  assert.equal(left.length, 1, "left-side list should be mapped into ordered entries once");
+  assert.equal(right.length, 1, "right-side list should be mapped into ordered entries once");
+  assert.match(block[1], /"شارع حسن مطر"[\s\S]*?"شارع إسماعيل الليثي"/);
+  assert.match(block[1], /"شارع أحمد عسلاقي"[\s\S]*?"شارع الحرية"/);
+});
+
+test("menu exposes the confirmed street directory without pretending it is mapped", () => {
+  assert.match(ui, /دليل الشوارع المثبتة \(\{STREET_ENTRANCES\.length\}\)/);
+  assert.match(ui, /STREET_ENTRANCES\.filter\(\(entry\) => entry\.side === side\)/);
+  assert.match(ui, /\.sort\(\(a, b\) => a\.sideOrder - b\.sideOrder\)/);
+  assert.match(ui, /لم نحدد بعد ترتيب المرور بين الجانبين أو موقع النزول الدقيق على الخريطة/);
+});
+
+test("mobile driving inputs are released when the page is being hidden", () => {
+  assert.match(ui, /window\.addEventListener\("pagehide", releaseInputs\)/);
+  assert.match(ui, /window\.removeEventListener\("pagehide", releaseInputs\)/);
+});
+
+test("global pointer release clears every matching control set before syncing touch state", () => {
+  const start = ui.indexOf("const onGlobalPointerUp = (event: PointerEvent) => {");
+  const end = ui.indexOf("\n    };", start);
+  const handler = ui.slice(start, end);
+  assert.match(handler, /releasedLeft = h\.l\.delete\(event\.pointerId\)/);
+  assert.match(handler, /releasedRight = h\.r\.delete\(event\.pointerId\)/);
+  assert.match(handler, /releasedThrottle = h\.g\.delete\(event\.pointerId\)/);
+  assert.match(handler, /releasedBrake = h\.b\.delete\(event\.pointerId\)/);
+  assert.match(handler, /gameRef\.current\?\.setTouch/);
 });
