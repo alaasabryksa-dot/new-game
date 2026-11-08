@@ -191,7 +191,7 @@ test("game progress survives a damaged primary save through the backup slot", ()
   assert.ok(engine.includes("function blankSave(): Save"));
   assert.ok(engine.includes("function parseSave(raw: string | null): Save | null"));
   assert.ok(engine.includes("function readSaveSlot(key: string): Save | null"));
-  assert.ok(engine.includes("return readSaveSlot(SAVE_KEY) ?? readSaveSlot(SAVE_BACKUP_KEY) ?? blankSave()"));
+  assert.match(engine, /const primary = readSaveSlot\(SAVE_KEY\)[\s\S]*?const backup = readSaveSlot\(SAVE_BACKUP_KEY\)[\s\S]*?writeSave\(backup\)/);
   assert.ok(engine.includes('localStorage.setItem(SAVE_KEY, serialized)'));
   assert.ok(engine.includes('localStorage.setItem(SAVE_BACKUP_KEY, serialized)'));
   assert.ok(engine.includes("if (p.v !== 2 || !p.upgrades || typeof p.upgrades !== \"object\") return null"));
