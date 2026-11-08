@@ -99,3 +99,9 @@ test("optional audio failures cannot block game startup", () => {
   assert.match(engine, /Audio is optional: unsupported or blocked audio must never stop gameplay/);
   assert.match(engine, /this\.stop\(\);/);
 });
+
+
+test("gameplay interruption and manual pause persist the current run immediately", () => {
+  assert.match(engine, /persist\(\);\s*phase = "pause";/);
+  assert.match(engine, /pause: \(\) => \{[\s\S]*?persist\(\);\s*phase = "pause";/);
+});
