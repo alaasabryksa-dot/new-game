@@ -1400,8 +1400,13 @@ function rollJobs(fromStop: number) {
         .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
         .filter((candidate) => !jobs.includes(candidate.dest));
       if (!available.length) break;
+      const preferred = available.filter((candidate) =>
+        candidate.hop >= JOB_ROUTE_TUNING.minHop &&
+        candidate.hop <= JOB_ROUTE_TUNING.maxHop
+      );
+      const routeCandidates = preferred.length ? preferred : available;
 
-      const weighted = available.map((candidate) => {
+      const weighted = routeCandidates.map((candidate) => {
         const { hop, dest } = candidate;
         const hopWeight = hop === 2 ? JOB_ROUTE_TUNING.hop2Weight
           : hop === 3 ? JOB_ROUTE_TUNING.hop3Weight
