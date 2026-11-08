@@ -62,6 +62,18 @@ test("mobile performance budgets pedestrians and render pixel ratio", () => {
   assert.match(engine, /if \(!androidDevice\) buildStreetFurniture/);
 });
 
+test("road-edge handling applies progressive shoulder drag before clamping", () => {
+  assert.match(engine, /const shoulderStart = Math\.max\(0, limit - 1\.35\)/);
+  assert.match(engine, /const shoulderDepth = Math\.max\(0, Math\.abs\(proj\.lat\) - shoulderStart\)/);
+  assert.match(engine, /player\.speed \*= Math\.exp\(-dt \* shoulderDrag \* 1\.35\)/);
+  assert.ok(engine.indexOf("shoulderDrag") < engine.indexOf("if (Math.abs(proj.lat) > limit)"));
+});
+
+test("fuel consumption accounts for speed as well as passenger load", () => {
+  assert.match(engine, /const speedFactor = 1 \+ Math\.min\(0\.35, Math\.abs\(player\.speed\) \/ Math\.max\(1, spec\.max\) \* 0\.35\)/);
+  assert.match(engine, /loadFactor \* speedFactor \* dt/);
+});
+
 test("opposing traffic collision checks road-aligned length and lane width", () => {
   assert.match(engine, /wrongLongitudinalGap = Math\.abs\(wrapDelta\(w\.s, proj\.s, track\.total\)\)/);
   assert.match(engine, /wrongLateralGap = Math\.abs\(w\.lat - proj\.lat\)/);
