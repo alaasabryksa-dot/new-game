@@ -82,6 +82,7 @@ export function DarSalam() {
       if (document.visibilityState === "hidden") releaseInputs();
     };
     window.addEventListener("blur", releaseInputs);
+    window.addEventListener("pointercancel", releaseInputs);
     document.addEventListener("visibilitychange", onVisibilityChange);
     canvas.addEventListener("webglcontextlost", reportContextLoss);
     void import("@/game/engine")
@@ -133,6 +134,7 @@ export function DarSalam() {
       if (readyFrame) cancelAnimationFrame(readyFrame);
       if (readyFrame2) cancelAnimationFrame(readyFrame2);
       window.removeEventListener("blur", releaseInputs);
+      window.removeEventListener("pointercancel", releaseInputs);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       canvas.removeEventListener("webglcontextlost", reportContextLoss);
       releaseInputs();
@@ -528,6 +530,15 @@ function PlayHud({
           onClick={() => game.current?.cycleCam()}
         >
           كاميرا
+        </button>
+        <button
+          type="button"
+          className="rounded-full bg-panel/90 p-3"
+          aria-label={snap.sound ? "كتم الصوت" : "تشغيل الصوت"}
+          title={snap.sound ? "كتم الصوت" : "تشغيل الصوت"}
+          onClick={() => game.current?.toggleSound()}
+        >
+          {snap.sound ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
         </button>
       </div>
 
