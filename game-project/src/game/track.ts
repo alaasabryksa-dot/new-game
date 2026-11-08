@@ -1,4 +1,4 @@
-import { STOP_NAMES, STREET_ENTRANCES } from "./types";
+import { STREET_ENTRANCES } from "./types";
 import { FAYOUM_ROUTE_COORDINATES } from "./data/fayoum-route";
 
 export const LANE_W = 3.45;
@@ -19,7 +19,7 @@ export type Proj = {
 export type Track = {
   pts: Sample[];
   total: number;
-  stops: { name: string; s: number }[];
+  stops: { name: string; side: "left" | "right"; s: number }[];
   entrances: { name: string; side: "left" | "right"; sideOrder: number; s: number }[];
   tollS: number;
   radarS: number[];
@@ -92,19 +92,16 @@ export function buildTrack(): Track {
   }
   const total = s;
 
-  // Provisional prototype placement: gameplay pickup points, not surveyed or named street stops.
-  // Confirmed side-street entrance order is stored separately until exact positions are mapped.
-  const stops = STOP_NAMES.map((name, i) => ({
-    name,
-    s: ((i + 0.06) / STOP_NAMES.length) * total,
-  }));
-
-  // Side-street signs use the user-confirmed order on each side independently.
-  // Their spacing is illustrative until individual entrance positions are surveyed.
+  // Passenger stops now use the player's 24 confirmed street names.
+  // Opposite-side streets with the same sideOrder share a provisional cross-section;
+  // this preserves each side's order without claiming surveyed cross-side alignment.
   const entrances = STREET_ENTRANCES.map((entry) => ({
     ...entry,
     s: (entry.sideOrder / 13) * total,
   }));
+  const stops = entrances
+    .map(({ name, side, s: stopS }) => ({ name, side, s: stopS }))
+    .sort((a, b) => a.s - b.s || (a.side === "left" ? -1 : 1));
 
   const tollS = total * 0.42;
   const radarS = [0.18, 0.57, 0.79].map((t) => t * total);
