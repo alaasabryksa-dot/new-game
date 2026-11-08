@@ -360,9 +360,9 @@ test("shift settlement preserves earnings when rent cannot yet be fully paid", (
 });
 
 test("shift settlement math preserves money across paid, partial and overpaid rent cases", () => {
-  const match = engine.match(/function calculateShiftSettlement\(earnings: number, wallet: number, rent: number\): ShiftSettlement \{([\\s\\S]*?)\\n\}/);
+  const match = engine.match(/function calculateShiftSettlement\(earnings: number, wallet: number, rent: number\): ShiftSettlement \{([\s\S]*?)\n\}/);
   assert.ok(match, "pure settlement calculation must remain independently testable");
-  const calculate = new Function("finiteNonNegative", match[1] + "\\nreturn { rentPaid, rentRemaining, walletAfter };");
+  const calculate = new Function("finiteNonNegative", "earnings", "wallet", "rent", match[1] + "\nreturn { rentPaid, rentRemaining, walletAfter };");
   const finite = (value, max = 1_000_000_000) => {
     const parsed = typeof value === "number" ? value : Number(value);
     if (!Number.isFinite(parsed)) return 0;
@@ -379,8 +379,10 @@ test("shift settlement math preserves money across paid, partial and overpaid re
 
 test("shift summary reports exact rent paid, remaining balance and wallet delta", () => {
   assert.match(engine, /let walletAtRunStart = save\.wallet/);
-  assert.match(engine, /settlementRentPaid = Math\.min\(RENT, availableForRent\)/);
-  assert.match(engine, /settlementRentRemaining = Math\.max\(0, RENT - availableForRent\)/);
+  assert.match(engine, /const settlement = calculateShiftSettlement\(money, save\.wallet, RENT\)/);
+  assert.match(engine, /settlementRentPaid = settlement\.rentPaid/);
+  assert.match(engine, /settlementRentRemaining = settlement\.rentRemaining/);
+  assert.match(engine, /save\.wallet = settlement\.walletAfter/);
   assert.match(engine, /settlementWalletChange = save\.wallet - walletAtRunStart/);
   assert.match(engine, /rentPaid: settlementRentPaid,[\s\S]*?rentRemaining: settlementRentRemaining,[\s\S]*?walletChange: settlementWalletChange/);
   assert.match(ui, /الإيجار المسدد/);
