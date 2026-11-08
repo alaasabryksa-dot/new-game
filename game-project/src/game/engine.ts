@@ -3618,12 +3618,14 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, play
   };
   const walkers: Walker[] = [];
   const loader = new THREE.TextureLoader();
+  // Resolve public assets from the current document so the same paths work
+  // in the web app (/) and inside Android's /assets/public/ WebView bundle.
   const spritePaths = [
-    "/assets/legacy-dar-salam/pedestrian_01.svg",
-    "/assets/legacy-dar-salam/pedestrian_02.svg",
-    "/assets/legacy-dar-salam/pedestrian_03.svg",
-    "/assets/legacy-dar-salam/pedestrian_04.svg",
-  ];
+    "pedestrian_01.svg",
+    "pedestrian_02.svg",
+    "pedestrian_03.svg",
+    "pedestrian_04.svg",
+  ].map((file) => new URL(`./assets/legacy-dar-salam/${file}`, document.baseURI).toString());
   const materials = spritePaths.map((path) => {
     const texture = loader.load(path);
     texture.colorSpace = THREE.SRGBColorSpace;
