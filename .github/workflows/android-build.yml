@@ -35,7 +35,7 @@ jobs:
           set +e
           npm audit --json > npm-audit.json
           audit_status=$?
-          node --input-type=module <<\x27NODE\x27
+          node --input-type=module <<'NODE'
           import fs from "node:fs";
           const report = JSON.parse(fs.readFileSync("npm-audit.json", "utf8"));
           console.log("Dependency audit summary:", JSON.stringify(report.metadata?.vulnerabilities ?? {}));
