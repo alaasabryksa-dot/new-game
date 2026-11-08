@@ -2708,13 +2708,13 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
       const shopWidth = Math.min(width * 0.88, 10.5);
       const panelIndex = shopCount++;
       addInstance(panels, panelIndex, frontX, 1.18, frontZ, point.yaw, 1, 1, shopWidth);
-      if ((seed % 5) === 0) {
-        addInstance(shutters, panelIndex, frontX - side * 0.035, 1.12, frontZ, point.yaw, 1, 1, shopWidth * 0.72);
-      } else {
-        addInstance(glass, panelIndex, frontX - side * 0.035, 1.22, frontZ, point.yaw, 1, 1, shopWidth * 0.72);
-        addInstance(doors, panelIndex, frontX - side * 0.055, 1.05, frontZ + rz * shopWidth * 0.31,
-          point.yaw, 1, 1, 1);
-      }
+      const hasShutter = (seed % 5) === 0;
+      addInstance(shutters, panelIndex, frontX - side * 0.035, 1.12, frontZ, point.yaw,
+        hasShutter ? 1 : 0, 1, shopWidth * 0.72);
+      addInstance(glass, panelIndex, frontX - side * 0.035, 1.22, frontZ, point.yaw,
+        hasShutter ? 0 : 1, 1, shopWidth * 0.72);
+      addInstance(doors, panelIndex, frontX - side * 0.055, 1.05, frontZ + rz * shopWidth * 0.31,
+        point.yaw, hasShutter ? 0 : 1, 1, 1);
       addInstance(shopLights, panelIndex, frontX - side * 0.12, 2.12, frontZ, point.yaw, 1, 1, shopWidth * 0.8);
 
       const signIndex = seed % signMats.length;
@@ -2738,16 +2738,20 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     mesh.count = Math.min(counts[index], capacity);
     mesh.instanceMatrix.needsUpdate = true;
   });
-  [panels, glass, shutters, doors, shopLights, ...signs, ...awnings, ...awningValances].forEach((mesh) => {
-    mesh.count = Math.min(mesh === panels || mesh === glass || mesh === shutters || mesh === doors || mesh === shopLights
-      ? shopCount
-      : mesh === signs[0] ? signsCount[0]
-      : mesh === signs[1] ? signsCount[1]
-      : mesh === signs[2] ? signsCount[2]
-      : mesh === signs[3] ? signsCount[3]
-      : mesh === signs[4] ? signsCount[4]
-      : awnings.includes(mesh) ? awningsCount[awnings.indexOf(mesh)]
-      : awningsCount[awningValances.indexOf(mesh)], capacity);
+  [panels, glass, shutters, doors, shopLights].forEach((mesh) => {
+    mesh.count = Math.min(shopCount, capacity);
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+  signs.forEach((mesh, index) => {
+    mesh.count = Math.min(signsCount[index], capacity);
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+  awnings.forEach((mesh, index) => {
+    mesh.count = Math.min(awningsCount[index], capacity);
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+  awningValances.forEach((mesh, index) => {
+    mesh.count = Math.min(awningsCount[index], capacity);
     mesh.instanceMatrix.needsUpdate = true;
   });
   return materials;
