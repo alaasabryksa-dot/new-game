@@ -1590,19 +1590,25 @@ export function mountGame(
     const proj = track.project(player.x, player.z, player.hint);
     for (const n of npcs) {
       if (!n.alive || hitCd > 0) continue;
+      const other = vehicleById(n.kind);
+      const longitudinalGap = Math.abs(wrapDelta(n.s, proj.s, track.total));
+      const lateralGap = Math.abs(laneLat(n.lane) - proj.lat);
+      const longitudinalReach = (spec.length + other.length) * 0.5;
+      const lateralReach = (spec.width + other.width) * 0.5 + 0.18;
+      // Adjacent lanes must not collide merely because the vehicles are close
+      // along the road; use separate length and width overlap checks.
+      if (longitudinalGap >= longitudinalReach || lateralGap >= lateralReach) continue;
       const sm = track.sample(n.s);
       const rx = Math.cos(sm.yaw);
       const rz = -Math.sin(sm.yaw);
-      const lat = laneLat(n.lane);
-      const x = sm.x + rx * lat;
-      const z = sm.z + rz * lat;
-      const reach = spec.length * 0.42 + vehicleById(n.kind).length * 0.4;
-      const d = Math.hypot(player.x - x, player.z - z);
-      if (d < reach) {
-        n.speed *= 0.68;
-        collide(d, player.x - x, player.z - z, n.speed);
-        break;
-      }
+      const x = sm.x + rx * laneLat(n.lane);
+      const z = sm.z + rz * laneLat(n.lane);
+      const dx = player.x - x;
+      const dz = player.z - z;
+      const d = Math.hypot(dx, dz);
+      n.speed *= 0.68;
+      collide(d, dx, dz, n.speed);
+      break;
     }
 
     if (hornCd > 0.72) {
