@@ -1469,27 +1469,7 @@ const POOL = androidDevice ? 20 : 64;
   }
   applyDusk(cfg.night ? 0.92 : 0.18);
 
-  function drawSigns() {
-    for (const s of signs) {
-      scene.remove(s);
-      s.geometry.dispose();
-      (s.material as THREE.Material).dispose();
-    }
-    signs.length = 0;
-    for (const stop of track.stops) {
-      const tex = signTexture(stop.name, "دار السلام");
-      if (!tex) continue;
-      const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 });
-      const sm = track.sample(stop.s - 70);
-      const rx = Math.cos(sm.yaw);
-      const rz = -Math.sin(sm.yaw);
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 3.6), mat);
-      mesh.position.set(sm.x + rx * 11.2, 3.3, sm.z + rz * 11.2);
-      mesh.rotation.y = sm.yaw;
-      scene.add(mesh);
-      signs.push(mesh);
-    }
-    const gasTex = signTexture("بنزينة", "اهدى يمين");
+  function drawSigns() {\n    const gasTex = signTexture("بنزينة", "اهدى يمين");
     if (gasTex) {
       const mat = new THREE.MeshStandardMaterial({ map: gasTex, roughness: 0.55 });
       const sm = track.sample(track.gasS - 36);
@@ -3334,28 +3314,20 @@ function buildTrafficSignals(scene: THREE.Scene, track: Track) {
 function buildStreetSigns(scene: THREE.Scene, track: Track) {
   const postMat = new THREE.MeshStandardMaterial({ color: "#777b7c", roughness: 0.78, metalness: 0.35 });
   const frameMat = new THREE.MeshStandardMaterial({ color: "#d4bd8a", roughness: 0.7, metalness: 0.12 });
-  const labels = [
-    { title: "شارع الفيوم", subtitle: "دار السلام", color: "#174b68" },
-    { title: "منطقة سكنية", subtitle: "خفف السرعة", color: "#286044" },
-    { title: "تنبيه مروري", subtitle: "يرجى الانتباه", color: "#8b4b2d" },
-    { title: "دار السلام", subtitle: "أهلاً بيك", color: "#174b68" },
-    { title: "خفف السرعة", subtitle: "قدامك عبور مشاة", color: "#286044" },
-    { title: "شارع الفيوم", subtitle: "طريق رئيسي", color: "#174b68" },
-  ];
   const postGeo = new THREE.CylinderGeometry(0.075, 0.11, 3.4, 7);
-  const boardGeo = new THREE.PlaneGeometry(3.15, 1.12);
-  const frameGeo = new THREE.BoxGeometry(3.28, 1.25, 0.09);
+  const boardGeo = new THREE.PlaneGeometry(3.65, 1.18);
+  const frameGeo = new THREE.BoxGeometry(3.78, 1.3, 0.09);
 
-  labels.forEach((label, index) => {
-    const s = track.stops[index % track.stops.length].s + (index >= track.stops.length ? 38 : 0);
-    const p = track.sample(s);
-    const side = index % 2 === 0 ? 1 : -1;
+  // 24 named entrance signs: each side preserves the player's confirmed order.
+  // Their spacing is deliberately illustrative, not a claim of surveyed GPS positions.
+  for (const entrance of track.entrances) {
+    const p = track.sample(entrance.s);
+    const side = entrance.side === "right" ? 1 : -1;
     const rx = Math.cos(p.yaw);
     const rz = -Math.sin(p.yaw);
-    const x = p.x + rx * side * (ROAD_HALF + 5.15);
-    const z = p.z + rz * side * (ROAD_HALF + 5.15);
+    const offset = ROAD_HALF + 5.15;
     const group = new THREE.Group();
-    group.position.set(x, 0, z);
+    group.position.set(p.x + rx * side * offset, 0, p.z + rz * side * offset);
     group.rotation.y = p.yaw + (side < 0 ? Math.PI : 0);
 
     const post = new THREE.Mesh(postGeo, postMat);
@@ -3363,24 +3335,28 @@ function buildStreetSigns(scene: THREE.Scene, track: Track) {
     const frame = new THREE.Mesh(frameGeo, frameMat);
     frame.position.set(0, 3.05, 0);
     const canvas = document.createElement("canvas");
-    canvas.width = 768;
-    canvas.height = 272;
+    canvas.width = 900;
+    canvas.height = 290;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.fillStyle = label.color;
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, "#174b70");
+      gradient.addColorStop(1, "#102e49");
+      ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = "#e5cf9d";
-      ctx.lineWidth = 12;
+      ctx.lineWidth = 13;
       ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
       ctx.direction = "rtl";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#fff4d9";
-      ctx.font = "bold 76px Tajawal, sans-serif";
-      ctx.fillText(label.title, 384, 112);
+      const fontSize = entrance.name.length > 20 ? 48 : entrance.name.length > 15 ? 58 : 70;
+      ctx.font = `bold ${fontSize}px Tajawal, sans-serif`;
+      ctx.fillText(entrance.name, 450, 112, 820);
       ctx.fillStyle = "#f0d79f";
-      ctx.font = "bold 43px Tajawal, sans-serif";
-      ctx.fillText(label.subtitle, 384, 207);
+      ctx.font = "bold 38px Tajawal, sans-serif";
+      ctx.fillText(`مدخل الشارع • ${entrance.side === "left" ? "شمال" : "يمين"}`, 450, 218);
     }
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -3391,7 +3367,7 @@ function buildStreetSigns(scene: THREE.Scene, track: Track) {
     board.position.set(0, 3.05, 0.055);
     group.add(post, frame, board);
     scene.add(group);
-  });
+  }
 }
 
 function buildElectricalPoles(scene: THREE.Scene, track: Track) {
