@@ -478,6 +478,32 @@ function facadeTexture(base: string, variant = 0) {
     }
   }
 
+  // A few exterior drain pipes and utility meter boxes break up the repeated
+  // apartment pattern while remaining part of the shared facade texture.
+  for (let pipe = 0; pipe < 2; pipe++) {
+    const px = pipe === 0 ? 5 + (variant % 3) * 5 : 352 + (variant % 4) * 5;
+    g.fillStyle = "rgba(55,59,57,0.24)";
+    g.fillRect(px - 2, 0, 7, 512);
+    g.fillStyle = variant % 2 ? "#aaa69b" : "#9c9c91";
+    g.fillRect(px, 0, 3, 512);
+    for (let floor = 1; floor < 4; floor++) {
+      g.fillStyle = "#d2cbbd";
+      g.fillRect(px - 3, floor * 128 - 5, 9, 5);
+    }
+  }
+  if (variant % 2 === 0) {
+    g.fillStyle = "rgba(35,42,43,0.22)";
+    g.fillRect(300, 448, 42, 34);
+    g.fillStyle = "#b7b4a8";
+    g.fillRect(303, 451, 36, 28);
+    g.fillStyle = "#6e7774";
+    g.fillRect(307, 455, 28, 3);
+    g.fillStyle = "#d6c78d";
+    g.beginPath();
+    g.arc(321, 466, 5, 0, Math.PI * 2);
+    g.fill();
+  }
+
   // Weathering near the lower edge and small facade details.
   g.fillStyle = "rgba(80,65,50,0.13)";
   g.fillRect(0, 478, c.width, 34);
