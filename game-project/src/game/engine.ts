@@ -1682,11 +1682,16 @@ function rollJobs(fromStop: number) {
       else if (cfg.mode === "rush") {
         if (targetD < 80 && proj.lat < 3.2) hint = "اهدى يمين المحطة";
       } else {
-        const relevant = waiting[targetI] > 0 || pax.some((person) => person.dest === targetI);
+        const droppingHere = pax.some((person) => person.dest === targetI);
+        const waitingHere = waiting[targetI] > 0;
+        const relevant = waitingHere || droppingHere;
         if (relevant && targetD < 90 && proj.lat < 3.2) hint = "خش يمين وهدّي";
         else if (relevant && targetD < 40 && player.speed > 4.5) hint = "هدّي عند المحطة";
-        else if (relevant && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المحطة لاستلام الركاب";
-        else if (relevant && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "ثبّت لحظة لاستلام الركاب";
+        else if (droppingHere && waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا لتنزيل الركاب واستلام المنتظرين";
+        else if (droppingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا لتنزيل الركاب";
+        else if (waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المحطة لاستلام الركاب";
+        else if (droppingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "ثبّت لحظة لتنزيل الركاب";
+        else if (waitingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "ثبّت لحظة لاستلام الركاب";
       }
     }
     return {
