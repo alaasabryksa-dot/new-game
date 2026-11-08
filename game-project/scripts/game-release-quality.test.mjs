@@ -108,8 +108,10 @@ test("passenger boarding spreads drop-off destinations when alternatives are ava
 
 
 test("passenger boarding widens destination choices before reusing a drop-off", () => {
-  assert.match(engine, /const extendedCandidates = \[2, 3, 4, 5, 6\]/);
-  assert.match(engine, /extendedCandidates\.length[\\s\\S]*?extendedCandidates[\\s\\S]*?: \[2, 3, 4, 5, 6\]/);
+  assert.match(engine, /const extendedCandidates = \\[2, 3, 4, 5, 6\\]/);
+  assert.ok(engine.includes(": extendedCandidates.length"));
+  assert.ok(engine.includes("? extendedCandidates"));
+  assert.ok(engine.includes(": [2, 3, 4, 5, 6].map"));
 });
 
 test("fuel consumption accounts for speed as well as passenger load", () => {
