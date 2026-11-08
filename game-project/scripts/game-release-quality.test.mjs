@@ -56,7 +56,9 @@ test("mobile performance budgets pedestrians and render pixel ratio", () => {
   assert.match(engine, /walkerBudget = constrainedDevice \? 18 : 32/);
   assert.match(engine, /const androidDevice = \/Android\/i\.test\(navigator\.userAgent\)/);
   assert.match(engine, /pixelRatioCap = androidDevice/);
-  assert.match(engine, /const POOL = androidDevice \? 24 : 64/);
+  assert.match(engine, /const POOL = androidDevice \? 12 : 64/);
+  assert.match(engine, /function buildCityMobile\(/);
+  assert.match(engine, /buildCity\(scene, track, androidDevice\)/);
   assert.match(engine, /if \(!androidDevice\) buildStreetFurniture/);
 });
 
