@@ -355,8 +355,10 @@ test("Android touch input remains active when pointer capture is unavailable", (
 
 
 test("shift settlement preserves earnings when rent cannot yet be fully paid", () => {
-  assert.match(engine, /const remainingRent = Math\.max\(0, RENT - money - save\.wallet\);[\s\S]*?save\.wallet \+= money;[\s\S]*?لسه فاضل/);
-  assert.match(engine, /if \(save\.wallet >= RENT - money\)[\s\S]*?save\.wallet -= RENT - money/);
+  assert.match(engine, /const settlement = calculateShiftSettlement\(money, save\.wallet, RENT\)/);
+  assert.match(engine, /settlement\.rentRemaining > 0|settlement\.rentRemaining === 0/);
+  assert.match(engine, /save\.wallet = settlement\.walletAfter/);
+  assert.match(engine, /جمعت \\$\{money\} ج — لسه فاضل \\$\{settlement\.rentRemaining\} ج على الإيجار/);
 });
 
 test("passenger fares scale predictably with trip distance and seat upgrades", () => {
