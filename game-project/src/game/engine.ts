@@ -3080,6 +3080,11 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   const canopyMatrices: THREE.Matrix4[] = [];
   const binMatrices: THREE.Matrix4[] = [];
   const bollardMatrices: THREE.Matrix4[] = [];
+  const cartBodyMatrices: THREE.Matrix4[] = [];
+  const cartTopMatrices: THREE.Matrix4[] = [];
+  const cartCanopyMatrices: THREE.Matrix4[] = [];
+  const cartWheelMatrices: THREE.Matrix4[] = [];
+  const cartProduceMatrices: THREE.Matrix4[][] = [[], [], []];
   const o = new THREE.Object3D();
 
   // Small street trees on the quieter sidewalk; keep clear of the lamp line.
@@ -3125,6 +3130,57 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     }
   }
 
+  // Occasional hand-pushed produce carts sit against the building edge,
+  // leaving the middle of the sidewalk open for pedestrians.
+  for (let i = 9; i < pts.length; i += 24) {
+    const p = pts[i];
+    const hash = Math.abs(Math.sin(i * 7.13) * 19341.71) % 1;
+    if (hash < 0.38) continue;
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const side = i % 2 === 0 ? 1 : -1;
+    const lat = side * (ROAD_HALF + 4.05);
+    const cx = p.x + rx * lat;
+    const cz = p.z + rz * lat;
+    o.rotation.set(0, p.yaw, 0);
+    o.scale.set(1, 1, 1);
+    o.position.set(cx, 0.48, cz);
+    o.updateMatrix();
+    cartBodyMatrices.push(o.matrix.clone());
+    o.position.set(cx, 0.94, cz);
+    o.scale.set(1.16, 0.12, 0.88);
+    o.updateMatrix();
+    cartTopMatrices.push(o.matrix.clone());
+    // Simple striped canopy gives each cart a recognizable street-market silhouette.
+    if (hash > 0.66) {
+      o.position.set(cx, 1.58, cz);
+      o.scale.set(1.25, 0.1, 1.02);
+      o.updateMatrix();
+      cartCanopyMatrices.push(o.matrix.clone());
+    }
+    for (let wheel = 0; wheel < 4; wheel++) {
+      const wx = wheel < 2 ? -0.43 : 0.43;
+      const wz = wheel % 2 === 0 ? -0.29 : 0.29;
+      o.position.set(cx + rx * wx + rz * wz, 0.2, cz + rz * wx - rx * wz);
+      o.rotation.set(0, p.yaw, Math.PI / 2);
+      o.scale.set(1, 1, 1);
+      o.updateMatrix();
+      cartWheelMatrices.push(o.matrix.clone());
+    }
+    for (let item = 0; item < 3; item++) {
+      const colorIndex = (Math.floor(hash * 100) + item) % cartProduceMatrices.length;
+      o.position.set(
+        cx + rx * ((item - 1) * 0.25),
+        1.12 + (item % 2) * 0.06,
+        cz + rz * ((item - 1) * 0.08),
+      );
+      o.rotation.set(0, p.yaw, 0);
+      o.scale.set(0.22, 0.2, 0.22);
+      o.updateMatrix();
+      cartProduceMatrices[colorIndex].push(o.matrix.clone());
+    }
+  }
+
   const trunk = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.16, 0.22, 2.1, 7),
     new THREE.MeshStandardMaterial({ color: "#725039", roughness: 1 }),
@@ -3149,7 +3205,43 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     bollardMatrices.length,
   );
   bollardMatrices.forEach((m, i) => bollards.setMatrixAt(i, m));
-  scene.add(trunk, canopy, bins, bollards);
+  const cartBodies = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.96, 0.82, 0.68),
+    new THREE.MeshStandardMaterial({ color: "#8b6240", roughness: 0.9 }),
+    cartBodyMatrices.length,
+  );
+  cartBodyMatrices.forEach((m, i) => cartBodies.setMatrixAt(i, m));
+  const cartTops = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.12, 0.12, 0.84),
+    new THREE.MeshStandardMaterial({ color: "#c9b28b", roughness: 0.82 }),
+    cartTopMatrices.length,
+  );
+  cartTopMatrices.forEach((m, i) => cartTops.setMatrixAt(i, m));
+  const cartCanopies = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.18, 0.1, 0.96),
+    new THREE.MeshStandardMaterial({ color: "#b6533f", roughness: 0.9 }),
+    Math.max(1, cartCanopyMatrices.length),
+  );
+  cartCanopyMatrices.forEach((m, i) => cartCanopies.setMatrixAt(i, m));
+  cartCanopies.count = cartCanopyMatrices.length;
+  const cartWheels = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.16, 0.16, 0.09, 8),
+    new THREE.MeshStandardMaterial({ color: "#343638", roughness: 0.78 }),
+    cartWheelMatrices.length,
+  );
+  cartWheelMatrices.forEach((m, i) => cartWheels.setMatrixAt(i, m));
+  const produceColors = ["#c94b37", "#6b9a43", "#e2b53f"];
+  const produceMeshes = cartProduceMatrices.map((matrices, index) => {
+    const mesh = new THREE.InstancedMesh(
+      new THREE.SphereGeometry(0.16, 6, 5),
+      new THREE.MeshStandardMaterial({ color: produceColors[index], roughness: 0.84 }),
+      Math.max(1, matrices.length),
+    );
+    matrices.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
+    mesh.count = matrices.length;
+    return mesh;
+  });
+  scene.add(trunk, canopy, bins, bollards, cartBodies, cartTops, cartCanopies, cartWheels, ...produceMeshes);
 }
 
 function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, playerX: number, playerZ: number) => void {
