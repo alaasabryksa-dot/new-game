@@ -46,6 +46,7 @@ type Npc = {
   stopAt: number;
   color: THREE.Color;
   braking: boolean;
+  turning: boolean;
   nextLane: number;
 };
 
@@ -135,6 +136,7 @@ function trafficGeoms(kind: VehicleId) {
   const wheels: THREE.BufferGeometry[] = [];
   const lights: THREE.BufferGeometry[] = [];
   const brakes: THREE.BufferGeometry[] = [];
+  const signals: THREE.BufferGeometry[] = [];
   const wheel = () => {
     const g = new THREE.CylinderGeometry(0.34, 0.34, 0.22, 8);
     g.rotateZ(Math.PI / 2);
@@ -155,6 +157,10 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.2, 0.22, 0.08, 0.75, 0.95, 2.5));
     brakes.push(box(0.24, 0.2, 0.09, -0.75, 0.95, 2.5));
     brakes.push(box(0.24, 0.2, 0.09, 0.75, 0.95, 2.5));
+    signals.push(box(0.13, 0.13, 0.1, -0.98, 0.95, 2.5));
+    signals.push(box(0.13, 0.13, 0.1, 0.98, 0.95, 2.5));
+    signals.push(box(0.13, 0.13, 0.1, -0.98, 0.95, -2.4));
+    signals.push(box(0.13, 0.13, 0.1, 0.98, 0.95, -2.4));
     addW(-1.05, 0.36, -1.6, 1.05);
     addW(1.05, 0.36, -1.6, 1.05);
     addW(-1.05, 0.36, 1.5, 1.05);
@@ -179,6 +185,10 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.12, 0.12, 0.06, 0.45, 0.7, 1.15));
     brakes.push(box(0.16, 0.14, 0.07, -0.45, 0.7, 1.15));
     brakes.push(box(0.16, 0.14, 0.07, 0.45, 0.7, 1.15));
+    signals.push(box(0.11, 0.12, 0.08, -0.58, 0.72, 1.15));
+    signals.push(box(0.11, 0.12, 0.08, 0.58, 0.72, 1.15));
+    signals.push(box(0.11, 0.12, 0.08, -0.58, 0.72, -1.08));
+    signals.push(box(0.11, 0.12, 0.08, 0.58, 0.72, -1.08));
     addW(-0.62, 0.3, 0.55, 0.85);
     addW(0.62, 0.3, 0.55, 0.85);
     addW(0, 0.3, -0.85, 0.85);
@@ -190,6 +200,10 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.22, 0.18, 0.08, 0.8, 0.85, 4.95));
     brakes.push(box(0.28, 0.22, 0.09, -0.8, 0.85, 4.95));
     brakes.push(box(0.28, 0.22, 0.09, 0.8, 0.85, 4.95));
+    signals.push(box(0.14, 0.15, 0.1, -1.02, 0.85, 4.95));
+    signals.push(box(0.14, 0.15, 0.1, 1.02, 0.85, 4.95));
+    signals.push(box(0.14, 0.15, 0.1, -1.02, 0.85, -4.28));
+    signals.push(box(0.14, 0.15, 0.1, 1.02, 0.85, -4.28));
     addW(-1.15, 0.42, -3.3, 1.2);
     addW(1.15, 0.42, -3.3, 1.2);
     addW(-1.15, 0.42, 1.2, 1.2);
@@ -205,6 +219,10 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.22, 0.14, 0.06, 0.62, 0.72, 2.12));
     brakes.push(box(0.26, 0.18, 0.07, -0.62, 0.72, 2.12));
     brakes.push(box(0.26, 0.18, 0.07, 0.62, 0.72, 2.12));
+    signals.push(box(0.13, 0.13, 0.08, -0.88, 0.72, 2.12));
+    signals.push(box(0.13, 0.13, 0.08, 0.88, 0.72, 2.12));
+    signals.push(box(0.13, 0.13, 0.08, -0.88, 0.72, -2.12));
+    signals.push(box(0.13, 0.13, 0.08, 0.88, 0.72, -2.12));
     addW(-0.78, 0.32, -1.35);
     addW(0.78, 0.32, -1.35);
     addW(-0.78, 0.32, 1.28);
@@ -216,6 +234,7 @@ function trafficGeoms(kind: VehicleId) {
     wheels: merge(wheels),
     lights: merge(lights),
     brakes: merge(brakes),
+    signals: merge(signals),
   };
 }
 
@@ -598,12 +617,13 @@ export function mountGame(
   buildQuarter(scene, track);
   const signs: THREE.Mesh[] = [];
 
-  const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh; brakes: THREE.InstancedMesh }>();
+  const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh; brakes: THREE.InstancedMesh; signals: THREE.InstancedMesh }>();
   const POOL = 64;
   const glassMat = new THREE.MeshStandardMaterial({ color: "#1c3c48", roughness: 0.18, metalness: 0.2 });
   const wheelMat = new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.7 });
   const lightMat = new THREE.MeshStandardMaterial({ color: "#ff3030", emissive: "#ff2020", emissiveIntensity: 0.85 });
   const brakeMat = new THREE.MeshStandardMaterial({ color: "#ff2525", emissive: "#ff1010", emissiveIntensity: 1.8 });
+  const signalMat = new THREE.MeshStandardMaterial({ color: "#ffad32", emissive: "#ff8a00", emissiveIntensity: 1.45 });
   for (const kind of KINDS) {
     const ge = trafficGeoms(kind);
     const bodyMat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.55, metalness: 0.08 });
@@ -620,6 +640,7 @@ export function mountGame(
       wheels: mk(ge.wheels, wheelMat),
       lights: mk(ge.lights, lightMat),
       brakes: mk(ge.brakes, brakeMat),
+      signals: mk(ge.signals, signalMat),
     });
   }
 
@@ -645,6 +666,7 @@ export function mountGame(
         p.wheels.setMatrixAt(i, dummy.matrix);
         p.lights.setMatrixAt(i, dummy.matrix);
         p.brakes.setMatrixAt(i, dummy.matrix);
+        p.signals.setMatrixAt(i, dummy.matrix);
       }
     }
   };
@@ -785,6 +807,7 @@ export function mountGame(
         stopAt: -1,
         color: col,
         braking: false,
+        turning: false,
         nextLane: 5 + (i % 7),
       });
     }
@@ -1428,6 +1451,7 @@ export function mountGame(
       if (leadGap < safeGap + 5 && n.speed < 3.5) {
         n.laneTarget = Math.round(n.lane);
       }
+      n.turning = Math.abs(n.laneTarget - n.lane) > 0.12;
       if (targetLaneSafe) {
         const diff = n.laneTarget - n.lane;
         const laneRate = n.kind === "truck" ? 0.32
@@ -1771,6 +1795,7 @@ export function mountGame(
       pool.lights.setMatrixAt(i, dummy.matrix);
       if (braking) {
         pool.brakes.setMatrixAt(i, dummy.matrix);
+        pool.signals.setMatrixAt(i, dummy.matrix);
       } else {
         dummy.position.set(0, -30, 0);
         dummy.scale.set(0, 0, 0);
@@ -1782,6 +1807,14 @@ export function mountGame(
         dummy.updateMatrix();
       }
       if (color) pool.body.setColorAt(i, color);
+      if (braking) pool.brakes.setMatrixAt(i, dummy.matrix);
+      if (color && npcs[cursors[kind] - 1]?.turning) pool.signals.setMatrixAt(i, dummy.matrix);
+      else {
+        dummy.position.set(0, -30, 0);
+        dummy.scale.set(0, 0, 0);
+        dummy.updateMatrix();
+        pool.signals.setMatrixAt(i, dummy.matrix);
+      }
     };
 
     for (const n of npcs) {
@@ -1810,6 +1843,7 @@ export function mountGame(
       pool.wheels.instanceMatrix.needsUpdate = true;
       pool.lights.instanceMatrix.needsUpdate = true;
       pool.brakes.instanceMatrix.needsUpdate = true;
+      pool.signals.instanceMatrix.needsUpdate = true;
       if (pool.body.instanceColor) pool.body.instanceColor.needsUpdate = true;
     }
 
