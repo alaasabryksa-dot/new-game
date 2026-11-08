@@ -50,6 +50,7 @@ export function DarSalam() {
   const gameRef = useRef<GameHandle | null>(null);
   const holds = useRef({ l: false, r: false, g: false, b: false });
   const [ready, setReady] = useState(false);
+  const [startupError, setStartupError] = useState<string | null>(null);
   const [cfg, setCfg] = useState<PreviewCfg>(INITIAL);
   const [snap, setSnap] = useState<Hud | null>(null);
 
@@ -68,14 +69,24 @@ export function DarSalam() {
     };
     window.addEventListener("blur", releaseInputs);
     document.addEventListener("visibilitychange", onVisibilityChange);
-    void import("@/game/engine").then(({ mountGame }) => {
-      if (dead) return;
-      handle = mountGame(canvas, map, setSnap);
-      gameRef.current = handle;
-      const heard = handle.getHud();
-      setCfg((c) => ({ ...c, sound: heard.sound }));
-      setReady(true);
-    });
+    void import("@/game/engine")
+      .then(({ mountGame }) => {
+        if (dead) return;
+        try {
+          handle = mountGame(canvas, map, setSnap);
+          gameRef.current = handle;
+          const heard = handle.getHud();
+          setCfg((c) => ({ ...c, sound: heard.sound }));
+          setReady(true);
+        } catch (error) {
+          console.error("Game engine startup failed", error);
+          setStartupError(error instanceof Error ? error.message : String(error));
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Game engine module failed to load", error);
+        if (!dead) setStartupError(error instanceof Error ? error.message : String(error));
+      });
     return () => {
       dead = true;
       window.removeEventListener("blur", releaseInputs);
@@ -326,6 +337,15 @@ export function DarSalam() {
 
       {phase !== "menu" && snap ? (
         <PlayHud snap={snap} hold={hold} game={gameRef} onAgain={() => gameRef.current?.start(cfg)} />
+      ) : null}
+      {startupError ? (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-asphalt p-5 text-center">
+          <section className="w-full max-w-lg rounded-2xl border border-line bg-panel p-5">
+            <h1 className="text-xl font-extrabold text-brick">تعذر تشغيل محرك اللعبة</h1>
+            <p className="mt-3 break-words text-sm leading-relaxed text-ink" dir="ltr">{startupError}</p>
+            <p className="mt-3 text-xs text-muted">ابعتلنا نص الخطأ الظاهر عشان نصلح السبب بدل التخمين.</p>
+          </section>
+        </div>
       ) : null}
     </main>
   );
