@@ -297,10 +297,18 @@ export const STREET_ENTRANCES: readonly StreetEntrance[] = [
 ];
 
 // Ten neutral gameplay pickup points. These are not claims about real street entrances.
-export const STOP_NAMES = Array.from(
-  { length: 10 },
-  (_, index) => `نقطة ركاب ${["١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩", "١٠"][index]}`,
-);
+export const STOP_NAMES = [
+  "نقطة ركاب ١",
+  "نقطة ركاب ٢",
+  "نقطة ركاب ٣",
+  "نقطة ركاب ٤",
+  "نقطة ركاب ٥",
+  "نقطة ركاب ٦",
+  "نقطة ركاب ٧",
+  "نقطة ركاب ٨",
+  "نقطة ركاب ٩",
+  "نقطة ركاب ١٠",
+];
 
 export function vehicleById(id: VehicleId) {
   return VEHICLES.find((v) => v.id === id) ?? VEHICLES[3];
