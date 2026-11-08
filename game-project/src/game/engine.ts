@@ -241,12 +241,10 @@ function calculateFuelBurnRate(
   return (DRIVING_FEEDBACK_TUNING.fuelIdleRate * movingFactor + safeThrottle * DRIVING_FEEDBACK_TUNING.fuelThrottleRate) * efficiency * loadFactor * speedFactor;
 }
 
-function calculatePassengerFare(distanceMeters: number, fareMultiplier: number, metersPerStop: number) {
-  const safeDistance = finiteNonNegative(distanceMeters, 100_000);
-  const safeStopLength = Math.max(1, finiteNonNegative(metersPerStop, 100_000));
-  const distanceSteps = Math.max(1, Math.ceil(safeDistance / safeStopLength));
-  const safeMultiplier = Math.min(10, Math.max(0.1, Number.isFinite(fareMultiplier) ? fareMultiplier : 1));
-  return Math.max(1, Math.round((PASSENGER_SYSTEM_TUNING.baseFare + distanceSteps * PASSENGER_SYSTEM_TUNING.farePerStop) * safeMultiplier));
+function calculatePassengerFare(hopCount: number, fareMultiplier: number) {
+  const safeHops = Math.max(0, Math.floor(finiteNonNegative(hopCount, 1000)));
+  const safeMultiplier = Number.isFinite(fareMultiplier) ? Math.max(0.1, Math.min(10, fareMultiplier)) : 1;
+  return Math.max(1, Math.round((PASSENGER_SYSTEM_TUNING.baseFare + safeHops * PASSENGER_SYSTEM_TUNING.farePerStop) * safeMultiplier));
 }
 
 function blankUpgrades(): Upgrades {
@@ -2416,7 +2414,7 @@ function rollJobs(fromStop: number) {
             assignedDestinations.add(dest);
             // Fare is fixed at pickup and scales with trip length and seat upgrades.
             const tripDistance = (track.stops[dest].s - track.stops[i].s + track.total) % track.total;
-            const fare = calculatePassengerFare(tripDistance, spec.fare, track.total / track.stops.length);
+            const fare = calculatePassengerFare(hop, spec.fare);
             const passenger = { dest, fare };
             pax.push(passenger);
             boarded.push(passenger);
