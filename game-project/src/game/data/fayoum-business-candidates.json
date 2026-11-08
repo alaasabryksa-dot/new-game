@@ -1,0 +1,94 @@
+{
+  "title": "Fayoum Street business candidates — Dar El Salam",
+  "purpose": "Research leads only. These listings are not verified current tenants, exact facade matches, or field-confirmed coordinates. Do not render real business names/signage in-game until independently checked.",
+  "checkedOn": "2026-11-08",
+  "candidates": [
+    {
+      "id": "telecom-egypt-126",
+      "name": "Telecom Egypt / WE - Dar El Salam Central",
+      "address": "126 ش الفيوم، دار السلام، القاهرة",
+      "source": "Business listing result",
+      "evidence": "address listing directly names Fayoum Street",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification",
+      "notes": "Address is a useful locator lead; exact frontage and current signage not verified."
+    },
+    {
+      "id": "vodafone-36",
+      "name": "Vodafone - Dar El Salam Fayoum St.",
+      "address": "36 Al Fayoum, Dar El Salam, Cairo",
+      "source": "Business listing result",
+      "evidence": "address listing directly names Fayoum Street",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification",
+      "notes": "Exact facade appearance and present occupancy not verified."
+    },
+    {
+      "id": "abd-elhady-jewelry-151",
+      "name": "Abd Elhady Jewelry",
+      "address": "151 El Fayoum, Dar El Salam, Cairo",
+      "source": "Business listing result",
+      "evidence": "address listing directly names El Fayoum",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification",
+      "notes": "Nearby listing associates the business with El Meleigy restaurant; do not infer facade details."
+    },
+    {
+      "id": "spicy-chicks-165",
+      "name": "Spicy Chicks",
+      "address": "165 Al Fayoum, Ezbet Nafie, Dar El Salam, Cairo",
+      "source": "Business listing result",
+      "evidence": "address listing directly names Al Fayoum",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification",
+      "notes": "Business identity and branch details should be reconfirmed before use."
+    },
+    {
+      "id": "el-meleigy-2",
+      "name": "El Meleigy",
+      "address": "2 Al Fayoum, Izbat Nafee, Dar El Salam, Cairo",
+      "source": "Business listing result",
+      "evidence": "listing places business on Al Fayoum; another listing associates it with 151 El Fayoum",
+      "confidence": "low",
+      "status": "needs_address_reconciliation_and_visual_verification",
+      "notes": "Conflicting address descriptions; do not place in game yet."
+    },
+    {
+      "id": "abou-elkhier-pharmacy",
+      "name": "Abou Elkhier Pharmacy",
+      "address": "Fayoum Street, Dar El Salam; listing references the Dar El Salam bridge",
+      "source": "Business listing result",
+      "evidence": "street association and nearby bridge landmark",
+      "confidence": "low",
+      "status": "needs_exact_address_and_visual_verification",
+      "notes": "No exact street number established in this listing."
+    },
+    {
+      "id": "al-mokhtabar-50",
+      "name": "Al Mokhtabar - Moamena Kamel Laboratories",
+      "address": "50 El Fayoum St / intersection with Ibrahim Abdel Hady St, Dar El Salam",
+      "source": "Business listing result",
+      "evidence": "listing gives Fayoum Street reference and a more detailed intersection address",
+      "confidence": "low",
+      "status": "needs_address_reconciliation_and_visual_verification",
+      "notes": "Use intersection description as a locator lead only."
+    },
+    {
+      "id": "tawheed-nour-70",
+      "name": "El Tawheed & El Nour",
+      "address": "70 El Fayoum St, Dar El Salam, Cairo",
+      "source": "Business listing result",
+      "evidence": "listing description gives Fayoum Street address",
+      "confidence": "low",
+      "status": "needs_current_visual_and_position_verification",
+      "notes": "Another similarly named listing appears elsewhere in Dar El Salam; confirm branch."
+    }
+  ],
+  "policy": [
+    "Do not invent coordinates from addresses or names.",
+    "Do not treat business listing metadata as a photo reference.",
+    "Resolve conflicting addresses before adding a business to the route.",
+    "Only mark a facade visually verified after matching a current image to a precise location.",
+    "Do not redistribute third-party photographs or logos without permission."
+  ]
+}

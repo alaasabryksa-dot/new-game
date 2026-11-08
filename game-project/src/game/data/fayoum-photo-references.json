@@ -1,6 +1,6 @@
 {
-  "title": "Fayoum Street, Dar El Salam — photo reference catalog",
-  "purpose": "Visual research only. These press photographs are reference material; do not bundle or redistribute them as game textures without permission from the rights holders.",
+  "title": "Fayoum Street, Dar El Salam — photo and context reference catalog",
+  "purpose": "Research only. Press photographs are reference material; do not bundle or redistribute them as game textures without permission from the rights holders.",
   "references": [
     {
       "id": "sawt-alsalam-2024",
@@ -12,7 +12,7 @@
         "https://www.bashkatibnews.com/public/uploads/attachments/1747216706.png"
       ],
       "verified_context": "Report explicitly identifies the main Fayoum Street in Dar El Salam; photographs show street congestion, sidewalks, and shopfront context.",
-      "use": "Reference for street width, shopfront density, sidewalk encroachment, and traffic composition."
+      "use": "Historical visual reference for street width, shopfront density, sidewalk encroachment, and traffic composition."
     },
     {
       "id": "youm7-2016",
@@ -22,8 +22,8 @@
       "images": [
         "https://img.youm7.com/ArticleImgs/2016/6/3/79070-26168356_1801253843279683_9219076726495872127_n.jpg"
       ],
-      "verified_context": "Article explicitly says the photographs depict Fayoum Street in Dar El Salam; page exposes four related image links.",
-      "use": "Reference for street vendors, storefronts, and sidewalk occupation."
+      "verified_context": "Article explicitly says the photographs depict Fayoum Street in Dar El Salam; page exposes related image links.",
+      "use": "Historical reference for street vendors, storefronts, and sidewalk occupation."
     },
     {
       "id": "youm7-2015",
@@ -33,6 +33,33 @@
       "images": [],
       "verified_context": "Article explicitly documents an enforcement campaign on Fayoum Street and contains a multi-image gallery.",
       "use": "Historical reference for street stalls and shopfront encroachment; inspect individual gallery images before modeling."
+    },
+    {
+      "id": "cairo-governorate-2020-01",
+      "source": "بوابة محافظة القاهرة / حي دار السلام",
+      "date": "2020-01-22",
+      "article": "https://www.cairo.gov.eg/ar/governorate-entities/neighborhoods/south-area/hay-dar-alsalaam/news/2020/06844acec27246f6925a57f69f97b020",
+      "images": [],
+      "verified_context": "Official district report documents removal of food and clothing carts and shop encroachments on Fayoum Street.",
+      "use": "Context evidence for the types of street activity and encroachment reported at that time; not a current-state claim."
+    },
+    {
+      "id": "cairo-governorate-2020-06",
+      "source": "بوابة محافظة القاهرة / حي دار السلام",
+      "date": "2020-06-16",
+      "article": "https://www.cairo.gov.eg/ar/governorate-entities/neighborhoods/south-area/hay-dar-alsalaam/news/2020/42f52a0d2c37423ebfbda21e20c56000",
+      "images": [],
+      "verified_context": "Official district report documents a campaign covering Fayoum Street extension, Ahmed Zaki, El-Gisr El-Barany, and Istislah lands.",
+      "use": "Context for adjacent road network and district enforcement coverage; does not establish exact facade details."
+    },
+    {
+      "id": "cairo-governorate-2026-07",
+      "source": "بوابة محافظة القاهرة / حي دار السلام",
+      "date": "2026-07-19",
+      "article": "https://www.cairo.gov.eg/ar/governorate-entities/neighborhoods/south-area/hay-dar-alsalaam/news/2026/july/21/12a629b99b2842848e717d6e5be97658",
+      "images": [],
+      "verified_context": "Official district report documents a campaign to remove encroachments from Fayoum Street.",
+      "use": "Recent context for street management; not evidence that the same obstacles remain today."
     }
   ],
   "caveats": [
