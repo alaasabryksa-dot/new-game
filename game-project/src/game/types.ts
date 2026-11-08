@@ -203,18 +203,19 @@ export type PreviewCfg = {
   sound: boolean;
 };
 
-// Generated passenger pickup points for gameplay, not verified real-world stops.
+// Provisional named street-entrance destinations along Fayoum Street.
+// Street names are supported by public/local references; their order and evenly
+// spaced in-game positions are temporary approximations pending field validation.
 export const STOP_NAMES = [
-  "نقطة ركاب ١",
-  "نقطة ركاب ٢",
-  "نقطة ركاب ٣",
-  "نقطة ركاب ٤",
-  "نقطة ركاب ٥",
-  "نقطة ركاب ٦",
-  "نقطة ركاب ٧",
-  "نقطة ركاب ٨",
-  "نقطة ركاب ٩",
-  "نقطة ركاب ١٠",
+  "شارع حسن مطر",
+  "شارع حسين الفخراني",
+  "شارع حسن منصور",
+  "شارع أحمد زكي",
+  "شارع حمدي جودة",
+  "شارع سيد حنفي",
+  "شارع 30 مارس",
+  "شارع عارف",
+  "شارع المحجر",
 ];
 
 export function vehicleById(id: VehicleId) {
