@@ -24,11 +24,14 @@
 - The passenger HUD now identifies the nearest upcoming onboard drop-off and its forward route distance, so the driver can prepare for the next stop without guessing from the passenger list.
 - When fuel falls to 35% or below, the driving HUD displays the forward route distance to the next gas-station pass, rather than the shortest geometric distance that could point backward after passing it.
 - Stop approach prompts now distinguish drop-off-only stops, pickup-only stops, and stops that serve both actions; the prompt no longer incorrectly describes every passenger stop as a pickup.
-- Pedestrian avoidance now uses elapsed-time exponential smoothing with a clamped frame delta, so sidewalk retreat remains consistent across different frame rates and cannot jump after a long suspended frame.\n- Resuming with the Escape key now follows the same lifecycle as the on-screen resume control: it resets the frame clock and unlocks audio from the user gesture, preventing a silent resume or stale-frame catch-up. Escape is handled globally even when a menu button retains focus.\n- Scene teardown now commits the current run before stopping audio and releasing WebGL resources, covering React unmounts that occur without a preceding browser focus-loss event.
+- Pedestrian avoidance now uses elapsed-time exponential smoothing with a clamped frame delta, so sidewalk retreat remains consistent across different frame rates and cannot jump after a long suspended frame.
+- Resuming with the Escape key now follows the same lifecycle as the on-screen resume control: it resets the frame clock and unlocks audio from the user gesture, preventing a silent resume or stale-frame catch-up. Escape is handled globally even when a menu button retains focus.
+- Scene teardown now commits the current run before stopping audio and releasing WebGL resources, covering React unmounts that occur without a preceding browser focus-loss event.
 - Mobile touch controls now track active pointer IDs and listen for global pointer-up events, so a finger released outside a button cannot leave steering, throttle, or braking stuck when Android WebView pointer capture is unavailable.
 - The renderer requires WebGL 2 / OpenGL ES 3.0. The manifest declares this hardware feature as required; devices without it are not compatible.
 - Android scene generation has a reduced-detail path and lower render resolution. The mobile path now uses instanced procedural building facades with textured upper-floor windows, generic Arabic shop signs, shutters/glazing, and awnings. These are original generic game assets, not verified reconstructions of individual storefronts.
 - APK build and browser-based offline bundle checks are automated. They do not prove successful operation on every physical Android phone.
+- Latest verified CI run passed TypeScript checking, the full automated test suite, landscape mobile gameplay smoke tests, the self-contained offline Android web-bundle smoke test, and the production web build.
 - A signed production AAB, signing lineage, ads, and physical-device verification are not yet release-approved.
 
 ## Remaining Android release work
