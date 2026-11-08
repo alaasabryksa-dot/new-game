@@ -467,6 +467,11 @@ function PlayHud({
               style={{ width: `${Math.max(0, Math.min(100, snap.fuel))}%` }}
             />
           </div>
+          {snap.fuel <= 35 ? (
+            <p className={snap.lowFuel ? "mt-1 text-[10px] font-bold text-brick" : "mt-1 text-[10px] font-semibold text-muted"} aria-live={snap.lowFuel ? "polite" : undefined}>
+              البنزينة: {snap.gasStationDist} م
+            </p>
+          ) : null}
           {shift ? (
             <>
               <p className="mt-2 text-lg font-extrabold tabular-nums" dir="ltr">
