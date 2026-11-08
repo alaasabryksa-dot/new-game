@@ -280,3 +280,9 @@ test("traffic signals are staggered per stop and NPCs obey each visible phase", 
   assert.match(engine, /nearestSignalCycle >= TRAFFIC_RED_SECONDS \+ TRAFFIC_AMBER_SECONDS/);
   assert.match(engine, /greenElapsed = Math\.max\(0, nearestSignalCycle - releaseAt\)/);
 });
+
+test("new-run starting stop selection respects the closed route wrap", () => {
+  assert.match(engine, /const here = track\.stops\.reduce\(\(best, stop, i\) => \{/);
+  assert.match(engine, /Math\.abs\(wrapDelta\(stop\.s, startS, track\.total\)\)/);
+  assert.doesNotMatch(engine, /const d = Math\.abs\(stop\.s - startS\)/);
+});
