@@ -3471,6 +3471,7 @@ function buildSideStreetEntrances(scene: THREE.Scene, track: Track) {
   const asphaltPositions: number[] = [];
   const curbPositions: number[] = [];
   const sidewalkPositions: number[] = [];
+  const crosswalkPositions: number[] = [];
   const addQuad = (target: number[], a: [number, number, number], b: [number, number, number],
     c: [number, number, number], d: [number, number, number]) => {
     target.push(...a, ...b, ...d, ...a, ...d, ...c);
@@ -3496,6 +3497,15 @@ function buildSideStreetEntrances(scene: THREE.Scene, track: Track) {
     addQuad(asphaltPositions,
       point(start, -halfRoad, 0.035), point(start, halfRoad, 0.035),
       point(end, -halfRoad, 0.035), point(end, halfRoad, 0.035));
+    // Five zebra stripes at every side-street mouth make each junction legible.
+    for (let stripe = 0; stripe < 5; stripe++) {
+      const stripeStart = start + 1.25 + stripe * 0.82;
+      addQuad(crosswalkPositions,
+        point(stripeStart, -halfRoad + 0.18, 0.075),
+        point(stripeStart + 0.34, -halfRoad + 0.18, 0.075),
+        point(stripeStart, halfRoad - 0.18, 0.075),
+        point(stripeStart + 0.34, halfRoad - 0.18, 0.075));
+    }
     for (const edge of [-1, 1]) {
       const inner = edge * halfRoad;
       const outer = edge * (halfRoad + sidewalk);
@@ -3520,6 +3530,7 @@ function buildSideStreetEntrances(scene: THREE.Scene, track: Track) {
     scene.add(mesh);
   };
   makeSurface(asphaltPositions, "#34383b", 0.98);
+  makeSurface(crosswalkPositions, "#e6e2d7", 0.92);
   makeSurface(sidewalkPositions, "#a9a49a", 0.94);
   makeSurface(curbPositions, "#d0c8b8", 0.86);
 }
