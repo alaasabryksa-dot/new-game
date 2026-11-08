@@ -51,7 +51,7 @@ test("mobile performance budgets pedestrians and render pixel ratio", () => {
 
 test("touch controls and game lifecycle retain focus-loss safeguards", () => {
   assert.match(ui, /const releaseInputs = \(\) =>/);
-  assert.match(ui, /document\.visibilitychange/);
+  assert.match(ui, /addEventListener\("visibilitychange"/);
   assert.match(engine, /const pauseForInterruption = \(\) =>/);
   assert.match(engine, /window\.addEventListener\("blur", onBlur\)/);
   assert.match(engine, /window\.addEventListener\("keydown", onDown\)/);
