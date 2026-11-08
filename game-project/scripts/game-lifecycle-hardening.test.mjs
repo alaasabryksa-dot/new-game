@@ -61,10 +61,10 @@ test("NPC rendering reuses frame scratch state and keeps painter outside render"
 
 test("minimap distinguishes passenger drop-off destinations from pickup points", () => {
   const mapStart = engine.indexOf("  function drawMap() {");
-  const mapEnd = engine.indexOf("\\n  function frame(", mapStart);
+  const mapEnd = engine.indexOf("\n  function frame(", mapStart);
   const map = engine.slice(mapStart, mapEnd);
-  assert.match(map, /const passengerDestination = pax\\.some\\(\\(person\\) => person\\.dest === i\\)/);
-  assert.match(map, /passengerDestination \\? "#d6a7ff" : "#1aa6a6"/);
-  assert.match(map, /if \\(passengerDestination && !hot\\)/);
-  assert.match(map, /ctx\\.arc\\(x, y, 4\\.2, 0, Math\\.PI \\* 2\\)/);
+  assert.ok(map.includes("const passengerDestination = pax.some((person) => person.dest === i);"));
+  assert.ok(map.includes('passengerDestination ? "#d6a7ff" : "#1aa6a6"'));
+  assert.ok(map.includes("if (passengerDestination && !hot)"));
+  assert.ok(map.includes("ctx.arc(x, y, 4.2, 0, Math.PI * 2)"));
 });
