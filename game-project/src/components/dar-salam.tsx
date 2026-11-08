@@ -529,7 +529,12 @@ function PlayHud({
                 ))}
               </div>
               {snap.passengers.length > 0 ? (
-                <p className="text-xs font-extrabold text-amber">أجرة متوقعة {snap.onboardFareTotal} ج</p>
+                <>
+                  <p className="text-xs font-extrabold text-amber">أجرة متوقعة {snap.onboardFareTotal} ج</p>
+                  <p className="text-[10px] font-bold leading-relaxed text-muted" aria-live="polite">
+                    أقرب نزلة: {snap.nextDropoffName} · {snap.nextDropoffDist} م
+                  </p>
+                </>
               ) : null}
             </div>
           ) : null}
