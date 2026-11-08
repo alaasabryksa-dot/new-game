@@ -376,7 +376,7 @@ function buildPlayer(kind: VehicleId, hex: string) {
   return { group: g, wheels, paint, spots: [spotL, spotR], rider };
 }
 
-function facadeTexture(base: string) {
+function facadeTexture(base: string, variant = 0) {
   const c = document.createElement("canvas");
   c.width = 384;
   c.height = 512;
@@ -404,12 +404,13 @@ function facadeTexture(base: string) {
     const y = 20 + floor * 124;
     for (let col = 0; col < 4; col++) {
       const x = 12 + col * 88;
-      const warm = (floor * 7 + col * 11 + base.length) % 5 === 0;
+      const pattern = (floor * 17 + col * 11 + variant * 13 + base.length) % 9;
+      const warm = pattern === 0 || pattern === 5;
       g.fillStyle = "rgba(65,52,42,0.28)";
       g.fillRect(x - 4, y - 4, 45, 78);
       g.fillStyle = "#d7d0c2";
       g.fillRect(x - 2, y - 2, 41, 74);
-      g.fillStyle = warm ? "#b6a17e" : "#8299a3";
+      g.fillStyle = warm ? (variant % 2 ? "#c19a68" : "#b6a17e") : (variant % 3 === 0 ? "#8299a3" : "#718d98");
       g.fillRect(x + 2, y + 2, 33, 66);
       g.fillStyle = "rgba(245,248,238,0.72)";
       g.fillRect(x + 4, y + 4, 4, 58);
@@ -417,7 +418,7 @@ function facadeTexture(base: string) {
       g.fillRect(x + 18, y + 2, 2, 66);
       g.fillRect(x + 2, y + 33, 33, 2);
 
-      if ((floor + col) % 3 === 0) {
+      if ((floor + col + variant) % 3 !== 1) {
         g.fillStyle = "#b9b2a5";
         g.fillRect(x - 7, y + 70, 47, 5);
         g.fillStyle = "#6e7778";
@@ -428,7 +429,7 @@ function facadeTexture(base: string) {
         g.fillRect(x + 8, y + 57, 2, 15);
         g.fillRect(x + 20, y + 57, 2, 15);
       }
-      if ((floor * 3 + col) % 4 === 0) {
+      if ((floor * 3 + col + variant) % 4 === 0) {
         g.fillStyle = "#e7e2d8";
         g.fillRect(x + 35, y + 20, 10, 16);
         g.fillStyle = "#737b7d";
@@ -2819,7 +2820,7 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
   const capacity = Math.max(1, Math.ceil(track.pts.length / 3) * 2);
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
   const materials = colors.map((color) => {
-    const map = facadeTexture(color);
+    const map = facadeTexture(color, colorIndex);
     return new THREE.MeshStandardMaterial({
       color: "#ffffff",
       map: map ?? undefined,
