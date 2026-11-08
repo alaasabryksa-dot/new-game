@@ -1771,7 +1771,7 @@ function rollJobs(fromStop: number) {
         else if (relevant && targetD < 40 && player.speed > 4.5) hint = "هدّي عند مدخل الشارع";
         else if (droppingHere && waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا لتنزيل الركاب واستلام المنتظرين";
         else if (droppingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا لتنزيل الركاب";
-        else if (waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المدخل لاستلام الركاب";
+        else if (waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المحطة لاستلام الركاب";
         else if (droppingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "اثبت لحظة عند المدخل لتنزيل الركاب";
         else if (waitingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "اثبت لحظة عند المدخل لاستلام الركاب";
       }
