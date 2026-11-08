@@ -1304,13 +1304,16 @@ export function mountGame(
         }
         if (redLight) {
           redStopDistance = Math.min(redStopDistance, distanceToLine);
-          const approachSpeed = distanceToLine > 3.2
-            ? Math.max(0, (distanceToLine - 3.2) * 0.64)
+          const stoppingDistance = (n.speed * n.speed) / (2 * 3.1) + 3.2;
+          const approachSpeed = distanceToLine > stoppingDistance
+            ? Math.min(target, Math.sqrt(Math.max(0, 2 * 3.1 * (distanceToLine - 3.2))))
             : 0;
           target = Math.min(target, approachSpeed);
-        } else if (amberLight && distanceToLine > 8) {
-          const amberApproach = Math.max(3, Math.min(5, (distanceToLine - 2.8) * 0.54));
-          target = Math.min(target, amberApproach);
+        } else if (amberLight) {
+          const stoppingDistance = (n.speed * n.speed) / (2 * 2.7) + 4.5;
+          if (distanceToLine > stoppingDistance) {
+            target = Math.min(target, Math.max(0, (distanceToLine - 3.2) * 0.58));
+          }
         }
       }
       // Release a queue in sequence after green: vehicles closest to the line
@@ -1324,13 +1327,14 @@ export function mountGame(
             queueAhead++;
           }
         }
-        const releaseAt = Math.min(14.2, 8.8 + queueAhead * 0.52);
+        const releaseAt = Math.min(14.2, 8.8 + queueAhead * 0.62);
         const greenElapsed = Math.max(0, signalCycle - releaseAt);
         target = Math.min(target, greenElapsed <= 0 ? 0 : greenElapsed * 2.65);
       }
       // Follow traffic with a longer buffer for large vehicles and higher closing speeds.
       let leadGap = Infinity;
       let leadSpeed = target;
+      let leadLength = spec.length;
       // Treat the player as part of traffic so NPCs naturally slow down instead of
       // driving into the player's rear when both occupy the same lane.
       const playerLane = Math.round(Math.max(0, Math.min(3,
@@ -1341,6 +1345,7 @@ export function mountGame(
       if (playerGap > 0 && playerGap < leadGap && Math.abs(playerLane - n.lane) < 0.72) {
         leadGap = playerGap;
         leadSpeed = Math.max(0, player.speed);
+        leadLength = vehicleById(cfg.vehicle).length;
       }
       for (const o of npcs) {
         if (o === n || !o.alive || Math.abs(o.lane - n.lane) > 0.72) continue;
@@ -1348,6 +1353,7 @@ export function mountGame(
         if (gap > 0 && gap < leadGap) {
           leadGap = gap;
           leadSpeed = o.speed;
+          leadLength = vehicleById(o.kind).length;
         }
       }
       // Vehicle-specific driving profiles: long/heavy vehicles leave more room,
@@ -1356,12 +1362,15 @@ export function mountGame(
         : n.kind === "micro" ? 1.12
         : n.kind === "tuktuk" ? 0.82
         : n.kind === "taxi" ? 1.04 : 0.94;
-      const safeGap = (6.4 + spec.length * 0.8
-        + Math.max(0, n.speed - leadSpeed) * 1.05) * gapFactor;
-      if (leadGap < safeGap + 15) {
-        const followFactor = Math.max(0, Math.min(1, (leadGap - safeGap) / 15));
-        const queueCreep = leadSpeed < 0.5 ? 0 : Math.max(0, leadGap - safeGap) * 0.09;
-        target = Math.min(target, leadSpeed * followFactor + queueCreep);
+      const closingSpeed = Math.max(0, n.speed - leadSpeed);
+      const timeHeadway = n.kind === "truck" ? 2.15 : n.kind === "micro" ? 1.9 : 1.55;
+      const safeGap = (3.8 + (spec.length + leadLength) * 0.48
+        + n.speed * timeHeadway * 0.42 + closingSpeed * 1.35) * gapFactor;
+      if (leadGap < safeGap + 18) {
+        const followFactor = Math.max(0, Math.min(1, (leadGap - safeGap) / 18));
+        const queueCreep = leadSpeed < 0.5 ? 0 : Math.max(0, leadGap - safeGap) * 0.065;
+        const smoothFollow = leadSpeed * followFactor + queueCreep;
+        target = Math.min(target, smoothFollow);
       }
       const brakeResponse = n.kind === "truck" ? 2.65 : n.kind === "micro" ? 3.1 : 3.85;
       const accelResponse = n.kind === "truck" ? 0.66 : n.kind === "tuktuk" ? 1.45 : n.kind === "taxi" ? 1.42 : 1.16;
@@ -1386,6 +1395,7 @@ export function mountGame(
           desiredLane = Math.random() < 0.5 ? 0 : 3;
         }
         const laneIsSafe = (lane: number) => {
+          if (Math.abs(lane - n.lane) < 0.8 || n.speed < 2.2 || n.braking) return false;
           if (lane === playerLane) {
             const frontGap = wrapDelta(proj.s, n.s, track.total);
             const rearGap = wrapDelta(n.s, proj.s, track.total);
@@ -1396,8 +1406,10 @@ export function mountGame(
             if (o === n || !o.alive || Math.abs(o.lane - lane) > 0.68) return true;
             const frontGap = wrapDelta(o.s, n.s, track.total);
             const rearGap = wrapDelta(n.s, o.s, track.total);
-            return !(frontGap > 0 && frontGap < 14 + spec.length * 0.45)
-              && !(rearGap > 0 && rearGap < 10 + vehicleById(o.kind).length * 0.35);
+            const frontBuffer = 7 + (spec.length + vehicleById(o.kind).length) * 0.42;
+            const rearBuffer = 6 + vehicleById(o.kind).length * 0.55;
+            return !(frontGap > 0 && frontGap < frontBuffer + Math.max(0, n.speed - o.speed) * 1.2)
+              && !(rearGap > 0 && rearGap < rearBuffer + Math.max(0, o.speed - n.speed) * 1.1);
           });
         };
         // Tuk-tuks are more willing to use a clear neighboring lane when boxed in,
@@ -1458,20 +1470,30 @@ export function mountGame(
       n.turning = Math.abs(n.laneTarget - n.lane) > 0.12;
       if (targetLaneSafe) {
         const diff = n.laneTarget - n.lane;
-        const laneRate = n.kind === "truck" ? 0.32
-          : n.kind === "micro" ? 0.44
-          : n.kind === "tuktuk" ? 0.78
-          : n.kind === "taxi" ? 0.56 : 0.62;
-        const stepL = Math.max(-1, Math.min(1, diff)) * dt * laneRate;
+        const laneRate = n.kind === "truck" ? 0.28
+          : n.kind === "micro" ? 0.38
+          : n.kind === "tuktuk" ? 0.68
+          : n.kind === "taxi" ? 0.5 : 0.56;
+        const speedFactor = Math.max(0.55, Math.min(1.15, n.speed / 12));
+        const stepL = Math.max(-1, Math.min(1, diff)) * dt * laneRate * speedFactor;
         n.lane += stepL;
       } else {
         n.laneTarget = Math.round(n.lane);
       }
       if (ahead < -35 || ahead > 320) {
-        n.s = proj.s + 180 + Math.random() * 150;
-        n.lane = Math.floor(Math.random() * 4);
+        n.s = proj.s + 190 + Math.random() * 150;
+        const safeLanes = [0, 1, 2, 3].filter((lane) => {
+          if (Math.abs(lane - playerLane) < 0.72 && wrapDelta(proj.s, n.s, track.total) < 45) return false;
+          return npcs.every((other) => other === n || !other.alive
+            || Math.abs(other.lane - lane) > 0.68
+            || Math.abs(wrapDelta(other.s, n.s, track.total)) > 22 + spec.length);
+        });
+        n.lane = safeLanes.length ? safeLanes[Math.floor(Math.random() * safeLanes.length)] : Math.floor(Math.random() * 4);
         n.laneTarget = n.lane;
+        n.speed = Math.min(n.speed, spec.max * 0.55);
         n.cruise = spec.max * (0.4 + Math.random() * 0.35);
+        n.braking = false;
+        n.turning = false;
       }
     }
 
