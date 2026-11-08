@@ -55,6 +55,24 @@ jobs:
         working-directory: game-project/android
         run: gradle --no-daemon :app:assembleDebug
 
+      - name: Launch APK in Android emulator and verify game startup
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: |
+            adb install game-project/android/app/build/outputs/apk/debug/app-debug.apk
+            adb logcat -c
+            adb shell am start -n com.tuktok.darelsalam/.MainActivity
+            sleep 45
+            adb shell pidof com.tuktok.darelsalam
+            adb logcat -d -s TuktokDarElsalam:I TuktokDarElsalam:E | tee android-startup.log
+            grep -q "GAME_READY" android-startup.log
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
