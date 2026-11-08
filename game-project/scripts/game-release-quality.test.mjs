@@ -364,7 +364,7 @@ test("shift settlement preserves earnings when rent cannot yet be fully paid", (
 test("passenger fares scale predictably with trip distance and seat upgrades", () => {
   const match = engine.match(/function calculatePassengerFare\(hopCount: number, fareMultiplier: number\) \{([\s\S]*?)\n\}/);
   assert.ok(match, "passenger fare calculation must remain independently testable");
-  const calculate = new Function("finiteNonNegative", "PASSENGER_SYSTEM_TUNING", "hopCount", "fareMultiplier", match[1] + "\nreturn calculatePassengerFare(hopCount, fareMultiplier);");
+  const calculate = new Function("finiteNonNegative", "PASSENGER_SYSTEM_TUNING", "hopCount", "fareMultiplier", match[1]);
   const finite = (value, max = 1_000_000_000) => {
     const parsed = typeof value === "number" ? value : Number(value);
     if (!Number.isFinite(parsed)) return 0;
