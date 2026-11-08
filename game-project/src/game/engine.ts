@@ -59,6 +59,29 @@ const TRAFFIC_SIGNAL_CYCLE = 15;
 const TRAFFIC_RED_SECONDS = 7.5;
 const TRAFFIC_AMBER_SECONDS = 1.3;
 
+const PASSENGER_SYSTEM_TUNING = {
+  queueRefreshSeconds: 9,
+  maxWaitingAtStop: 8,
+  baseSpawnChance: 0.42,
+  hubSpawnChanceBonus: 0.18,
+  quietStopSpawnScale: 0.72,
+  bonusSpawnChance: 0.16,
+  bonusSpawnCount: 1,
+  initialQueueMin: 2,
+  initialQueueRange: 3,
+  pickupStopDistance: 17,
+  curbLaneMinimum: 3.2,
+  pickupSpeedLimit: 2.8,
+  steadyStopSeconds: 0.85,
+  maxBoardPerStop: 3,
+  destinationHopMin: 2,
+  destinationHopMax: 6,
+  baseFare: 24,
+  farePerStop: 12,
+  servicedClearDistance: 32,
+  maxQueueReturnBonus: 3,
+} as const;
+
 // Fine-grained traffic tuning keeps NPC behavior readable and predictable on phones.
 const NPC_DRIVING_TUNING = {
   curveLookAhead: 9, curveLookBehind: 5, curveSlowdown: 7.5, curveYawScale: 0.72,
@@ -909,7 +932,7 @@ export function mountGame(
   let trafficClock = 0;
   let crashes = 0;
   let pax: Pax[] = [];
-  let waiting = track.stops.map(() => 2 + Math.floor(Math.random() * 3));
+  let waiting = track.stops.map(() => PASSENGER_SYSTEM_TUNING.initialQueueMin + Math.floor(Math.random() * PASSENGER_SYSTEM_TUNING.initialQueueRange));
   let queueClock = 0;
   let stopHold = 0;
   let serviced = -1;
@@ -1294,7 +1317,7 @@ export function mountGame(
         if (relevant && targetD < 90 && proj.lat < 3.2) hint = "خش يمين وهدّي";
         else if (relevant && targetD < 40 && player.speed > 4.5) hint = "هدّي عند المحطة";
         else if (relevant && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المحطة لاستلام الركاب";
-        else if (relevant && targetD < 22 && stopHold < 0.85) hint = "ثبّت لحظة لاستلام الركاب";
+        else if (relevant && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "ثبّت لحظة لاستلام الركاب";
       }
     }
     return {
@@ -1823,12 +1846,12 @@ export function mountGame(
     // Passenger demand keeps evolving while the shift is active, even when the player
     // is away from a stop. Busy hubs attract queues faster than quieter side stops.
     queueClock += dt;
-    while (queueClock >= 9) {
-      queueClock -= 9;
+    while (queueClock >= PASSENGER_SYSTEM_TUNING.queueRefreshSeconds) {
+      queueClock -= PASSENGER_SYSTEM_TUNING.queueRefreshSeconds;
       const demand = [0.9, 1, 0.78, 0.72, 0.42, 0.62, 0.58, 0.92, 0.76, 0.5];
       for (let i = 0; i < waiting.length; i++) {
-        if (waiting[i] >= 8 || Math.random() > demand[i % demand.length]) continue;
-        waiting[i] = Math.min(8, waiting[i] + 1 + (Math.random() < 0.16 ? 1 : 0));
+        const hubChance = PASSENGER_SYSTEM_TUNING.baseSpawnChance + demand[i % demand.length] * PASSENGER_SYSTEM_TUNING.hubSpawnChanceBonus;\n        const stopChance = i % 5 === 4 ? hubChance * PASSENGER_SYSTEM_TUNING.quietStopSpawnScale : hubChance;\n        if (waiting[i] >= PASSENGER_SYSTEM_TUNING.maxWaitingAtStop || Math.random() > stopChance) continue;
+        const extra = Math.random() < PASSENGER_SYSTEM_TUNING.bonusSpawnChance ? PASSENGER_SYSTEM_TUNING.bonusSpawnCount : 0;\n        waiting[i] = Math.min(PASSENGER_SYSTEM_TUNING.maxWaitingAtStop, waiting[i] + 1 + extra);
       }
     }
     const spec = specNow();
@@ -1867,7 +1890,7 @@ export function mountGame(
 
     const nearStop = (index: number) => {
       const d = Math.abs(wrapDelta(track.stops[index].s, proj.s, track.total));
-      return d < 17 && proj.lat > 3.2 && Math.abs(player.speed) < 2.8;
+      return d < PASSENGER_SYSTEM_TUNING.pickupStopDistance && proj.lat > PASSENGER_SYSTEM_TUNING.curbLaneMinimum && Math.abs(player.speed) < PASSENGER_SYSTEM_TUNING.pickupSpeedLimit;
     };
 
     // Require a brief, steady stop at the curb before serving passengers or a delivery.
@@ -1877,8 +1900,8 @@ export function mountGame(
 
     if (serviced >= 0) {
       const away = Math.abs(wrapDelta(track.stops[serviced].s, proj.s, track.total));
-      if (away > 32) {
-        waiting[serviced] = Math.min(8, waiting[serviced] + 1 + Math.floor(Math.random() * 3));
+      if (away > PASSENGER_SYSTEM_TUNING.servicedClearDistance) {
+        waiting[serviced] = Math.min(PASSENGER_SYSTEM_TUNING.maxWaitingAtStop, waiting[serviced] + 1 + Math.floor(Math.random() * PASSENGER_SYSTEM_TUNING.maxQueueReturnBonus));
         serviced = -1;
       }
     }
@@ -1897,30 +1920,30 @@ export function mountGame(
         }
         const free = Math.max(0, spec.seats - pax.length);
         if (free > 0 && waiting[i] > 0) {
-          const n = Math.max(0, Math.min(free, waiting[i], 3));
+          const n = Math.max(0, Math.min(free, waiting[i], PASSENGER_SYSTEM_TUNING.maxBoardPerStop));
           const boarded: Pax[] = [];
           // Spread passengers across different destinations when possible, so a
           // single stop does not create an unrealistic pile of identical drop-offs.
           const assignedDestinations = new Set(pax.map((person) => person.dest));
           for (let k = 0; k < n; k++) {
-            const candidates = [2, 3, 4]
+            const candidates = [PASSENGER_SYSTEM_TUNING.destinationHopMin, 3, 4]
               .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
               .filter((candidate) => !assignedDestinations.has(candidate.dest));
             // If the usual 2–4-stop destinations are already occupied, widen
             // the search before allowing two passengers to share a drop-off.
-            const extendedCandidates = [2, 3, 4, 5, 6]
+            const extendedCandidates = [PASSENGER_SYSTEM_TUNING.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING.destinationHopMax]
               .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
               .filter((candidate) => !assignedDestinations.has(candidate.dest));
             const choices = candidates.length
               ? candidates
               : extendedCandidates.length
                 ? extendedCandidates
-                : [2, 3, 4, 5, 6].map((hop) => ({ hop, dest: (i + hop) % track.stops.length }));
+                : [PASSENGER_SYSTEM_TUNING.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING.destinationHopMax].map((hop) => ({ hop, dest: (i + hop) % track.stops.length }));
             const choice = choices[Math.floor(Math.random() * choices.length)];
             const { hop, dest } = choice;
             assignedDestinations.add(dest);
             // Fare is fixed at pickup and scales with trip length and seat upgrades.
-            const fare = Math.max(1, Math.round((24 + hop * 12) * spec.fare));
+            const fare = Math.max(1, Math.round((PASSENGER_SYSTEM_TUNING.baseFare + hop * PASSENGER_SYSTEM_TUNING.farePerStop) * spec.fare));
             const passenger = { dest, fare };
             pax.push(passenger);
             boarded.push(passenger);
