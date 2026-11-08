@@ -2578,13 +2578,22 @@ function rollJobs(fromStop: number) {
     ctx.strokeStyle = "#f0b429";
     ctx.lineWidth = 3;
     ctx.stroke();
-    ctx.fillStyle = "#1aa6a6";
     track.stops.forEach((stop, i) => {
       const sm = track.sample(stop.s);
       const [x, y] = px(sm.x, sm.z);
-      const hot = cfg.mode === "rush" ? jobs[jobIndex] === i : false;
-      ctx.fillStyle = hot ? "#f0b429" : "#1aa6a6";
-      ctx.fillRect(x - (hot ? 3 : 1.6), y - (hot ? 3 : 1.6), hot ? 6 : 3.2, hot ? 6 : 3.2);
+      const hot = cfg.mode === "rush" && jobs[jobIndex] === i;
+      const passengerDestination = pax.some((person) => person.dest === i);
+      ctx.fillStyle = hot ? "#f0b429" : passengerDestination ? "#d6a7ff" : "#1aa6a6";
+      const markerSize = hot ? 6 : passengerDestination ? 4.8 : 3.2;
+      ctx.fillRect(x - markerSize / 2, y - markerSize / 2, markerSize, markerSize);
+      if (passengerDestination && !hot) {
+        // A subtle ring distinguishes passenger drop-offs from pickup points.
+        ctx.strokeStyle = "#f0e5ff";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, 4.2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     });
     const gas = track.sample(track.gasS);
     const [gx, gy] = px(gas.x, gas.z);
