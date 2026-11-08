@@ -83,3 +83,19 @@ test("the project has reproducible typecheck, test and production build scripts"
   assert.equal(typeof packageJson.scripts.test, "string");
   assert.equal(typeof packageJson.scripts.build, "string");
 });
+
+
+test("save data rejects non-finite values and clamps persisted wallet and upgrades", () => {
+  assert.match(engine, /function finiteNonNegative\(value: unknown/);
+  assert.match(engine, /Number\.isFinite\(parsed\)/);
+  assert.match(engine, /finiteNonNegative\(p\.wallet, 10_000_000\)/);
+  assert.match(engine, /finiteNonNegative\(p\.bestKm, 1_000_000\)/);
+  assert.match(engine, /Math\.floor\(Math\.min\(3, finiteNonNegative\(n, 3\)\)\)/);
+});
+
+test("optional audio failures cannot block game startup", () => {
+  assert.match(engine, /const AudioContextCtor = window\.AudioContext/);
+  assert.match(engine, /if \(!AudioContextCtor\) return/);
+  assert.match(engine, /Audio is optional: unsupported or blocked audio must never stop gameplay/);
+  assert.match(engine, /this\.stop\(\);/);
+});
