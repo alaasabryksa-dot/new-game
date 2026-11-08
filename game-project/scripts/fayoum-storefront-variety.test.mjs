@@ -128,3 +128,23 @@ test("pedestrian crowd exposes thirty active mobile-safe movement and sidewalk-s
   assert.ok(engine.includes("PEDESTRIAN_TUNING.minimumWalkerGap"));
   assert.ok(engine.includes("PEDESTRIAN_TUNING.mobileWalkerBudget"));
 });
+
+test("vehicle audio exposes thirty bounded mobile-safe sound controls", () => {
+  const marker = "const SFX_TUNING = {";
+  const start = engine.indexOf(marker);
+  assert.notEqual(start, -1, "sound tuning must remain explicit");
+  const end = engine.indexOf("} as const;", start);
+  assert.notEqual(end, -1, "sound tuning must be closed");
+  const tuning = engine.slice(start, end);
+  const keys = [...tuning.matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
+  assert.equal(keys.length, 30, "sound tuning must expose thirty controls");
+  for (const key of keys) {
+    assert.ok(engine.includes("SFX_TUNING." + key), "unused sound tuning: " + key);
+  }
+  assert.ok(engine.includes("setTargetAtTime(frequency"));
+  assert.ok(engine.includes("THREE.MathUtils.clamp("));
+  assert.ok(engine.includes("SFX_TUNING.hornProfile"));
+  assert.ok(engine.includes("SFX_TUNING.cashProfile"));
+  assert.ok(engine.includes("SFX_TUNING.crashProfile"));
+  assert.ok(engine.includes("SFX_TUNING.radarProfile"));
+});
