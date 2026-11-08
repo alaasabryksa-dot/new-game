@@ -1662,6 +1662,15 @@ function rollJobs(fromStop: number) {
       targetD = forwardDist(track.stops[targetI].s, proj.s);
     }
     const stop = track.stops[targetI];
+    let nextDropoffName = "";
+    let nextDropoffDist = Infinity;
+    for (const person of pax) {
+      const distance = forwardDist(track.stops[person.dest].s, proj.s);
+      if (distance < nextDropoffDist) {
+        nextDropoffDist = distance;
+        nextDropoffName = track.stops[person.dest].name;
+      }
+    }
     let hint = "";
     if (phase === "play") {
       const gasD = Math.abs(wrapDelta(track.gasS, proj.s, track.total));
