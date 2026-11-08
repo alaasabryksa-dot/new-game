@@ -3568,23 +3568,53 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     canvas.height = 128;
     const context = canvas.getContext("2d");
     if (context) {
-      context.fillStyle = signColors[index];
+      const base = signColors[index];
+      const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, base);
+      gradient.addColorStop(0.52, base);
+      gradient.addColorStop(1, "#202326");
+      context.fillStyle = gradient;
       context.fillRect(0, 0, canvas.width, canvas.height);
-      context.fillStyle = "#f5e9c9";
-      context.fillRect(0, 0, canvas.width, 6);
-      context.fillRect(0, canvas.height - 6, canvas.width, 6);
+
+      // Original locally generated shop-sign artwork, not copied storefront photos.
+      context.fillStyle = "rgba(255,245,220,0.96)";
+      context.fillRect(0, 0, canvas.width, 7);
+      context.fillRect(0, canvas.height - 7, canvas.width, 7);
+      context.fillStyle = "rgba(10,15,18,0.28)";
+      context.fillRect(0, 10, canvas.width, 5);
+      context.strokeStyle = "rgba(255,238,196,0.58)";
+      context.lineWidth = 3;
+      context.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
+      context.fillStyle = "rgba(255,222,143,0.95)";
+      for (let light = 0; light < 9; light++) {
+        context.beginPath();
+        context.arc(25 + light * 58, 18, 3.5, 0, Math.PI * 2);
+        context.fill();
+      }
+      context.fillStyle = "rgba(255,255,255,0.10)";
+      for (let stripe = 0; stripe < 12; stripe++) {
+        context.fillRect(stripe * 47, 27 + (stripe % 3) * 5, 2, 78);
+      }
       context.direction = "rtl";
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.font = `bold ${label.length > 10 ? 43 : label.length > 7 ? 52 : 62}px Tajawal, sans-serif`;
       context.lineJoin = "round";
-      context.lineWidth = 5;
-      context.strokeStyle = "rgba(15, 20, 24, 0.48)";
-      context.strokeText(label, canvas.width / 2, canvas.height / 2);
-      context.shadowColor = "rgba(0, 0, 0, 0.35)";
-      context.shadowBlur = 4;
-      context.fillText(label, canvas.width / 2, canvas.height / 2);
+      context.lineWidth = 7;
+      context.strokeStyle = "rgba(8, 12, 15, 0.72)";
+      context.strokeText(label, canvas.width / 2, canvas.height / 2 + 4);
+      context.shadowColor = "rgba(255,224,160,0.42)";
+      context.shadowBlur = 9;
+      context.fillStyle = "#fff4d7";
+      context.fillText(label, canvas.width / 2, canvas.height / 2 + 4);
       context.shadowBlur = 0;
+      context.direction = "ltr";
+      context.fillStyle = "rgba(255,244,215,0.72)";
+      context.font = "bold 15px sans-serif";
+      context.textAlign = "left";
+      context.fillText("DAR EL SALAM", 22, 105);
+      context.fillStyle = "rgba(255,255,255,0.16)";
+      context.fillRect(18, 112, canvas.width - 36, 2);
     }
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
