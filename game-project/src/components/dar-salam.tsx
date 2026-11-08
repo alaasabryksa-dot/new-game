@@ -613,6 +613,7 @@ function PlayHud({
             {rush ? "التوصيلة" : "مدخل الشارع"}
           </div>
           <p aria-live="polite" aria-atomic="true" className="truncate text-base font-extrabold leading-snug">{rush ? snap.jobName : snap.stopName}</p>
+          <p className="mt-1 text-xs font-bold text-muted">{snap.stopSide === "right" ? "مدخل على يمين الشارع" : "مدخل على شمال الشارع"}</p>
           <p dir="ltr" aria-label={`المسافة إلى المحطة ${snap.stopDist} متر`} className="text-sm font-bold text-amber tabular-nums">
             {snap.stopDist} m
           </p>
