@@ -110,6 +110,14 @@ test("gameplay interruption and manual pause persist the current run immediately
 });
 
 
+test("fuel guidance distinguishes station approach, lane entry and stopping", () => {
+  assert.match(engine, /fuel < 98 && gasD < 28/);
+  assert.match(engine, /proj\.lat <= 2\.5\) hint = "ادخل يمين البنزينة"/);
+  assert.match(engine, /Math\.abs\(player\.speed\) >= 2\.8\) hint = "هدّي عند البنزينة للتفويل"/);
+  assert.match(engine, /hint = "اثبت عند البنزينة للتفويل"/);
+  assert.match(engine, /fuel < 22 && gasD < 90/);
+});
+
 test("mobile HUD exposes an in-game sound toggle", () => {
   assert.match(ui, /aria-label=\{snap\.sound \? "كتم الصوت" : "تشغيل الصوت"\}/);
   assert.match(ui, /onClick=\{\(\) => game\.current\?\.toggleSound\(\)\}/);
