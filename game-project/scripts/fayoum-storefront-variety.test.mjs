@@ -33,3 +33,11 @@ test("Android procedural frontage uses the denser commercial mix without claimin
   assert.match(engine, /real names stay out until verified/);
   assert.match(engine, /plausible fictional local businesses/);
 });
+
+test("Android street facades vary independently by side and include lightweight rooftop water tanks", () => {
+  assert.match(engine, /const sideSeed = seed \+ \(side === 1 \? 7919 : 0\);/);
+  assert.match(engine, /const sideVariation = \(sideSeed % 1000\) \/ 1000;/);
+  assert.match(engine, /new THREE\.CylinderGeometry\(0\.52, 0\.56, 1\.12, 9\)/);
+  assert.match(engine, /roofTank\.count = roofTankCount;/);
+  assert.match(engine, /roofTankTop\.count = roofTankCount;/);
+});
