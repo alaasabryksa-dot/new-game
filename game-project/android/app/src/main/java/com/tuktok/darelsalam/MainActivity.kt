@@ -43,8 +43,32 @@ class MainActivity : Activity() {
                 override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest) =
                     assetLoader.shouldInterceptRequest(request.url)
 
+                override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                    Log.i(TAG, "Page started: " + url)
+                }
+
                 override fun onPageFinished(view: WebView, url: String) {
                     Log.i(TAG, "Page finished: " + url)
+                }
+
+                override fun onReceivedError(
+                    view: WebView,
+                    request: WebResourceRequest,
+                    error: WebResourceError
+                ) {
+                    val message = "WEB_RESOURCE_ERROR mainFrame=" + request.isForMainFrame +
+                        " code=" + error.errorCode + " description=" + error.description +
+                        " url=" + request.url
+                    if (request.isForMainFrame) Log.e(TAG, message) else Log.w(TAG, message)
+                }
+
+                override fun onReceivedHttpError(
+                    view: WebView,
+                    request: WebResourceRequest,
+                    response: android.webkit.WebResourceResponse
+                ) {
+                    Log.e(TAG, "WEB_HTTP_ERROR status=" + response.statusCode +
+                        " reason=" + response.reasonPhrase + " url=" + request.url)
                 }
 
                 override fun onRenderProcessGone(
