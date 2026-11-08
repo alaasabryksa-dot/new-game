@@ -93,7 +93,11 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+  # Emulator startup is intentionally manual-only: do not repeat expensive
+  # emulator attempts on every source commit while the Android renderer issue
+  # is being resolved.
   test-on-clean-emulator:
+    if: github.event_name == 'workflow_dispatch'
     needs: build-apk
     runs-on: ubuntu-latest
     steps:
