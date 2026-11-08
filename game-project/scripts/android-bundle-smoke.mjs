@@ -90,15 +90,22 @@ try {
 
   await page.getByRole("button", { name: /ابدأ الوردية/ }).click();
   await page.getByRole("button", { name: "كلاكس" }).waitFor({ state: "visible", timeout: 15000 });
-  await page.evaluate(() => window.__controlsTest?.setKeys?.(["ArrowUp"]));
-  await page.waitForFunction(() => (window.__controlsTest?.getSpeed?.() ?? 0) > 0, null, { timeout: 10000 });
-  await page.evaluate(() => window.__controlsTest?.setKeys?.([]));
+  // Exercise the same pointer handlers used by the on-screen mobile throttle,
+  // rather than relying only on the keyboard test hook.
+  const throttle = page.getByRole("button", { name: "بنزين" });
+  await throttle.hover();
+  await page.mouse.down();
+  try {
+    await page.waitForFunction(() => (window.__controlsTest?.getSpeed?.() ?? 0) > 0, null, { timeout: 10000 });
+  } finally {
+    await page.mouse.up();
+  }
   await page.getByRole("button", { name: "إيقاف" }).click();
   await page.getByText("وقفة", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
 
   assert.deepEqual(pageErrors, [], `Android bundle must not throw JavaScript errors: ${pageErrors.join(" | ")}`);
   assert.deepEqual(failedRequests, [], `Android bundle must not request missing/offline assets: ${failedRequests.join(" | ")}`);
-  console.log("Android offline bundle smoke test passed: local entry, WebGL2, game start, touch UI, driving input, pause, and no failed requests.");
+  console.log("Android offline bundle smoke test passed: local entry, WebGL2, game start, mobile pointer throttle, pause, and no failed requests.");
   await context.close();
 } finally {
   await browser.close();
