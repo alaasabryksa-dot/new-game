@@ -208,6 +208,8 @@ export function DarSalam() {
       <canvas ref={viewRef} aria-hidden="true" className="game-canvas absolute inset-0 h-full w-full" />
       <canvas
         ref={mapRef}
+        role="img"
+        aria-label="خريطة مصغرة لموقع التوكتوك على الطريق"
         width={180}
         height={180}
         className={
@@ -243,8 +245,8 @@ export function DarSalam() {
                     onClick={() => patch({ mode: m.id })}
                     className={
                       cfg.mode === m.id
-                        ? "rounded-xl bg-amber px-2 py-3 text-amber-ink"
-                        : "rounded-xl bg-panel-2 px-2 py-3 text-ink"
+                        ? "min-h-14 rounded-xl bg-amber px-2 py-3 text-amber-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
+                        : "min-h-14 rounded-xl bg-panel-2 px-2 py-3 text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
                     }
                   >
                     <span className="block text-sm font-extrabold">{m.name}</span>
@@ -260,6 +262,7 @@ export function DarSalam() {
                     key={p.id}
                     type="button"
                     aria-label={p.name}
+                    title={`اختيار اللون ${p.name}`}
                     aria-pressed={cfg.paint === p.hex}
                     onClick={() => patch({ paint: p.hex })}
                     className={
@@ -291,7 +294,8 @@ export function DarSalam() {
                   type="button"
                   aria-pressed={cfg.night}
                   onClick={() => patch({ night: !cfg.night })}
-                  className="rounded-full bg-panel-2 px-3 py-2 text-xs font-bold"
+                  title="تبديل وقت وإضاءة الشارع"
+                  className="min-h-11 rounded-full bg-panel-2 px-3 py-2 text-xs font-bold"
                 >
                   {cfg.night ? "ليل الحتة" : "الضهر"}
                 </button>
@@ -299,7 +303,7 @@ export function DarSalam() {
                   type="button"
                   aria-pressed={!cfg.sound}
                   onClick={() => patch({ sound: !cfg.sound })}
-                  className="rounded-full bg-panel-2 p-2"
+                  className="min-h-11 min-w-11 rounded-full bg-panel-2 p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
                   aria-label={cfg.sound ? "كتم الصوت" : "تشغيل الصوت"}
                 >
                   {cfg.sound ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
