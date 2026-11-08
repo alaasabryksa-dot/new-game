@@ -10,7 +10,7 @@ import android.view.WindowInsetsController
 import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
-import android.webkit.WebResourceError
+import androidx.webkit.WebResourceErrorCompat
 import android.webkit.WebResourceRequest
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebView
@@ -54,7 +54,7 @@ class MainActivity : Activity() {
                 override fun onReceivedError(
                     view: WebView,
                     request: WebResourceRequest,
-                    error: WebResourceError
+                    error: WebResourceErrorCompat
                 ) {
                     val message = "WEB_RESOURCE_ERROR mainFrame=" + request.isForMainFrame +
                         " code=" + error.errorCode + " description=" + error.description +
@@ -76,7 +76,6 @@ class MainActivity : Activity() {
                     detail: RenderProcessGoneDetail
                 ): Boolean {
                     Log.e(TAG, "WebView renderer process gone; didCrash=" + detail.didCrash())
-                    view.removeJavascriptInterface("AndroidAds")
                     (view.parent as? android.view.ViewGroup)?.removeView(view)
                     view.destroy()
                     setContentView(TextView(this@MainActivity).apply {
@@ -96,7 +95,6 @@ class MainActivity : Activity() {
                     return true
                 }
             }
-            addJavascriptInterface(AndroidAdsBridge(), "AndroidAds")
             addJavascriptInterface(AndroidDiagnosticsBridge(), "AndroidDiagnostics")
         }
         setContentView(webView)
@@ -136,17 +134,9 @@ class MainActivity : Activity() {
         }
     }
 
-    // AdMob is paused in this diagnostic build to isolate startup crashes.
-    inner class AndroidAdsBridge {
-        @JavascriptInterface
-        fun showInterstitial() {
-            Log.d(TAG, "Interstitial request ignored in diagnostic build")
-        }
-    }
 
     override fun onDestroy() {
         if (::webView.isInitialized) {
-            webView.removeJavascriptInterface("AndroidAds")
             webView.removeJavascriptInterface("AndroidDiagnostics")
             webView.stopLoading()
             webView.loadUrl("about:blank")
