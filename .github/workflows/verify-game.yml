@@ -28,9 +28,27 @@ jobs:
           cache-dependency-path: game-project/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Install Chromium for gameplay smoke test
+        run: npx playwright install --with-deps chromium
       - name: Type check
         run: npm run typecheck
       - name: Run tests
         run: npm test
+      - name: Start development server
+        run: |
+          npm run dev > /tmp/new-game-vite.log 2>&1 &
+          echo $! > /tmp/new-game-vite.pid
+      - name: Wait for development server
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8080/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/new-game-vite.log
+          exit 1
+      - name: Smoke test desktop and mobile gameplay
+        run: npm run test:browser
       - name: Production build
         run: npm run build
