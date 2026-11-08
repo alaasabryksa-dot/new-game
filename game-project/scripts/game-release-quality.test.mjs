@@ -137,7 +137,7 @@ test("live fuel use and range estimate share a balanced, independently tested mo
   assert.ok(burn(0, false, 0, 0, 0) < base * 0.1, "idling must consume less fuel than driving");
   assert.ok(burn(0.65, true, 0.5, 3, 0) > base, "passenger load must increase consumption");
   assert.ok(burn(0.65, true, 1, 2, 0) > base, "higher speed must increase consumption");
-  assert.match(engine, /const fuelBurnRate = calculateFuelBurnRate([\s\S]*?fuel -= fuelBurnRate \* dt/);
+  assert.match(engine, /const fuelBurnRate = calculateFuelBurnRate\([\s\S]*?fuel -= fuelBurnRate \* dt/);
   assert.match(engine, /const estimateFuelRate = calculateFuelBurnRate\(/);
 });
 
