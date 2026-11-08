@@ -1579,7 +1579,8 @@ function rollJobs(fromStop: number) {
         (_, index) => index + 1,
       )
         .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
-        .filter((candidate) => !jobs.includes(candidate.dest));
+        .filter((candidate) => !jobs.includes(candidate.dest)
+          && forwardDist(track.stops[candidate.dest].s, track.stops[i].s) > 35);
       if (!available.length) break;
       const preferred = available.filter((candidate) =>
         candidate.hop >= JOB_ROUTE_TUNING.minHop &&
@@ -1725,7 +1726,10 @@ function rollJobs(fromStop: number) {
     let bestD = Infinity;
     for (let i = 0; i < track.stops.length; i++) {
       const d = forwardDist(track.stops[i].s, proj.s);
-      if (d < bestD) {
+      const playerSide = proj.lat >= 0 ? "right" : "left";
+      const sameSide = track.stops[i].side === playerSide;
+      const bestSameSide = track.stops[bestI]?.side === playerSide;
+      if (d < bestD || (Math.abs(d - bestD) < 0.5 && sameSide && !bestSameSide)) {
         bestD = d;
         bestI = i;
       }
@@ -1768,18 +1772,23 @@ function rollJobs(fromStop: number) {
         else hint = "اثبت عند البنزينة للتفويل";
       } else if (fuel < 22 && gasD < 90) hint = "البنزينة على اليمين";
       else if (cfg.mode === "rush") {
-        if (targetD < 80 && proj.lat < 3.2) hint = "اهدى يمين المحطة";
+        const sideSign = stop?.side === "right" ? 1 : -1;
+        const sideWord = stop?.side === "right" ? "يمين" : "شمال";
+        if (targetD < 80 && proj.lat * sideSign < 3.2) hint = `اتجه ${sideWord} واهدأ عند المحطة`;
       } else {
         const droppingHere = pax.some((person) => person.dest === targetI);
         const waitingHere = waiting[targetI] > 0;
         const relevant = waitingHere || droppingHere;
-        if (relevant && targetD < 90 && proj.lat < 3.2) hint = "قرّب من مدخل الشارع وهدّي";
-        else if (relevant && targetD < 40 && player.speed > 4.5) hint = "هدّي عند مدخل الشارع";
-        else if (droppingHere && waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا لتنزيل الركاب واستلام المنتظرين";
-        else if (droppingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف يمينًا لتنزيل الركاب";
-        else if (waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = "قف عند المحطة لاستلام الركاب";
-        else if (droppingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "اثبت لحظة عند المدخل لتنزيل الركاب";
-        else if (waitingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = "اثبت لحظة عند المدخل لاستلام الركاب";
+        const sideSign = stop?.side === "right" ? 1 : -1;
+        const sideWord = stop?.side === "right" ? "يمين" : "شمال";
+        const onTargetSide = proj.lat * sideSign > 3.2;
+        if (relevant && targetD < 90 && !onTargetSide) hint = `اتجه ناحية ${sideWord} لمدخل ${stop.name}`;
+        else if (relevant && targetD < 40 && player.speed > 4.5) hint = `هدّي عند مدخل ${stop.name}`;
+        else if (droppingHere && waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = `قف ${sideWord} لتنزيل الركاب واستلام المنتظرين`;
+        else if (droppingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = `قف ${sideWord} لتنزيل الركاب`;
+        else if (waitingHere && targetD < 22 && Math.abs(player.speed) >= 2.8) hint = `قف عند ${stop.name} لاستلام الركاب`;
+        else if (droppingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = `اثبت لحظة عند مدخل ${stop.name} لتنزيل الركاب`;
+        else if (waitingHere && targetD < 22 && stopHold < PASSENGER_SYSTEM_TUNING.steadyStopSeconds) hint = `اثبت لحظة عند مدخل ${stop.name} لاستلام الركاب`;
       }
     }
     return {
@@ -2008,8 +2017,8 @@ function rollJobs(fromStop: number) {
       } else if (n.kind === "tuktuk") {
         // Some tuk-tuks make short passenger pick-ups at the curb-side game stops.
         n.stopTimer = Math.max(0, n.stopTimer - dt);
-        for (let i = 0; i < track.stops.length; i++) {
-          const d = wrapDelta(track.stops[i].s, n.s, track.total);
+        for (let i = 0; i < signalStops.length; i++) {
+          const d = wrapDelta(signalStops[i].s, n.s, track.total);
           const curbLane = n.lane < 0.55 || n.lane > 2.45;
           if (curbLane && d > NPC_STOPPING_TUNING.tuktukStopApproachStart && d < NPC_STOPPING_TUNING.tuktukStopApproachEnd) {
             const approachSpeed = Math.min(3.2, Math.max(0, (d - NPC_STOPPING_TUNING.tuktukStopApproachBase) * NPC_STOPPING_TUNING.tuktukStopApproachScale));
@@ -2408,17 +2417,21 @@ function rollJobs(fromStop: number) {
           for (let k = 0; k < n; k++) {
             const candidates = [PASSENGER_SYSTEM_TUNING.destinationHopMin, 3, 4]
               .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
-              .filter((candidate) => !assignedDestinations.has(candidate.dest));
+              .filter((candidate) => !assignedDestinations.has(candidate.dest)
+                && forwardDist(track.stops[candidate.dest].s, track.stops[i].s) > 35);
             // If the usual 2–4-stop destinations are already occupied, widen
             // the search before allowing two passengers to share a drop-off.
             const extendedCandidates = [PASSENGER_SYSTEM_TUNING.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING.destinationHopMax]
               .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
-              .filter((candidate) => !assignedDestinations.has(candidate.dest));
+              .filter((candidate) => !assignedDestinations.has(candidate.dest)
+                && forwardDist(track.stops[candidate.dest].s, track.stops[i].s) > 35);
             const choices = candidates.length
               ? candidates
               : extendedCandidates.length
                 ? extendedCandidates
-                : [PASSENGER_SYSTEM_TUNING.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING.destinationHopMax].map((hop) => ({ hop, dest: (i + hop) % track.stops.length }));
+                : [PASSENGER_SYSTEM_TUNING.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING.destinationHopMax]
+                  .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
+                  .filter((candidate) => forwardDist(track.stops[candidate.dest].s, track.stops[i].s) > 35);
             const choice = choices[Math.floor(Math.random() * choices.length)];
             const { hop, dest } = choice;
             assignedDestinations.add(dest);
