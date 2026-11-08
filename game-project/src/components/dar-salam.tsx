@@ -303,7 +303,7 @@ export function DarSalam() {
                 </div>
               </details>
 
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="mt-4 grid grid-cols-3 gap-2" role="group" aria-label="اختيار نمط اللعب">
                 {MODES.map((m) => (
                   <button
                     key={m.id}
@@ -323,7 +323,7 @@ export function DarSalam() {
               </div>
 
               <p className="mt-4 text-xs font-bold text-muted">لون التوكتوك</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2" role="group" aria-label="اختيار لون التوكتوك">
                 {PAINTS.map((p) => (
                   <button
                     key={p.id}
@@ -334,14 +334,14 @@ export function DarSalam() {
                     onClick={() => patch({ paint: p.hex })}
                     className={
                       cfg.paint === p.hex
-                        ? `h-11 w-11 rounded-full border-2 border-ink ${p.swatch}`
-                        : `h-11 w-11 rounded-full border-2 border-line ${p.swatch}`
+                        ? `h-11 w-11 rounded-full border-2 border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber ${p.swatch}`
+                        : `h-11 w-11 rounded-full border-2 border-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber ${p.swatch}`
                     }
                   />
                 ))}
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="كثافة المرور والوقت والصوت">
                 {DENSITIES.map((d) => (
                   <button
                     key={d.id}
@@ -350,8 +350,8 @@ export function DarSalam() {
                     onClick={() => patch({ density: d.id })}
                     className={
                       cfg.density === d.id
-                        ? "rounded-full bg-nile px-3 py-2 text-xs font-bold text-asphalt"
-                        : "rounded-full bg-panel-2 px-3 py-2 text-xs font-bold text-ink"
+                        ? "min-h-11 rounded-full bg-nile px-3 py-2 text-xs font-bold text-asphalt focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
+                        : "min-h-11 rounded-full bg-panel-2 px-3 py-2 text-xs font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
                     }
                   >
                     {d.name}
@@ -362,7 +362,8 @@ export function DarSalam() {
                   aria-pressed={cfg.night}
                   onClick={() => patch({ night: !cfg.night })}
                   title="تبديل وقت وإضاءة الشارع"
-                  className="min-h-11 rounded-full bg-panel-2 px-3 py-2 text-xs font-bold"
+                  className="min-h-11 rounded-full bg-panel-2 px-3 py-2 text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
+                  aria-label={cfg.night ? "تحويل الإضاءة إلى النهار" : "تحويل الإضاءة إلى الليل"}
                 >
                   {cfg.night ? "ليل الحتة" : "الضهر"}
                 </button>
@@ -425,8 +426,17 @@ export function DarSalam() {
                 </p>
               ) : null}
 
+              <details className="mt-3 rounded-xl border border-line bg-panel-2/50 p-3">
+                <summary className="cursor-pointer text-center text-xs font-extrabold text-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber">
+                  إرشادات التحكم
+                </summary>
+                <p className="mt-2 text-center text-xs leading-relaxed text-muted">
+                  الموبايل: استخدم أزرار البنزين والفرامل والاتجاهات أسفل الشاشة.
+                  <br />
+                  الكمبيوتر: W بنزين · S فرامل · A شمال · D يمين · H كلاكس · C كاميرا · Esc إيقاف مؤقت
+                </p>
+              </details>
               <p className="mt-3 text-center text-xs leading-relaxed text-muted">
-                كمبيوتر: W بنزين · S فرامل · A شمال · D يمين · H كلاكس · C كاميرا
                 <br />
                 الإيجار {RENT} ج في ٣ دقايق · التانك {GAS_COST} ج يمين الشارع
               </p>
@@ -448,6 +458,7 @@ export function DarSalam() {
                 disabled={!ready}
                 onClick={startGame}
                 className="min-h-14 w-full rounded-xl bg-amber py-3 text-lg font-extrabold text-amber-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink disabled:opacity-60"
+                aria-busy={!ready}
               >
                 {ready ? startLabel : "لحظة، بنجهّز التوكتوك"}
               </button>
@@ -601,7 +612,7 @@ function PlayHud({
             <MapPin className="size-3.5 text-nile" />
             {rush ? "التوصيلة" : "مدخل الشارع"}
           </div>
-          <p className="truncate text-base font-extrabold leading-snug">{rush ? snap.jobName : snap.stopName}</p>
+          <p aria-live="polite" aria-atomic="true" className="truncate text-base font-extrabold leading-snug">{rush ? snap.jobName : snap.stopName}</p>
           <p dir="ltr" aria-label={`المسافة إلى المحطة ${snap.stopDist} متر`} className="text-sm font-bold text-amber tabular-nums">
             {snap.stopDist} m
           </p>
@@ -627,7 +638,7 @@ function PlayHud({
         </button>
         <button
           type="button"
-          className="rounded-full bg-panel/90 p-3"
+          className="min-h-12 min-w-12 rounded-full bg-panel/90 p-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
           aria-label="إطلاق الكلاكس"
           title="كلاكس"
           onClick={() => game.current?.horn()}
@@ -645,7 +656,7 @@ function PlayHud({
         </button>
         <button
           type="button"
-          className="rounded-full bg-panel/90 p-3"
+          className="min-h-12 min-w-12 rounded-full bg-panel/90 p-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
           aria-label={snap.sound ? "كتم الصوت" : "تشغيل الصوت"}
           aria-pressed={!snap.sound}
           title={snap.sound ? "كتم الصوت" : "تشغيل الصوت"}
@@ -655,12 +666,12 @@ function PlayHud({
         </button>
       </div>
 
-      <div dir="ltr" className="absolute inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 flex items-end justify-between px-3" role="group" aria-label="أزرار قيادة التوكتوك">
+      <div dir="ltr" className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-30 flex items-end justify-between px-3" role="group" aria-label="أزرار قيادة التوكتوك">
         <div className="flex gap-2">
           <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/95 text-ink shadow-lg active:scale-95 active:bg-panel-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber" aria-label="يسار" {...hold("l")}>
             <ChevronLeft className="mx-auto size-8" />
           </button>
-          <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/90 text-ink" aria-label="يمين" {...hold("r")}>
+          <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/90 text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber" aria-label="يمين" {...hold("r")}>
             <ChevronRight className="mx-auto size-8" />
           </button>
         </div>
@@ -680,7 +691,7 @@ function PlayHud({
       </div>
 
       {snap.phase === "pause" || snap.phase === "summary" ? (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-asphalt/75 p-4">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-asphalt/75 p-4" onContextMenu={(event) => event.preventDefault()}>
           <section role="dialog" aria-modal="true" aria-label={snap.phase === "pause" ? "قائمة الإيقاف المؤقت" : "ملخص المشوار"} className="w-full max-w-sm rounded-2xl border border-line bg-panel p-5 text-center shadow-2xl">
             <h2 className="text-2xl font-extrabold text-amber">
               {snap.phase === "pause" ? "وقفة" : rush ? "التوصيلات" : shift ? "خلصت الوردية" : "خلصت اللفة"}
@@ -750,7 +761,7 @@ function PlayHud({
               ) : (
                 <button
                   type="button"
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber py-3 font-extrabold text-amber-ink"
+                  className="min-h-12 flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber py-3 font-extrabold text-amber-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
                   onClick={onAgain}
                 >
                   <RotateCcw className="size-4" />
@@ -780,7 +791,7 @@ function PlayHud({
       ) : (
         <button
           type="button"
-          className="absolute bottom-6 left-4 z-20 hidden rounded-full bg-panel/80 px-4 py-2 text-xs font-bold text-muted md:block"
+          className="absolute bottom-6 left-4 z-20 hidden min-h-11 rounded-full bg-panel/80 px-4 py-2 text-xs font-bold text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber md:block"
           onClick={() => game.current?.finish()}
         >
           خلّص المشوار
