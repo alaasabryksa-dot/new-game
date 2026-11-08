@@ -90,6 +90,14 @@ test("road-edge handling applies progressive shoulder drag before clamping", () 
   assert.ok(engine.indexOf("shoulderDrag") < engine.indexOf("if (Math.abs(proj.lat) > limit)"));
 });
 
+test("rush delivery routes avoid repeating a destination within the same run", () => {
+  assert.match(engine, /function rollJobs\(fromStop: number\)/);
+  assert.match(engine, /const available = Array\.from\(\{ length: track\.stops\.length - 1 \}/);
+  assert.match(engine, /\.filter\(\(candidate\) => !jobs\.includes\(candidate\.dest\)\)/);
+  assert.match(engine, /const preferred = available\.filter\(\(candidate\) => candidate\.hop >= 2 && candidate\.hop <= 4\)/);
+  assert.match(engine, /const choices = preferred\.length \? preferred : available/);
+});
+
 test("passenger boarding spreads drop-off destinations when alternatives are available", () => {
   assert.match(engine, /const assignedDestinations = new Set\(pax\.map\(\(person\) => person\.dest\)\)/);
   assert.match(engine, /\.filter\(\(candidate\) => !assignedDestinations\.has\(candidate\.dest\)\)/);
