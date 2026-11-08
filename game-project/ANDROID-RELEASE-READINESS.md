@@ -48,6 +48,8 @@
 
 - Rent settlement now uses one bounded, independently testable calculation for fully paid, partially paid, wallet-assisted, and overpaid shifts. Invalid or negative inputs are normalized before the wallet is updated; regression tests cover these edge cases.
 
+- Passenger fare calculation is now a bounded pure helper with regression coverage for short/long trips, each seat-upgrade multiplier, and invalid input. The established base-plus-distance economy is preserved; this change makes future balance tuning safer.
+
 ## Remaining Android release work
 
 1. Preserve the packaged-local-assets-only WebView policy. If optional online services (such as ads) are later approved, isolate them behind a separately reviewed allowlist and ensure they cannot block gameplay; do not introduce remote game dependencies or server/auth requirements into the Android entry.
