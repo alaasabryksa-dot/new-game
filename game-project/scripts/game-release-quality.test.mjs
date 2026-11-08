@@ -62,6 +62,13 @@ test("mobile performance budgets pedestrians and render pixel ratio", () => {
   assert.match(engine, /if \(!androidDevice\) buildStreetFurniture/);
 });
 
+test("traffic lane changes increase front and rear clearance for closing speed", () => {
+  assert.match(engine, /playerAheadBuffer = 12 \+ spec\.length \* 0\.4[\s\S]*?Math\.max\(0, n\.speed - player\.speed\) \* 1\.1/);
+  assert.match(engine, /playerBehindBuffer = 10 \+ Math\.max\(0, player\.speed - n\.speed\)/);
+  assert.match(engine, /frontBuffer = 11 \+ spec\.length \* 0\.4[\s\S]*?Math\.max\(0, n\.speed - o\.speed\) \* 1\.2/);
+  assert.match(engine, /rearBuffer = 9 \+ otherSpec\.length \* 0\.3[\s\S]*?Math\.max\(0, o\.speed - n\.speed\) \* 1\.1/);
+});
+
 test("traffic respawn uses maximum-clearance lane when no lane is fully free", () => {
   assert.match(engine, /const fallbackLane = \[0, 1, 2, 3\]\.map\(\(lane\) =>/);
   assert.match(engine, /clearance = Math\.min\(clearance, Math\.abs\(wrapDelta\(other\.s, n\.s, track\.total\)\)\)/);
