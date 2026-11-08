@@ -163,9 +163,16 @@ export function DarSalam() {
   const hold = (key: "l" | "r" | "g" | "b") => ({
     onPointerDown: (e: ReactPointer<HTMLButtonElement>) => {
       e.preventDefault();
-      e.currentTarget.setPointerCapture(e.pointerId);
+      // Engage the control even if an older Android WebView rejects pointer capture.
       holds.current[key] = true;
       syncTouch();
+      try {
+        if (typeof e.currentTarget.setPointerCapture === "function") {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }
+      } catch {
+        // Pointer capture is an enhancement; the touch control must still work.
+      }
     },
     onPointerUp: () => {
       holds.current[key] = false;
