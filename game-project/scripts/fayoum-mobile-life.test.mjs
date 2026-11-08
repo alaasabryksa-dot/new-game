@@ -28,3 +28,16 @@ test("mobile audio suspends on interruptions and fully releases WebAudio resourc
   assert.match(engine, /this\.osc = null;[\s\S]*?this\.filter = null;/);
   assert.match(engine, /if \(ctx && ctx\.state !== "closed"\) void ctx\.close\(\)\.catch/);
 });
+
+
+test("pedestrian crowd spacing uses world-space sidewalk separation", () => {
+  assert.match(engine, /let separatedX = x/);
+  assert.match(engine, /let separatedZ = z/);
+  assert.match(engine, /for \(let prior = 0; prior < index; prior\+\+\)/);
+  assert.match(engine, /if \(other\.side !== walker\.side\) continue/);
+  assert.match(engine, /const distance = Math\.hypot\(dx, dz\)/);
+  assert.match(engine, /const minimumDistance = PEDESTRIAN_TUNING\.minimumWalkerGap/);
+  assert.match(engine, /separatedX \+= rx \* walker\.side \* correction/);
+  assert.match(engine, /separatedZ \+= rz \* walker\.side \* correction/);
+  assert.match(engine, /walker\.sprite\.position\.set\(separatedX, 0\.02 \+ bob, separatedZ\)/);
+});
