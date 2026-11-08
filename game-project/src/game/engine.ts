@@ -1077,7 +1077,9 @@ export function mountGame(
   const signs: THREE.Mesh[] = [];
 
   const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh; brakes: THREE.InstancedMesh; signalsLeft: THREE.InstancedMesh; signalsRight: THREE.InstancedMesh }>();
-  const POOL = androidDevice ? 12 : 64;
+  // High-density traffic can contain up to 20 tuk-tuks; keep every simulated
+// vehicle renderable on Android instead of allowing invisible collision actors.
+const POOL = androidDevice ? 20 : 64;
   const glassMat = new THREE.MeshStandardMaterial({ color: "#1c3c48", roughness: 0.18, metalness: 0.2 });
   const wheelMat = new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.7 });
   const lightMat = new THREE.MeshStandardMaterial({ color: "#ff3030", emissive: "#ff2020", emissiveIntensity: 0.85 });
