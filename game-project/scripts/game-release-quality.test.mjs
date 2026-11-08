@@ -54,8 +54,10 @@ test("the player can only drive a tuk-tuk; other vehicle types are traffic NPCs"
 
 test("mobile performance budgets pedestrians and render pixel ratio", () => {
   assert.match(engine, /walkerBudget = constrainedDevice \? 18 : 32/);
-  assert.match(engine, /pixelRatioCap = coarsePointer/);
-  assert.match(engine, /constrainedDevice \? 1\.0 : 1\.2/);
+  assert.match(engine, /const androidDevice = \/Android\/i\.test\(navigator\.userAgent\)/);
+  assert.match(engine, /androidDevice \? 0\.85/);
+  assert.match(engine, /const POOL = androidDevice \? 24 : 64/);
+  assert.match(engine, /if \(!androidDevice\) buildStreetFurniture/);
 });
 
 test("steering inputs preserve player-visible left and right", () => {
