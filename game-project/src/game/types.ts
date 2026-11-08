@@ -203,28 +203,34 @@ export type PreviewCfg = {
   sound: boolean;
 };
 
-// Working inventory of named side-street destinations found around Fayoum Street.
-// Order and exact junction positions are still approximate until the map junctions
-// are matched to the route geometry in track.ts.
+// Working Fayoum Street branch-street candidates collected from map/address listings.
+// This is not yet a verified 100-street inventory or exact along-road order.
 export const STOP_NAMES = [
-  "شارع خيرى الجندي",
+  "شارع خيري الجندي",
   "شارع محمد حسنين مطر",
   "شارع الشهيد حمدي جودة",
   "شارع سيد حنفي",
-  "شارع التل",
   "شارع إسماعيل الليثي",
   "شارع حسن منصور",
   "شارع عبد الغفار عزيز",
   "شارع السيدة زينب",
-  "شارع محمد عبد الكريم",
   "شارع لاشين",
   "شارع المهدي",
-  "امتداد شارع رشاد عبد الهادي",
+  "شارع الجمعية",
+  "شارع الإخلاص",
+  "شارع هاشم العطار",
+  "شارع رشاد عبد الهادي",
+  "شارع حسين مطر",
+  "شارع حسين الفخراني",
+  "شارع المطبعة",
+  "شارع المحجر",
+  "شارع التل",
+  "شارع محمد عبد الكريم",
   "شارع عزت مطر",
   "شارع الهدى",
   "شارع سيد عبد الرازق",
   "شارع فهيم عبد الخالق",
-  "شارع المحجر",
+  "امتداد شارع رشاد عبد الهادي",
 
 ];
 
