@@ -352,3 +352,22 @@ test("Android touch input remains active when pointer capture is unavailable", (
   assert.match(ui, /onPointerUp: \(e: ReactPointer<HTMLButtonElement>\) => \{[\s\S]*?delete\(e\.pointerId\)/);
   assert.match(ui, /Pointer capture is an enhancement; the touch control must still work/);
 });
+
+
+test("shift settlement preserves earnings when rent cannot yet be fully paid", () => {
+  assert.match(engine, /const remainingRent = Math\.max\(0, RENT - money - save\.wallet\);[\s\S]*?save\.wallet \+= money;[\s\S]*?لسه فاضل/);
+  assert.match(engine, /if \(save\.wallet >= RENT - money\)[\s\S]*?save\.wallet -= RENT - money/);
+});
+
+test("fuel station charges proportionally to the amount of fuel added", () => {
+  assert.match(engine, /const refuelCost = Math\.max\(1, Math\.ceil\(\(\(100 - fuel\) \/ 100\) \* GAS_COST\)\)/);
+  assert.match(engine, /if \(pay\(refuelCost\)\)[\s\S]*?fuel = 100[\s\S]*?تملى التانك — \$\{refuelCost\} ج/);
+});
+
+test("rush delivery payouts scale with the route hop count and are announced", () => {
+  assert.match(engine, /const JOB_REWARD_TUNING = \{[\s\S]*?base: 35,[\s\S]*?perStop: 4/);
+  assert.match(engine, /const hopCount = \(jobs\[jobIndex\] - fromStop \+ track\.stops\.length\) % track\.stops\.length/);
+  assert.match(engine, /const reward = JOB_REWARD_TUNING\.base \+ hopCount \* JOB_REWARD_TUNING\.perStop/);
+  assert.match(engine, /money \+= reward/);
+  assert.match(engine, /وصلت \+\$\{reward\} ج/);
+});
