@@ -9,7 +9,7 @@ test("Android and desktop scenes expose the expanded fictional Egyptian storefro
   assert.equal(matches.length, 2, "both mobile and desktop scene paths must define storefront categories");
   for (const match of matches) {
     const labels = [...match[1].matchAll(/"([^"]+)"/g)].map((entry) => entry[1]);
-    assert.equal(labels.length, 20, "each renderer must expose 20 category labels");
+    assert.equal(labels.length, 32, "each renderer must expose 32 category labels");
     assert.ok(labels.includes("جزارة"));
     assert.ok(labels.includes("مكتبة"));
     assert.ok(labels.includes("قطع غيار"));
@@ -21,7 +21,7 @@ test("storefront category palettes and adaptive Arabic sign typography are kept 
   const palettes = [...engine.matchAll(/const signColors = \[([^\]]+)\];/g)];
   assert.equal(palettes.length, 2);
   for (const match of palettes) {
-    assert.equal([...match[1].matchAll(/"#[0-9a-fA-F]{6}"/g)].length, 20);
+    assert.equal([...match[1].matchAll(/"#[0-9a-fA-F]{6}"/g)].length, 32);
   }
   assert.match(engine, /label\.length > 10 \? 43/);
   assert.match(engine, /label\.length > 7 \? 52/);
