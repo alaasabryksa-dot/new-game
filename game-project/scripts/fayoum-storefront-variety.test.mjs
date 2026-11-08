@@ -54,7 +54,7 @@ test("Android street facades vary independently by side and include lightweight 
 test("apartment frontage texture includes all twenty deterministic low-cost detail variants", () => {
   assert.match(engine, /Twenty deterministic frontage accents/);
   assert.match(engine, /const frontageDetail = \(floor \* 17 \+ col \* 11 \+ variant \* 7 \+ base\.length\) % 20;/);
-  const detailCases = [...engine.matchAll(/case \\d+: \/\//g)];
+  const detailCases = [...engine.matchAll(/case \d+: \/\//g)];
   assert.equal(detailCases.length, 20, "all twenty facade accents must have an implementation");
   assert.match(engine, /painted once into the shared texture, not scene meshes/);
 });
@@ -62,7 +62,7 @@ test("apartment frontage texture includes all twenty deterministic low-cost deta
 test("NPC traffic has twenty active driving-tuning controls for curves, spacing, and varied pace", () => {
   const tuning = engine.match(/const NPC_DRIVING_TUNING = \{([\s\S]*?)\} as const;/);
   assert.ok(tuning, "NPC driving tuning must remain explicit");
-  const keys = [...tuning[1].matchAll(/^\s*([A-Za-z][A-Za-z0-9]*):/gm)].map((entry) => entry[1]);
+  const keys = [...tuning[1].matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
   assert.equal(keys.length, 20, "traffic tuning must expose twenty independent controls");
   assert.match(engine, /const speedVariation = 1/);
   assert.match(engine, /const curveFactor = Math\.max\(NPC_DRIVING_TUNING\.curveSpeedFloor/);
@@ -73,7 +73,7 @@ test("NPC traffic has twenty active driving-tuning controls for curves, spacing,
 test("passenger system exposes and uses twenty independent gameplay tuning controls", () => {
   const tuning = engine.match(/const PASSENGER_SYSTEM_TUNING = \{([\s\S]*?)\} as const;/);
   assert.ok(tuning, "passenger tuning must remain explicit");
-  const keys = [...tuning[1].matchAll(/^\s*([A-Za-z][A-Za-z0-9]*):/gm)].map((entry) => entry[1]);
+  const keys = [...tuning[1].matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
   assert.equal(keys.length, 20);
   for (const key of keys) {
     assert.ok(engine.includes(`PASSENGER_SYSTEM_TUNING.${key}`), `unused passenger tuning: ${key}`);
