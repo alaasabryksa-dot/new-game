@@ -14,7 +14,9 @@ test("scene teardown persists progress before stopping the game loop", () => {
 
 test("Escape-key resume resets the frame clock and unlocks audio", () => {
   const escapeResume = engine.slice(engine.indexOf('if (e.code === "Escape")'), engine.indexOf('const onUp ='));
-  assert.match(escapeResume, /const isEscape = e\.code === "Escape"/);\n  assert.match(escapeResume, /!isEscape[\s\S]*?target\.closest\("input, textarea, select, button/);\n  assert.match(escapeResume, /phase === "pause"[\s\S]*?last = performance\.now\(\);[\s\S]*?acc = 0;[\s\S]*?phase = "play";[\s\S]*?sfx\.unlock\(\);[\s\S]*?publish\(\)/);
+  assert.match(escapeResume, /const isEscape = e\.code === "Escape"/);
+  assert.match(escapeResume, /!isEscape[\s\S]*?target\.closest\("input, textarea, select, button/);
+  assert.match(escapeResume, /phase === "pause"[\s\S]*?last = performance\.now\(\);[\s\S]*?acc = 0;[\s\S]*?phase = "play";[\s\S]*?sfx\.unlock\(\);[\s\S]*?publish\(\)/);
 });
 
 test("manual pause suspends continuous engine audio after saving the run", () => {
