@@ -3746,6 +3746,8 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
     const p = pts[i];
     const rx = Math.cos(p.yaw);
     const rz = -Math.sin(p.yaw);
+    const tx = Math.sin(p.yaw);
+    const tz = Math.cos(p.yaw);
     const side = i % 2 === 0 ? -1 : 1;
     const lat = ROAD_HALF + 2.55 + (i % 3) * 0.18;
     const x = p.x + rx * side * lat;
