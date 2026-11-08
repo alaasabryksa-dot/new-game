@@ -119,8 +119,8 @@ test("pedestrian crowd exposes thirty active mobile-safe movement and sidewalk-s
   for (const key of keys) {
     assert.ok(engine.includes(`PEDESTRIAN_TUNING.${key}`), `unused pedestrian tuning: ${key}`);
   }
-  assert.match(engine, /walker\\.avoidanceOffset \\+=/);
-  assert.match(engine, /PEDESTRIAN_TUNING\\.pauseCycleSeconds/);
-  assert.match(engine, /PEDESTRIAN_TUNING\\.minimumWalkerGap/);
-  assert.match(engine, /PEDESTRIAN_TUNING\\.mobileWalkerBudget/);
+  assert.ok(engine.includes("walker.avoidanceOffset +="));
+  assert.ok(engine.includes("PEDESTRIAN_TUNING.pauseCycleSeconds"));
+  assert.ok(engine.includes("PEDESTRIAN_TUNING.minimumWalkerGap"));
+  assert.ok(engine.includes("PEDESTRIAN_TUNING.mobileWalkerBudget"));
 });
