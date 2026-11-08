@@ -3129,6 +3129,8 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   const benchLegMatrices: THREE.Matrix4[] = [];
   const lampPoleMatrices: THREE.Matrix4[] = [];
   const lampHeadMatrices: THREE.Matrix4[] = [];
+  const stopPoleMatrices: THREE.Matrix4[] = [];
+  const stopBoardMatrices: THREE.Matrix4[] = [];
   const o = new THREE.Object3D();
 
   // Small street trees on the quieter sidewalk; keep clear of the lamp line.
@@ -3193,6 +3195,27 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     o.scale.set(1, 1, 1);
     o.updateMatrix();
     lampHeadMatrices.push(o.matrix.clone());
+  }
+
+  // Occasional informal transit-stop markers sit at the outer pavement edge.
+  for (let i = 16; i < pts.length; i += 58) {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const side = i % 2 === 0 ? 1 : -1;
+    const lat = side * (ROAD_HALF + 3.15);
+    const x = p.x + rx * lat;
+    const z = p.z + rz * lat;
+    o.position.set(x, 1.55, z);
+    o.rotation.set(0, 0, 0);
+    o.scale.set(0.09, 3.1, 0.09);
+    o.updateMatrix();
+    stopPoleMatrices.push(o.matrix.clone());
+    o.position.set(x - rx * side * 0.12, 2.78, z - rz * side * 0.12);
+    o.rotation.set(0, p.yaw, 0);
+    o.scale.set(1, 1, 1);
+    o.updateMatrix();
+    stopBoardMatrices.push(o.matrix.clone());
   }
 
   // Occasional hand-pushed produce carts sit against the building edge,
@@ -3316,6 +3339,41 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   lampHeadMatrices.forEach((m, i) => lampHeads.setMatrixAt(i, m));
   lampHeads.count = lampHeadMatrices.length;
   lampHeads.instanceMatrix.needsUpdate = true;
+  const stopPoles = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.07, 0.1, 1, 7),
+    new THREE.MeshStandardMaterial({ color: "#59636a", metalness: 0.58, roughness: 0.64 }),
+    Math.max(1, stopPoleMatrices.length),
+  );
+  stopPoleMatrices.forEach((m, i) => stopPoles.setMatrixAt(i, m));
+  stopPoles.count = stopPoleMatrices.length;
+  stopPoles.instanceMatrix.needsUpdate = true;
+  const stopBoardCanvas = document.createElement("canvas");
+  stopBoardCanvas.width = 256;
+  stopBoardCanvas.height = 160;
+  const stopBoardContext = stopBoardCanvas.getContext("2d");
+  if (stopBoardContext) {
+    stopBoardContext.fillStyle = "#174f70";
+    stopBoardContext.fillRect(0, 0, 256, 160);
+    stopBoardContext.strokeStyle = "#f2e6c9";
+    stopBoardContext.lineWidth = 9;
+    stopBoardContext.strokeRect(7, 7, 242, 146);
+    stopBoardContext.fillStyle = "#fff1d1";
+    stopBoardContext.direction = "rtl";
+    stopBoardContext.textAlign = "center";
+    stopBoardContext.textBaseline = "middle";
+    stopBoardContext.font = "bold 54px Tajawal, sans-serif";
+    stopBoardContext.fillText("موقف", 128, 80);
+  }
+  const stopBoardTexture = new THREE.CanvasTexture(stopBoardCanvas);
+  stopBoardTexture.colorSpace = THREE.SRGBColorSpace;
+  const stopBoards = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.12, 0.88, 1.32),
+    new THREE.MeshStandardMaterial({ color: "#ffffff", map: stopBoardTexture, roughness: 0.72 }),
+    Math.max(1, stopBoardMatrices.length),
+  );
+  stopBoardMatrices.forEach((m, i) => stopBoards.setMatrixAt(i, m));
+  stopBoards.count = stopBoardMatrices.length;
+  stopBoards.instanceMatrix.needsUpdate = true;
   const benchSeats = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1.8, 0.12, 0.62),
     new THREE.MeshStandardMaterial({ color: "#805b3e", roughness: 0.88 }),
@@ -3381,7 +3439,7 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     mesh.instanceMatrix.needsUpdate = true;
     return mesh;
   });
-  scene.add(trunk, canopy, bins, bollards, lampPoles, lampHeads, benchSeats, benchBacks, benchLegs, cartBodies, cartTops, cartCanopies, cartWheels, ...produceMeshes);
+  scene.add(trunk, canopy, bins, bollards, lampPoles, lampHeads, stopPoles, stopBoards, benchSeats, benchBacks, benchLegs, cartBodies, cartTops, cartCanopies, cartWheels, ...produceMeshes);
 }
 
 function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, playerX: number, playerZ: number) => void {
