@@ -490,7 +490,7 @@ function PlayHud({
           </div>
           {snap.fuel <= 35 ? (
             <p className={snap.lowFuel ? "mt-1 text-[10px] font-bold text-brick" : "mt-1 text-[10px] font-semibold text-muted"} aria-live={snap.lowFuel ? "polite" : undefined}>
-              البنزينة: {snap.gasStationDist} م
+              مدى تقريبي: {snap.fuelRange.toFixed(1)} كم · البنزينة: {snap.gasStationDist} م
             </p>
           ) : null}
           {shift ? (
