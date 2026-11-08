@@ -2846,10 +2846,12 @@ function rollJobs(fromStop: number) {
       const materials = new Set<THREE.Material>();
       const textures = new Set<THREE.Texture>();
       scene.traverse((object) => {
-        const mesh = object as THREE.Mesh;
-        if (!mesh.isMesh && !(mesh as THREE.InstancedMesh).isInstancedMesh) return;
-        if (mesh.geometry) geometries.add(mesh.geometry);
-        const material = mesh.material;
+        // Sprites (notably pedestrian textures) also own GPU materials and must
+        // be released alongside meshes when React tears down the game scene.
+        const renderable = object as THREE.Mesh | THREE.Sprite;
+        const geometry = (renderable as THREE.Mesh).geometry;
+        if (geometry) geometries.add(geometry);
+        const material = renderable.material;
         for (const mat of Array.isArray(material) ? material : material ? [material] : []) {
           materials.add(mat);
           for (const value of Object.values(mat)) {
