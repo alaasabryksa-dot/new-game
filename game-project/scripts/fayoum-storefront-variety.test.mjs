@@ -185,3 +185,15 @@ test("camera exposes twenty tuning controls for phone comfort and stable follow"
   assert.ok(engine.includes("CAMERA_TUNING.speedFovBoost"));
   assert.ok(engine.includes("CAMERA_TUNING.shakePositionScale"));
 });
+
+test("game progress survives a damaged primary save through the backup slot", () => {
+  assert.ok(engine.includes('const SAVE_BACKUP_KEY = "daralsalam-save-v2-backup"'));
+  assert.ok(engine.includes("function blankSave(): Save"));
+  assert.ok(engine.includes("function parseSave(raw: string | null): Save | null"));
+  assert.ok(engine.includes("function readSaveSlot(key: string): Save | null"));
+  assert.ok(engine.includes("return readSaveSlot(SAVE_KEY) ?? readSaveSlot(SAVE_BACKUP_KEY) ?? blankSave()"));
+  assert.ok(engine.includes('localStorage.setItem(SAVE_KEY, serialized)'));
+  assert.ok(engine.includes('localStorage.setItem(SAVE_BACKUP_KEY, serialized)'));
+  assert.ok(engine.includes("if (p.v !== 2 || !p.upgrades || typeof p.upgrades !== \"object\") return null"));
+  assert.ok(engine.includes("bestTrial: typeof p.bestTrial === \"number\""));
+});
