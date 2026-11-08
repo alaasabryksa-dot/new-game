@@ -3647,12 +3647,51 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     color: "#ffe0a0", emissive: "#ffbd55", emissiveIntensity: 0.52, roughness: 0.45,
   }), capacity);
 
+  // Upper-floor facade details: windows, projecting balconies and AC units.
+  // Instancing keeps the richer Cairo frontage inexpensive on Android.
+  const windowFrames = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.18, 1.16, 0.92),
+    new THREE.MeshStandardMaterial({ color: "#d7cbb7", roughness: 0.86 }),
+    capacity * 18,
+  );
+  const windowGlass = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.12, 0.94, 0.7),
+    new THREE.MeshStandardMaterial({
+      color: "#527d89", roughness: 0.26, metalness: 0.08,
+      emissive: "#17313b", emissiveIntensity: 0.12,
+    }),
+    capacity * 18,
+  );
+  const balconySlabs = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.92, 0.13, 1.72),
+    new THREE.MeshStandardMaterial({ color: "#bcb3a4", roughness: 0.88 }),
+    capacity * 4,
+  );
+  const balconyRails = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.1, 0.72, 1.72),
+    new THREE.MeshStandardMaterial({ color: "#929b9b", metalness: 0.42, roughness: 0.52 }),
+    capacity * 4,
+  );
+  const airConditioners = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.58, 0.42, 0.82),
+    new THREE.MeshStandardMaterial({ color: "#e7e4dc", roughness: 0.62, metalness: 0.12 }),
+    capacity * 3,
+  );
+  const acGrilles = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.08, 0.27, 0.55),
+    new THREE.MeshStandardMaterial({ color: "#7b8587", roughness: 0.58, metalness: 0.35 }),
+    capacity * 3,
+  );
+
   const dummy = new THREE.Object3D();
   const counts = colors.map(() => 0);
   const signsCount = signMats.map(() => 0);
   const awningsCount = awningMats.map(() => 0);
   let roofTankCount = 0;
   let shopCount = 0;
+  let windowCount = 0;
+  let balconyCount = 0;
+  let acCount = 0;
   const addInstance = (mesh: THREE.InstancedMesh, index: number, x: number, y: number, z: number,
     yaw: number, sx: number, sy: number, sz: number) => {
     dummy.position.set(x, y, z);
@@ -3691,6 +3730,35 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
         addInstance(roofTank, roofTankCount, centerX, height + 0.58, centerZ, point.yaw, 1, 1, 1);
         addInstance(roofTankTop, roofTankCount, centerX, height + 1.17, centerZ, point.yaw, 1, 1, 1);
         roofTankCount++;
+      }
+
+      // Give upper floors readable windows instead of blank procedural walls.
+      const facadeX = point.x + rx * side * (ROAD_HALF + depth * 0.5 + 2.5 + width * 0.5 + 0.1);
+      const upperFloors = Math.min(floors - 1, 5);
+      for (let floor = 1; floor <= upperFloors; floor++) {
+        for (let column = 0; column < 3; column++) {
+          const z = centerZ + rz * ((column - 1) * depth * 0.27);
+          const y = 1.9 + floor * 2.45;
+          if (windowCount < capacity * 18) {
+            addInstance(windowFrames, windowCount, facadeX, y, z, point.yaw, 1, 1, 1);
+            addInstance(windowGlass, windowCount, facadeX - side * 0.045, y, z, point.yaw, 1, 1, 1);
+            windowCount++;
+          }
+        }
+        if (floor % 2 === 0 && balconyCount < capacity * 4) {
+          const balconyZ = centerZ + rz * ((sideVariation > 0.5 ? 0.28 : -0.28) * depth);
+          const balconyY = 1.55 + floor * 2.45;
+          addInstance(balconySlabs, balconyCount, facadeX - side * 0.48, balconyY, balconyZ, point.yaw, 1, 1, 1);
+          addInstance(balconyRails, balconyCount, facadeX - side * 0.9, balconyY + 0.4, balconyZ, point.yaw, 1, 1, 1);
+          balconyCount++;
+        }
+      }
+      if (sideVariation > 0.38 && acCount < capacity * 3) {
+        const acY = 2.0 + (1 + (sideSeed % Math.max(1, upperFloors))) * 2.45;
+        const acZ = centerZ + rz * ((sideVariation > 0.7 ? 0.34 : -0.34) * depth);
+        addInstance(airConditioners, acCount, facadeX - side * 0.38, acY, acZ, point.yaw, 1, 1, 1);
+        addInstance(acGrilles, acCount, facadeX - side * 0.69, acY, acZ, point.yaw, 1, 1, 1);
+        acCount++;
       }
 
       // Alternate fictional commercial and residential ground floors.
@@ -3740,6 +3808,18 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     mesh.count = Math.min(shopCount, capacity);
     mesh.instanceMatrix.needsUpdate = true;
   });
+  windowFrames.count = Math.min(windowCount, capacity * 18);
+  windowFrames.instanceMatrix.needsUpdate = true;
+  windowGlass.count = Math.min(windowCount, capacity * 18);
+  windowGlass.instanceMatrix.needsUpdate = true;
+  balconySlabs.count = Math.min(balconyCount, capacity * 4);
+  balconySlabs.instanceMatrix.needsUpdate = true;
+  balconyRails.count = Math.min(balconyCount, capacity * 4);
+  balconyRails.instanceMatrix.needsUpdate = true;
+  airConditioners.count = Math.min(acCount, capacity * 3);
+  airConditioners.instanceMatrix.needsUpdate = true;
+  acGrilles.count = Math.min(acCount, capacity * 3);
+  acGrilles.instanceMatrix.needsUpdate = true;
   signs.forEach((mesh, index) => {
     mesh.count = Math.min(signsCount[index], capacity);
     mesh.instanceMatrix.needsUpdate = true;
