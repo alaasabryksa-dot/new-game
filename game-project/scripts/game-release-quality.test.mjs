@@ -72,7 +72,7 @@ test("steering input eases smoothly with a frame-rate-independent response", () 
 test("steering inputs preserve player-visible left and right", () => {
   assert.match(engine, /down\("KeyA"\)[\s\S]{0,90}steer \+= 1/);
   assert.match(engine, /down\("KeyD"\)[\s\S]{0,90}steer -= 1/);
-  assert.match(engine, /player\.yaw \+= steer \* spec\.turn/);
+  assert.match(engine, /player\.yaw \+= steeringInput \* spec\.turn/);
   assert.match(engine, /window\.__controlsTest =/);
   assert.match(engine, /setSteer: \(v: number\) =>/);
 });
