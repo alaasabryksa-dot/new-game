@@ -46,6 +46,8 @@
 
 - The end-of-run summary now itemizes the rent actually paid, the unpaid remainder (if any), and the net wallet change from the start of the run. This makes partial rent carryover and in-run wallet spending visible instead of showing only the final wallet balance.
 
+- Rent settlement now uses one bounded, independently testable calculation for fully paid, partially paid, wallet-assisted, and overpaid shifts. Invalid or negative inputs are normalized before the wallet is updated; regression tests cover these edge cases.
+
 ## Remaining Android release work
 
 1. Preserve the packaged-local-assets-only WebView policy. If optional online services (such as ads) are later approved, isolate them behind a separately reviewed allowlist and ensure they cannot block gameplay; do not introduce remote game dependencies or server/auth requirements into the Android entry.
