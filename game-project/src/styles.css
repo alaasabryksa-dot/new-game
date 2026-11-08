@@ -34,3 +34,17 @@
     background: #14181e;
   }
 }
+
+/* Android-first touch, safe-area and accessibility polish. */
+.game-root { min-height: 100%; min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom); overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+.game-canvas { display: block; touch-action: none; contain: strict; }
+.game-menu-scroll { scrollbar-width: thin; scrollbar-color: #596575 transparent; -webkit-overflow-scrolling: touch; }
+.game-root button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.game-root button:focus-visible, .game-root a:focus-visible { outline: 2px solid #f0b429; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .game-root *, .game-root *::before, .game-root *::after {
+    scroll-behavior: auto !important; transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+  }
+}
+@media (max-height: 420px) { .game-menu-scroll { padding-top: 0.5rem; padding-bottom: 0.5rem; } .game-menu-scroll h1 { font-size: 1.6rem; } }
