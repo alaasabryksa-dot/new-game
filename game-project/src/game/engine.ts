@@ -1027,8 +1027,11 @@ export function mountGame(
     alert = null;
     placeOn(startS, 2);
     spawnTraffic(startS);
+    // Treat the route as a loop when finding the nearest starting stop.
+    // Plain subtraction misidentifies the nearest stop when startS is near the
+    // end of the route and the closest stop is just after the wrap to zero.
     const here = track.stops.reduce((best, stop, i) => {
-      const d = Math.abs(stop.s - startS);
+      const d = Math.abs(wrapDelta(stop.s, startS, track.total));
       return d < best.d ? { d, i } : best;
     }, { d: Infinity, i: 0 }).i;
     rollJobs(here);
