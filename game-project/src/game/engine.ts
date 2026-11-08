@@ -1200,6 +1200,10 @@ const POOL = androidDevice ? 20 : 64;
   let cfg: PreviewCfg = { ...defaultCfg, sound: save.sound };
   let phase: Phase = "menu";
   let money = 0;
+  let walletAtRunStart = save.wallet;
+  let settlementRentPaid = 0;
+  let settlementRentRemaining = 0;
+  let settlementWalletChange = 0;
   let km = 0;
   let time = 0;
   let trafficClock = 0;
@@ -1577,6 +1581,10 @@ function rollJobs(fromStop: number) {
 
   function resetRun(startS: number) {
     money = 0;
+    walletAtRunStart = save.wallet;
+    settlementRentPaid = 0;
+    settlementRentRemaining = 0;
+    settlementWalletChange = 0;
     km = 0;
     time = 0;
     crashes = 0;
@@ -1614,6 +1622,9 @@ function rollJobs(fromStop: number) {
     if (money > save.bestMoney) save.bestMoney = money;
     if (km > save.bestKm) save.bestKm = km;
     if (cfg.mode === "shift") {
+      const availableForRent = money + save.wallet;
+      settlementRentPaid = Math.min(RENT, availableForRent);
+      settlementRentRemaining = Math.max(0, RENT - availableForRent);
       if (money >= RENT) {
         save.wallet += money - RENT;
         say("الإيجار اتسدد");
@@ -1641,6 +1652,7 @@ function rollJobs(fromStop: number) {
       save.wallet += Math.max(0, money);
       say("خلّصت اللفة");
     }
+    settlementWalletChange = save.wallet - walletAtRunStart;
     persist();
   }
 
@@ -1755,6 +1767,9 @@ function rollJobs(fromStop: number) {
       fuelRange,
       gasStationDist,
       rent: RENT,
+      rentPaid: settlementRentPaid,
+      rentRemaining: settlementRentRemaining,
+      walletChange: settlementWalletChange,
       shiftLeft: Math.max(0, SHIFT_SECONDS - time),
       wallet: save.wallet,
       upgrades: save.upgrades,
