@@ -50,3 +50,11 @@ test("Android street facades vary independently by side and include lightweight 
   assert.match(engine, /roofTank\.count = roofTankCount;/);
   assert.match(engine, /roofTankTop\.count = roofTankCount;/);
 });
+
+test("apartment frontage texture includes all twenty deterministic low-cost detail variants", () => {
+  assert.match(engine, /Twenty deterministic frontage accents/);
+  assert.match(engine, /const frontageDetail = \(floor \* 17 \+ col \* 11 \+ variant \* 7 \+ base\.length\) % 20;/);
+  const detailCases = [...engine.matchAll(/case (\\d+): \/\//g)].map((entry) => Number(entry[1]));
+  assert.deepEqual(detailCases.slice(-20), Array.from({ length: 20 }, (_, index) => index));
+  assert.match(engine, /painted once into the shared texture, not scene meshes/);
+});
