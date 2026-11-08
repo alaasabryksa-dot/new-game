@@ -109,7 +109,7 @@ test("rush delivery routes avoid repeating a destination within the same run", (
 
 test("passenger boarding spreads drop-off destinations when alternatives are available", () => {
   assert.match(engine, /const assignedDestinations = new Set\(pax\.map\(\(person\) => person\.dest\)\)/);
-  assert.match(engine, /\.filter\(\(candidate\) => !assignedDestinations\.has\(candidate\.dest\)\)/);
+  assert.match(engine, /\.filter\(\(candidate\) => !assignedDestinations\.has\(candidate\.dest\)[\s\S]*?forwardDist\(track\.stops\[candidate\.dest\]\.s, track\.stops\[i\]\.s\) > 35\)/);
   assert.match(engine, /assignedDestinations\.add\(dest\)/);
   assert.match(engine, /const choices = candidates\.length[\s\S]*?choices\[Math\.floor\(Math\.random\(\) \* choices\.length\)\]/);
 });
