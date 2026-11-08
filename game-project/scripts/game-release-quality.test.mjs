@@ -11,6 +11,7 @@ const [engine, ui, routeSource, routeData, photoRefs, packageJson, rootRoute, tr
   read("../src/game/data/fayoum-photo-references.json").then(JSON.parse),
   read("../package.json").then(JSON.parse),
   read("../src/routes/__root.tsx"),
+  read("../src/game/track.ts"),
 ]);
 
 test("the game identifies the requested street without overstating map verification", () => {
