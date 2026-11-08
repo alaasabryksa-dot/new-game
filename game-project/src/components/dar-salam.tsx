@@ -126,6 +126,14 @@ export function DarSalam() {
   const patch = (partial: Partial<PreviewCfg>) => setCfg((c) => ({ ...c, ...partial }));
   const startLabel =
     cfg.mode === "rush" ? "ابدأ التوصيلات" : cfg.mode === "cruise" ? "انزل الشارع" : "ابدأ الوردية";
+  const startGame = () => {
+    // Android installed PWAs can lock orientation after a user gesture.
+    // Browsers that do not support the API still work in landscape manually.
+    if (screen.orientation && "lock" in screen.orientation) {
+      void screen.orientation.lock("landscape").catch(() => undefined);
+    }
+    gameRef.current?.start(cfg);
+  };
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-asphalt font-sans text-ink touch-none select-none">
@@ -293,7 +301,7 @@ export function DarSalam() {
               <button
                 type="button"
                 disabled={!ready}
-                onClick={() => gameRef.current?.start(cfg)}
+                onClick={startGame}
                 className="w-full rounded-xl bg-amber py-3 text-lg font-extrabold text-amber-ink disabled:opacity-60"
               >
                 {ready ? startLabel : "لحظة، بنجهّز التوكتوك"}
