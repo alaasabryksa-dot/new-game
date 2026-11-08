@@ -3085,6 +3085,9 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   const cartCanopyMatrices: THREE.Matrix4[] = [];
   const cartWheelMatrices: THREE.Matrix4[] = [];
   const cartProduceMatrices: THREE.Matrix4[][] = [[], [], []];
+  const benchSeatMatrices: THREE.Matrix4[] = [];
+  const benchBackMatrices: THREE.Matrix4[] = [];
+  const benchLegMatrices: THREE.Matrix4[] = [];
   const o = new THREE.Object3D();
 
   // Small street trees on the quieter sidewalk; keep clear of the lamp line.
@@ -3181,6 +3184,36 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     }
   }
 
+  // A few compact benches add resting spots without occupying the sidewalk center.
+  for (let i = 20; i < pts.length; i += 40) {
+    const p = pts[i];
+    const hash = Math.abs(Math.sin(i * 5.71) * 9127.31) % 1;
+    if (hash < 0.48) continue;
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const side = i % 3 === 0 ? -1 : 1;
+    const lat = side * (ROAD_HALF + 4.05);
+    const cx = p.x + rx * lat;
+    const cz = p.z + rz * lat;
+    o.rotation.set(0, p.yaw, 0);
+    o.scale.set(1, 1, 1);
+    o.position.set(cx, 0.58, cz);
+    o.updateMatrix();
+    benchSeatMatrices.push(o.matrix.clone());
+    o.position.set(cx - rx * 0.42, 1.02, cz - rz * 0.42);
+    o.scale.set(1, 1, 1);
+    o.updateMatrix();
+    benchBackMatrices.push(o.matrix.clone());
+    for (const along of [-0.72, 0.72]) {
+      for (const depth of [-0.3, 0.3]) {
+        o.position.set(cx + rx * along + rz * depth, 0.29, cz + rz * along - rx * depth);
+        o.scale.set(1, 1, 1);
+        o.updateMatrix();
+        benchLegMatrices.push(o.matrix.clone());
+      }
+    }
+  }
+
   const trunk = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.16, 0.22, 2.1, 7),
     new THREE.MeshStandardMaterial({ color: "#725039", roughness: 1 }),
@@ -3205,6 +3238,30 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     bollardMatrices.length,
   );
   bollardMatrices.forEach((m, i) => bollards.setMatrixAt(i, m));
+  const benchSeats = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.8, 0.12, 0.62),
+    new THREE.MeshStandardMaterial({ color: "#805b3e", roughness: 0.88 }),
+    Math.max(1, benchSeatMatrices.length),
+  );
+  benchSeatMatrices.forEach((m, i) => benchSeats.setMatrixAt(i, m));
+  benchSeats.count = benchSeatMatrices.length;
+  benchSeats.instanceMatrix.needsUpdate = true;
+  const benchBacks = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.8, 0.78, 0.12),
+    new THREE.MeshStandardMaterial({ color: "#76543b", roughness: 0.9 }),
+    Math.max(1, benchBackMatrices.length),
+  );
+  benchBackMatrices.forEach((m, i) => benchBacks.setMatrixAt(i, m));
+  benchBacks.count = benchBackMatrices.length;
+  benchBacks.instanceMatrix.needsUpdate = true;
+  const benchLegs = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.12, 0.58, 0.12),
+    new THREE.MeshStandardMaterial({ color: "#42484a", metalness: 0.52, roughness: 0.62 }),
+    Math.max(1, benchLegMatrices.length),
+  );
+  benchLegMatrices.forEach((m, i) => benchLegs.setMatrixAt(i, m));
+  benchLegs.count = benchLegMatrices.length;
+  benchLegs.instanceMatrix.needsUpdate = true;
   const cartBodies = new THREE.InstancedMesh(
     new THREE.BoxGeometry(0.96, 0.82, 0.68),
     new THREE.MeshStandardMaterial({ color: "#8b6240", roughness: 0.9 }),
@@ -3246,7 +3303,7 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     mesh.instanceMatrix.needsUpdate = true;
     return mesh;
   });
-  scene.add(trunk, canopy, bins, bollards, cartBodies, cartTops, cartCanopies, cartWheels, ...produceMeshes);
+  scene.add(trunk, canopy, bins, bollards, benchSeats, benchBacks, benchLegs, cartBodies, cartTops, cartCanopies, cartWheels, ...produceMeshes);
 }
 
 function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, playerX: number, playerZ: number) => void {
