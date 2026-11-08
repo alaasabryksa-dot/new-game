@@ -41,3 +41,8 @@ These are deliberately invented environmental details, not claims about actual t
 ## Android facade and rooftop variation (8 Nov 2026)
 
 The mobile scene now derives building width, depth, floor count, facade color, and shop category from a side-specific deterministic seed. Opposite sides therefore no longer reuse identical building dimensions and category patterns at each route sample. A portion of buildings also receive simple rooftop water tanks, rendered with instanced cylinder meshes to limit additional draw calls. These are generic environmental details, not individually surveyed properties.
+
+
+## Android street-life pass (8 Nov 2026)
+
+Android now receives a deliberately compact set of instanced sidewalk props: waste bins, occasional trees, street lamps, vendor carts and benches. The Android scene also enables a reduced ten-sprite pedestrian crowd with the existing proximity-based sidewalk avoidance. Desktop retains its richer prop set and larger crowd. This is generic environmental dressing; it does not claim exact surveyed positions for individual vendors or street furniture.
