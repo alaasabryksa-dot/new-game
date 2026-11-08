@@ -10,9 +10,9 @@ const browser = await chromium.launch({
 
 try {
   for (const viewport of [
-    { name: "desktop", width: 1280, height: 800, isMobile: false },
-    { name: "mobile", width: 390, height: 844, isMobile: true },
-  ]) {
+    { name: "mobile-landscape-compact", width: 740, height: 360, isMobile: true },
+    { name: "mobile-landscape-standard", width: 844, height: 390, isMobile: true },
+  ])
     const context = await browser.newContext({
       viewport: { width: viewport.width, height: viewport.height },
       isMobile: viewport.isMobile,
@@ -24,6 +24,7 @@ try {
 
     const response = await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
     assert.equal(response?.status(), 200, `${viewport.name}: app should return HTTP 200`);
+    assert.ok(viewport.width > viewport.height, `${viewport.name}: viewport must be landscape`);
     await page.getByText("توكتوك شارع الفيوم", { exact: true }).waitFor({ timeout: 30000 });
     await page.locator("canvas").first().waitFor({ state: "attached" });
     await page.getByRole("button", { name: /ابدأ الوردية/ }).waitFor({ state: "visible", timeout: 30000 });
@@ -51,7 +52,7 @@ try {
     await page.getByRole("button", { name: "إيقاف" }).waitFor({ state: "visible" });
 
     assert.deepEqual(pageErrors, [], `${viewport.name}: no uncaught browser errors`);
-    console.log(`PASS ${viewport.name}: load, canvas, start, controls, pause and resume`);
+    console.log(`PASS ${viewport.name}: landscape load, canvas, start, touch controls, pause and resume`);
     await context.close();
   }
 } finally {
