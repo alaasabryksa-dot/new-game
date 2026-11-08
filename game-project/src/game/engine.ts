@@ -438,6 +438,46 @@ function facadeTexture(base: string, variant = 0) {
     }
   }
 
+  // Small split A/C units, drain pipes and satellite dishes make apartment fronts
+  // feel lived-in without adding scene meshes or mobile draw calls.
+  for (let floor = 0; floor < 4; floor++) {
+    for (let col = 0; col < 4; col++) {
+      const detail = (floor * 19 + col * 13 + variant * 7 + base.length) % 11;
+      const x = 12 + col * 88;
+      const y = 20 + floor * 124;
+      if (detail === 1 || detail === 6) {
+        const unitX = x + 25;
+        const unitY = y + 82;
+        g.fillStyle = "rgba(30,35,37,0.24)";
+        g.fillRect(unitX - 2, unitY + 2, 29, 18);
+        g.fillStyle = "#d4d1c8";
+        g.fillRect(unitX, unitY, 26, 15);
+        g.fillStyle = "#899394";
+        g.fillRect(unitX + 3, unitY + 3, 20, 2);
+        g.fillStyle = "#6f797a";
+        for (let vent = 0; vent < 4; vent++) g.fillRect(unitX + 4 + vent * 5, unitY + 7, 2, 5);
+        g.fillStyle = "#b4b0a5";
+        g.fillRect(unitX + 25, unitY + 13, 3, 13);
+      }
+      if (detail === 3) {
+        const dishX = x + 50;
+        const dishY = y + 91;
+        g.strokeStyle = "#777c79";
+        g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(dishX, dishY + 8);
+        g.lineTo(dishX + 2, dishY - 5);
+        g.stroke();
+        g.fillStyle = "#c7c5bc";
+        g.beginPath();
+        g.ellipse(dishX + 2, dishY - 6, 8, 4, -0.35, 0, Math.PI * 2);
+        g.fill();
+        g.strokeStyle = "#858982";
+        g.stroke();
+      }
+    }
+  }
+
   // Weathering near the lower edge and small facade details.
   g.fillStyle = "rgba(80,65,50,0.13)";
   g.fillRect(0, 478, c.width, 34);
