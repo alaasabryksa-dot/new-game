@@ -115,7 +115,7 @@ test("passenger boarding widens destination choices before reusing a drop-off", 
 });
 
 test("fuel consumption accounts for speed as well as passenger load", () => {
-  assert.match(engine, /const speedFactor = 1 \+ Math\.min\(0\.35, Math\.abs\(player\.speed\) \/ Math\.max\(1, spec\.max\) \* 0\.35\)/);
+  assert.match(engine, /const speedFactor = 1 \\+ Math\\.min\\(DRIVING_FEEDBACK_TUNING\\.speedFuelLoadCap, Math\\.abs\\(player\\.speed\\) \\/ Math\\.max\\(1, spec\\.max\\) \\* DRIVING_FEEDBACK_TUNING\\.speedFuelLoadCap\\)/);
   assert.match(engine, /loadFactor \* speedFactor \* dt/);
 });
 
@@ -166,8 +166,8 @@ test("traffic collision checks longitudinal and lateral vehicle overlap separate
 });
 
 test("collision fine message matches the amount deducted", () => {
-  assert.ok(engine.includes("money = Math.max(0, money - 35)"));
-  assert.ok(engine.includes('say("خبطة! غرامة ٣٥ ج")'));
+  assert.ok(engine.includes("money = Math.max(0, money - DRIVING_FEEDBACK_TUNING.collisionFineAmount)"));
+  assert.ok(engine.includes("say(`خبطة! غرامة ${DRIVING_FEEDBACK_TUNING.collisionFineAmount} ج`)"));
   assert.ok(!engine.includes('say("خبطة! غرامة ٤٠ ج")'));
 });
 
