@@ -305,3 +305,9 @@ test("Android backgrounding stops the render loop and safely restarts it on retu
   assert.match(engine, /last = performance\.now\(\);\s*acc = 0;\s*if \(running && raf === 0\) raf = requestAnimationFrame\(frame\);/);
   assert.match(engine, /Android WebViews may suspend animation frames while backgrounded/);
 });
+
+
+test("Android touch input remains active when pointer capture is unavailable", () => {
+  assert.match(ui, /holds\.current\[key\] = true;\s*syncTouch\(\);\s*try \{[\s\S]*?setPointerCapture\(e\.pointerId\)/);
+  assert.match(ui, /Pointer capture is an enhancement; the touch control must still work/);
+});
