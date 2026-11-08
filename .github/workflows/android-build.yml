@@ -58,12 +58,12 @@ jobs:
       - name: Launch APK in Android emulator and verify game startup
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 30
           target: google_apis
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -camera-back none -camera-front none
           script: |
             adb install game-project/android/app/build/outputs/apk/debug/app-debug.apk
             adb logcat -c
