@@ -778,6 +778,7 @@ export function mountGame(
   let last = performance.now();
   let acc = 0;
   let hudAcc = 0;
+  let mapDrawClock = 0.1;
   let raf = 0;
   let running = true;
 
@@ -1907,7 +1908,11 @@ export function mountGame(
       if (spark.life <= 0) spark.m.visible = false;
     }
 
-    drawMap();
+    mapDrawClock += dt;
+    if (mapDrawClock >= 0.1) {
+      mapDrawClock %= 0.1;
+      drawMap();
+    }
     renderer.render(scene, camera);
   }
 
