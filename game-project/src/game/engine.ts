@@ -59,6 +59,39 @@ const TRAFFIC_SIGNAL_CYCLE = 15;
 const TRAFFIC_RED_SECONDS = 7.5;
 const TRAFFIC_AMBER_SECONDS = 1.3;
 
+const DRIVING_FEEDBACK_TUNING = {
+  fuelIdleRate: 0.3,
+  fuelThrottleRate: 0.62,
+  passengerFuelLoadStep: 0.045,
+  passengerFuelLoadCap: 0.24,
+  speedFuelLoadCap: 0.35,
+  lowFuelBeepThreshold: 20,
+  lowFuelBeepInterval: 5,
+  lowFuelWarningThreshold: 18,
+  emptyFuelSpeedCap: 2.8,
+  collisionPushDistance: 0.65,
+  collisionSpeedRetention: 0.58,
+  collisionCooldown: 0.8,
+  collisionFineThreshold: 4.2,
+  collisionFineAmount: 35,
+  collisionRushTimePenalty: 2,
+  radarTriggerDistance: 19,
+  radarCooldown: 8,
+  radarRushTimePenalty: 1.5,
+  radarFineAmount: 70,
+  tollApproachStart: -8,
+  tollApproachEnd: 16,
+  tollFineAmount: 15,
+  bumpTriggerDistance: 3.2,
+  bumpSpeedThreshold: 9,
+  bumpCooldown: 1.15,
+  bumpSpeedRetention: 0.48,
+  gasStationTriggerDistance: 18,
+  gasStationLaneMinimum: 2.5,
+  gasStationStopSpeed: 2.8,
+  shiftFinalWarningSeconds: 30,
+} as const;
+
 const PASSENGER_SYSTEM_TUNING = {
   queueRefreshSeconds: 9,
   maxWaitingAtStop: 8,
@@ -1343,7 +1376,7 @@ export function mountGame(
       shiftLeft: Math.max(0, SHIFT_SECONDS - time),
       wallet: save.wallet,
       upgrades: save.upgrades,
-      lowFuel: fuel <= 18,
+      lowFuel: fuel <= DRIVING_FEEDBACK_TUNING.lowFuelWarningThreshold,
       jobsDone: jobIndex,
       jobsNeed: JOBS_NEED,
       jobName: jobs[jobIndex] != null ? track.stops[jobs[jobIndex]].name : "خلّصت",
@@ -1406,7 +1439,7 @@ export function mountGame(
         const mag = Math.max(0, Math.abs(player.speed) - 3.2 * dt);
         player.speed = sign * mag;
       }
-      const cap = phase === "play" && fuel <= 0 ? 2.8 : spec.max;
+      const cap = phase === "play" && fuel <= 0 ? DRIVING_FEEDBACK_TUNING.emptyFuelSpeedCap : spec.max;
       player.speed = Math.max(-5, Math.min(cap, player.speed));
 
       const sp = Math.min(1, Math.abs(player.speed) / 8);
@@ -1453,13 +1486,13 @@ export function mountGame(
         time += dt;
         const eff = Math.max(0.42, 1 - save.upgrades.fuel * 0.19);
         const moving = Math.abs(player.speed) > 0.35 ? 1 : 0.08;
-        const loadFactor = pax.length > 0 ? 1 + Math.min(0.24, pax.length * 0.045) : 1;
-        const speedFactor = 1 + Math.min(0.35, Math.abs(player.speed) / Math.max(1, spec.max) * 0.35);
-        fuel -= (0.3 * moving + throttle * 0.62) * eff * loadFactor * speedFactor * dt;
+        const loadFactor = pax.length > 0 ? 1 + Math.min(DRIVING_FEEDBACK_TUNING.passengerFuelLoadCap, pax.length * DRIVING_FEEDBACK_TUNING.passengerFuelLoadStep) : 1;
+        const speedFactor = 1 + Math.min(DRIVING_FEEDBACK_TUNING.speedFuelLoadCap, Math.abs(player.speed) / Math.max(1, spec.max) * DRIVING_FEEDBACK_TUNING.speedFuelLoadCap);
+        fuel -= (DRIVING_FEEDBACK_TUNING.fuelIdleRate * moving + throttle * DRIVING_FEEDBACK_TUNING.fuelThrottleRate) * eff * loadFactor * speedFactor * dt;
         if (fuel < 0 || !Number.isFinite(fuel)) fuel = 0;
         fuelBeep = Math.max(0, fuelBeep - dt);
-        if (fuel < 20 && fuelBeep <= 0) {
-          fuelBeep = 5;
+        if (fuel < DRIVING_FEEDBACK_TUNING.lowFuelBeepThreshold && fuelBeep <= 0) {
+          fuelBeep = DRIVING_FEEDBACK_TUNING.lowFuelBeepInterval;
           sfx.blip(560, 0.06, "sine", 0.025);
         }
       }
@@ -1815,25 +1848,25 @@ export function mountGame(
   function collide(dist: number, dx: number, dz: number, otherSpeed: number) {
     const spec = specNow();
     const d = Math.max(0.001, dist);
-    const push = 0.65;
+    const push = DRIVING_FEEDBACK_TUNING.collisionPushDistance;
     player.x += (dx / d) * push;
     player.z += (dz / d) * push;
     const rel = Math.abs(player.speed - otherSpeed);
-    player.speed *= 0.58;
-    hitCd = 0.8;
+    player.speed *= DRIVING_FEEDBACK_TUNING.collisionSpeedRetention;
+    hitCd = DRIVING_FEEDBACK_TUNING.collisionCooldown;
     shake = 0.3;
-    if (rel > 4.2 && phase === "play") {
+    if (rel > DRIVING_FEEDBACK_TUNING.collisionFineThreshold && phase === "play") {
       crashes += 1;
       player.yaw += (Math.random() - 0.5) * 0.35;
       if (cfg.mode === "shift") {
-        money = Math.max(0, money - 35);
+        money = Math.max(0, money - DRIVING_FEEDBACK_TUNING.collisionFineAmount);
         if (pax.length) {
           pax.pop();
           say("راكب نزل غصب — غرامة");
-        } else say("خبطة! غرامة ٣٥ ج");
+        } else say(`خبطة! غرامة ${DRIVING_FEEDBACK_TUNING.collisionFineAmount} ج`);
       } else if (cfg.mode === "rush") {
-        time += 2;
-        say("خبطة +٢ ث");
+        time += DRIVING_FEEDBACK_TUNING.collisionRushTimePenalty;
+        say(`خبطة +${DRIVING_FEEDBACK_TUNING.collisionRushTimePenalty} ث`);
       } else say("خبطة! خد بالك");
       flash("crash");
       hitstop = reduceMotion ? 0 : 0.06;
@@ -1976,17 +2009,17 @@ export function mountGame(
 
     if (radarCd <= 0) {
       for (const rs of track.radarS) {
-        if (Math.abs(wrapDelta(rs, proj.s, track.total)) < 19 && Math.abs(player.speed) > RADAR_LIMIT) {
-          radarCd = 8;
+        if (Math.abs(wrapDelta(rs, proj.s, track.total)) < DRIVING_FEEDBACK_TUNING.radarTriggerDistance && Math.abs(player.speed) > RADAR_LIMIT) {
+          radarCd = DRIVING_FEEDBACK_TUNING.radarCooldown;
           flash("radar");
           sfx.radar();
           const which = track.radarS.indexOf(rs);
           if (cfg.mode === "rush") {
-            time += 1.5;
-            say(which === 1 ? "كمين +١.٥ ث" : "رادار +١.٥ ث");
+            time += DRIVING_FEEDBACK_TUNING.radarRushTimePenalty;
+            say(which === 1 ? `كمين +${DRIVING_FEEDBACK_TUNING.radarRushTimePenalty} ث` : `رادار +${DRIVING_FEEDBACK_TUNING.radarRushTimePenalty} ث`);
           } else {
-            money = Math.max(0, money - 70);
-            say(which === 1 ? "كمين! غرامة ٧٠ ج" : "رادار! غرامة ٧٠ ج");
+            money = Math.max(0, money - DRIVING_FEEDBACK_TUNING.radarFineAmount);
+            say(which === 1 ? `كمين! غرامة ${DRIVING_FEEDBACK_TUNING.radarFineAmount} ج` : `رادار! غرامة ${DRIVING_FEEDBACK_TUNING.radarFineAmount} ج`);
           }
           break;
         }
@@ -1994,7 +2027,7 @@ export function mountGame(
     }
 
     const tollD = wrapDelta(track.tollS, proj.s, track.total);
-    if (tollD > -8 && tollD < 16) {
+    if (tollD > DRIVING_FEEDBACK_TUNING.tollApproachStart && tollD < DRIVING_FEEDBACK_TUNING.tollApproachEnd) {
       if (!tollLatch && player.speed > TOLL_LIMIT) {
         tollLatch = true;
         player.speed = Math.min(player.speed, TOLL_LIMIT);
@@ -2002,14 +2035,14 @@ export function mountGame(
           time += 1;
           say("الكوبري عايز تهدية");
         } else {
-          money = Math.max(0, money - 15);
-          say("كارتة الكوبري — ١٥ ج");
+          money = Math.max(0, money - DRIVING_FEEDBACK_TUNING.tollFineAmount);
+          say(`كارتة الكوبري — ${DRIVING_FEEDBACK_TUNING.tollFineAmount} ج`);
         }
       }
     } else if (Math.abs(tollD) > 40) tollLatch = false;
 
     const gasD = Math.abs(wrapDelta(track.gasS, proj.s, track.total));
-    if (gasD < 18 && proj.lat > 2.5 && Math.abs(player.speed) < 2.8 && fuel < 98) {
+    if (gasD < DRIVING_FEEDBACK_TUNING.gasStationTriggerDistance && proj.lat > DRIVING_FEEDBACK_TUNING.gasStationLaneMinimum && Math.abs(player.speed) < DRIVING_FEEDBACK_TUNING.gasStationStopSpeed && fuel < 98) {
       if (!gasLatch) {
         if (pay(GAS_COST)) {
           fuel = 100;
@@ -2027,9 +2060,9 @@ export function mountGame(
 
     if (bumpCd <= 0) {
       for (const b of track.bumps) {
-        if (Math.abs(wrapDelta(b, proj.s, track.total)) < 3.2 && Math.abs(player.speed) > 9) {
-          bumpCd = 1.15;
-          player.speed *= 0.48;
+        if (Math.abs(wrapDelta(b, proj.s, track.total)) < DRIVING_FEEDBACK_TUNING.bumpTriggerDistance && Math.abs(player.speed) > DRIVING_FEEDBACK_TUNING.bumpSpeedThreshold) {
+          bumpCd = DRIVING_FEEDBACK_TUNING.bumpCooldown;
+          player.speed *= DRIVING_FEEDBACK_TUNING.bumpSpeedRetention;
           shake = Math.max(shake, reduceMotion ? 0 : 0.3);
           if (messageT <= 0) say("مطب!");
           sfx.blip(120, 0.07, "triangle", 0.04);
@@ -2044,7 +2077,7 @@ export function mountGame(
       say("البنزين خلّص — دور على البنزينة");
       flash("fuel");
     }
-    if (phase === "play" && cfg.mode === "shift" && !halfWarned && time >= SHIFT_SECONDS - 30) {
+    if (phase === "play" && cfg.mode === "shift" && !halfWarned && time >= SHIFT_SECONDS - DRIVING_FEEDBACK_TUNING.shiftFinalWarningSeconds) {
       halfWarned = true;
       say("فاضل نص دقيقة");
     }
