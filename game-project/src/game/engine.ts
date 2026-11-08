@@ -2058,6 +2058,10 @@ export function mountGame(
 
   function frame(now: number) {
     if (!running) return;
+    if (document.visibilityState === "hidden") {
+      raf = 0;
+      return;
+    }
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     acc += dt;
@@ -2149,7 +2153,17 @@ export function mountGame(
   const onBlur = () => pauseForInterruption();
   const onPageHide = () => pauseForInterruption();
   const onVisibilityChange = () => {
-    if (document.visibilityState === "hidden") pauseForInterruption();
+    if (document.visibilityState === "hidden") {
+      pauseForInterruption();
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      return;
+    }
+    // Android WebViews may suspend animation frames while backgrounded. Restart
+    // the render loop with a fresh clock so returning never causes a catch-up spike.
+    last = performance.now();
+    acc = 0;
+    if (running && raf === 0) raf = requestAnimationFrame(frame);
   };
   window.addEventListener("keydown", onDown);
   window.addEventListener("keyup", onUp);
