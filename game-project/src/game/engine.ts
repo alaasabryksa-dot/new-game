@@ -2648,8 +2648,8 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     emissive: "#142c32", emissiveIntensity: 0.18,
   });
   const shutterMat = new THREE.MeshStandardMaterial({ color: "#737b7c", roughness: 0.72, metalness: 0.42 });
-  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "خضار وفاكهة"];
-  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334"];
+  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "مخبوزات", "خضار وفاكهة", "حلاقة", "ورشة"];
+  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334", "#477342", "#5a526b", "#59636b"];
   const signMats = signLabels.map((label, index) => {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
