@@ -69,3 +69,16 @@ test("NPC traffic has twenty active driving-tuning controls for curves, spacing,
   assert.match(engine, /NPC_DRIVING_TUNING\.signalLaneLock/);
   assert.match(engine, /NPC_DRIVING_TUNING\.playerHornReactionRange/);
 });
+
+test("passenger system exposes and uses twenty independent gameplay tuning controls", () => {
+  const tuning = engine.match(/const PASSENGER_SYSTEM_TUNING = \{([\s\S]*?)\} as const;/);
+  assert.ok(tuning, "passenger tuning must remain explicit");
+  const keys = [...tuning[1].matchAll(/^\s*([A-Za-z][A-Za-z0-9]*):/gm)].map((entry) => entry[1]);
+  assert.equal(keys.length, 20);
+  for (const key of keys) {
+    assert.ok(engine.includes(`PASSENGER_SYSTEM_TUNING.${key}`), `unused passenger tuning: ${key}`);
+  }
+  assert.match(engine, /const hubChance = PASSENGER_SYSTEM_TUNING\.baseSpawnChance/);
+  assert.match(engine, /const stopChance = i % 5 === 4/);
+  assert.match(engine, /const fare = Math\.max\(1, Math\.round\(\(PASSENGER_SYSTEM_TUNING\.baseFare/);
+});
