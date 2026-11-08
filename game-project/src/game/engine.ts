@@ -2575,6 +2575,12 @@ function buildCity(scene: THREE.Scene, track: Track) {
     emissive: "#203b42", emissiveIntensity: 0.12,
   });
   const shopGlass = new THREE.InstancedMesh(shopGlassGeo, shopGlassMat, 100);
+  // A portion of shops use closed ribbed metal shutters instead of display glazing.
+  const shutterGeo = new THREE.BoxGeometry(0.1, 1.62, 1.42);
+  const shutterMat = new THREE.MeshStandardMaterial({
+    color: "#777b7b", metalness: 0.62, roughness: 0.7,
+  });
+  const shopShutters = new THREE.InstancedMesh(shutterGeo, shutterMat, 100);
   const shopDoorGeo = new THREE.BoxGeometry(0.14, 1.9, 0.72);
   const shopDoorMat = new THREE.MeshStandardMaterial({ color: "#4b4540", roughness: 0.55 });
   const shopDoors = new THREE.InstancedMesh(shopDoorGeo, shopDoorMat, 100);
@@ -2787,11 +2793,15 @@ function buildCity(scene: THREE.Scene, track: Track) {
       signMeshes[signIndex].setMatrixAt(signCounts[signIndex]++, dummy.matrix);
       signCount++;
 
-      // Full-height shop glazing and a distinct entrance door below the sign.
+      // Mix open glazed displays with closed metal shutters for a more lived-in retail strip.
       dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.1), 1.25, p.z + rz * (side * depth + frontX - side * 0.1));
       dummy.scale.set(1, 1, deep * 0.78);
       dummy.updateMatrix();
-      shopGlass.setMatrixAt(shopFrontCount, dummy.matrix);
+      if (hsh > 0.84) {
+        shopShutters.setMatrixAt(shopFrontCount, dummy.matrix);
+      } else {
+        shopGlass.setMatrixAt(shopFrontCount, dummy.matrix);
+      }
       dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.2), 1.08, p.z + rz * (side * depth + frontX - side * 0.2));
       dummy.scale.set(1, 1, 1);
       dummy.updateMatrix();
@@ -2880,12 +2890,14 @@ function buildCity(scene: THREE.Scene, track: Track) {
     scene.add(mesh);
   });
   shopGlass.instanceMatrix.needsUpdate = true;
+  shopShutters.count = shopFrontCount;
+  shopShutters.instanceMatrix.needsUpdate = true;
   shopDoors.instanceMatrix.needsUpdate = true;
   signMeshes.forEach((mesh, i) => {
     mesh.count = signCounts[i];
     mesh.instanceMatrix.needsUpdate = true;
   });
-  scene.add(balconyMesh, railMesh, shopGlass, shopDoors, shopLights, shopShelves, acUnits, acGrilles, entryDoors, entryFrames, entrySteps, entryLamps);
+  scene.add(balconyMesh, railMesh, shopGlass, shopShutters, shopDoors, shopLights, shopShelves, acUnits, acGrilles, entryDoors, entryFrames, entrySteps, entryLamps);
   signMeshes.forEach((mesh) => scene.add(mesh));
   awnings.forEach((mesh, i) => {
     mesh.count = awningCounts[i];
