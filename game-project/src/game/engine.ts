@@ -2538,9 +2538,35 @@ function buildCity(scene: THREE.Scene, track: Track) {
   const railMat = new THREE.MeshStandardMaterial({ color: "#aeb6b5", metalness: 0.28, roughness: 0.58 });
   const railMesh = new THREE.InstancedMesh(railGeo, railMat, 260);
   const awningGeo = new THREE.BoxGeometry(1.1, 0.18, 1);
-  const awningMats = ["#b84f3d", "#d6a23b", "#397f7a", "#e7e0d2"].map(
-    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.76 }),
-  );
+  // Striped canvas gives the small shop canopies a more recognizable Cairo streetscape feel.
+  // These are generic procedural awnings, not copies of verified individual businesses.
+  const awningMats = ["#b84f3d", "#d6a23b", "#397f7a", "#e7e0d2"].map((color) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const stripeWidth = 32;
+      for (let x = 0; x < canvas.width; x += stripeWidth * 2) {
+        ctx.fillStyle = "#f3ead7";
+        ctx.globalAlpha = 0.88;
+        ctx.fillRect(x, 0, stripeWidth, canvas.height);
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "rgba(35, 31, 27, 0.12)";
+      ctx.fillRect(0, 0, canvas.width, 7);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = 2;
+    return new THREE.MeshStandardMaterial({
+      color: "#ffffff", map: texture, roughness: 0.82, side: THREE.DoubleSide,
+    });
+  });
   const awnings = awningMats.map((mat) => new THREE.InstancedMesh(awningGeo, mat, 100));
   const signGeo = new THREE.BoxGeometry(0.16, 0.72, 1);
   // Fictional category labels add neighborhood texture; they are not verified shop identities.
