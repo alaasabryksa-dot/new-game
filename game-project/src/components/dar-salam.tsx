@@ -451,9 +451,9 @@ function PlayHud({
   snap: Hud;
   hold: (key: "l" | "r" | "g" | "b") => {
     onPointerDown: (e: ReactPointer<HTMLButtonElement>) => void;
-    onPointerUp: () => void;
-    onPointerCancel: () => void;
-    onLostPointerCapture: () => void;
+    onPointerUp: (e: ReactPointer<HTMLButtonElement>) => void;
+    onPointerCancel: (e: ReactPointer<HTMLButtonElement>) => void;
+    onLostPointerCapture: (e: ReactPointer<HTMLButtonElement>) => void;
   };
   game: RefObject<GameHandle | null>;
   onAgain: () => void;
