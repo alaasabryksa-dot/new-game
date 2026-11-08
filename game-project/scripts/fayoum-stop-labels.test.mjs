@@ -6,7 +6,7 @@ const types = await readFile(new URL("../src/game/types.ts", import.meta.url), "
 const track = await readFile(new URL("../src/game/track.ts", import.meta.url), "utf8");
 const engine = await readFile(new URL("../src/game/engine.ts", import.meta.url), "utf8");
 
-const entranceBlock = types.match(/export const STREET_ENTRANCES = \[([\s\S]*?)\];/);
+const entranceBlock = types.match(/export const STREET_ENTRANCES(?:\s*:\s*[^=]+)?\s*=\s*\[([\s\S]*?)\];/);
 
 test("all 24 player-confirmed side-street names are retained in their side-local order", () => {
   assert.ok(entranceBlock, "STREET_ENTRANCES must remain exported");
