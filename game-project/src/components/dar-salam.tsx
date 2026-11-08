@@ -421,7 +421,14 @@ function PlayHud({
             <Fuel className={snap.lowFuel ? "size-3.5 text-brick" : "size-3.5 text-amber"} />
             بنزين
           </div>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
+          <div
+            className="mt-1 h-1.5 overflow-hidden rounded-full bg-line"
+            role="progressbar"
+            aria-label="مستوى البنزين"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.max(0, Math.min(100, snap.fuel))}
+          >
             <div
               className={snap.lowFuel ? "h-full bg-brick" : "h-full bg-nile"}
               style={{ width: `${Math.max(0, Math.min(100, snap.fuel))}%` }}
@@ -432,7 +439,14 @@ function PlayHud({
               <p className="mt-2 text-lg font-extrabold tabular-nums" dir="ltr">
                 {snap.money} <span className="text-xs font-bold text-muted">ج</span>
               </p>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
+              <div
+                className="mt-1 h-1.5 overflow-hidden rounded-full bg-line"
+                role="progressbar"
+                aria-label="تقدم سداد الإيجار"
+                aria-valuemin={0}
+                aria-valuemax={snap.rent}
+                aria-valuenow={Math.max(0, Math.min(snap.rent, snap.money))}
+              >
                 <div
                   className="h-full bg-amber"
                   style={{ width: `${Math.min(100, (snap.money / snap.rent) * 100)}%` }}
