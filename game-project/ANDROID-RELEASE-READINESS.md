@@ -15,7 +15,7 @@
 - The Gradle project is present under `android/`, with application ID `com.tuktok.darelsalam`, minimum Android API 24, and landscape orientation.
 - The Android-specific Vite build packages the game entry and assets under `android/app/src/main/assets/public` and loads them from the local Android asset origin. Gameplay does not require a remote web server.
 - The renderer requires WebGL 2 / OpenGL ES 3.0. The manifest declares this hardware feature as required; devices without it are not compatible.
-- Android scene generation has a reduced-detail path and lower render resolution. The game currently uses generic procedural building masses on the mobile path; this is not a verified reconstruction of individual storefronts.
+- Android scene generation has a reduced-detail path and lower render resolution. The mobile path now uses instanced procedural building facades with textured upper-floor windows, generic Arabic shop signs, shutters/glazing, and awnings. These are original generic game assets, not verified reconstructions of individual storefronts.
 - APK build and browser-based offline bundle checks are automated. They do not prove successful operation on every physical Android phone.
 - A signed production AAB, signing lineage, ads, and physical-device verification are not yet release-approved.
 
@@ -38,8 +38,8 @@
 
 - [ ] Self-contained offline client bundle is implemented and verified.
 - [ ] Native Android project and Gradle build are implemented.
-- [ ] AdMob test integration is implemented; production IDs are configured securely.
-- [ ] APK and AAB build successfully in CI.
+- [ ] Mobile street environment has a low-draw-call storefront pass; remaining work is to compare its appearance and frame pacing on a physical device.
+- [ ] APK and AAB build successfully in CI after the user approves the final packaging stage.
 - [ ] Signed APK installs and launches on physical Android devices.
 - [ ] Gameplay works with airplane mode enabled.
 - [ ] Ad loading failures do not interrupt gameplay.
