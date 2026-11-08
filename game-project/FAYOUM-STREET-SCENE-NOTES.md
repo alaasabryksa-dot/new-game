@@ -37,3 +37,7 @@ All six require current visual confirmation before any recognizable signage or f
 The Android and desktop scene generators now use 20 fictional Egyptian neighborhood-shop categories (including butcher, bakery, spice shop, household goods, stationery, spare parts, sweets, juice, clothing, shoes, detergents, and accessories), rather than repeating the original eight labels. Sign colors vary by category and longer Arabic labels use smaller type so they fit. The Android street pass also raises the chance of a commercial ground floor to create a denser mixed-use frontage.
 
 These are deliberately invented environmental details, not claims about actual tenants. No unverified business names, logos, or exact storefront locations have been inserted. Keep this procedural approach until current facade references are available.
+
+## Android facade and rooftop variation (8 Nov 2026)
+
+The mobile scene now derives building width, depth, floor count, facade color, and shop category from a side-specific deterministic seed. Opposite sides therefore no longer reuse identical building dimensions and category patterns at each route sample. A portion of buildings also receive simple rooftop water tanks, rendered with instanced cylinder meshes to limit additional draw calls. These are generic environmental details, not individually surveyed properties.
