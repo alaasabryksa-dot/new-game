@@ -218,6 +218,15 @@ test("gameplay interruption and manual pause persist the current run immediately
 });
 
 
+test("fuel range estimate uses the live fuel-efficiency and passenger-load model", () => {
+  assert.match(engine, /const estimateSpeed = Math\.min\(8, Math\.max\(4, spec\.max \* 0\.5\)\)/);
+  assert.match(engine, /const estimateLoad = pax\.length > 0[\s\S]*?passengerFuelLoadCap[\s\S]*?passengerFuelLoadStep/);
+  assert.match(engine, /Math\.max\(0\.42, 1 - save\.upgrades\.fuel \* 0\.19\)/);
+  assert.match(engine, /const fuelRange = Math\.max\(0, Math\.round\(/);
+  assert.match(engine, /fuelRange,/);
+  assert.match(ui, /مدى تقريبي: \{snap\.fuelRange\.toFixed\(1\)\} كم/);
+});
+
 test("fuel guidance distinguishes station approach, lane entry and stopping", () => {
   assert.match(engine, /fuel < 98 && gasD < 28/);
   assert.match(engine, /proj\.lat <= 2\.5\) hint = "ادخل يمين البنزينة"/);
