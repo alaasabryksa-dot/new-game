@@ -96,3 +96,17 @@ test("driving feedback exposes and uses thirty explicit fuel, collision, radar, 
   assert.match(engine, /DRIVING_FEEDBACK_TUNING\.radarRushTimePenalty/);
   assert.match(engine, /DRIVING_FEEDBACK_TUNING\.gasStationStopSpeed/);
 });
+
+test("NPC microbus, tuk-tuk and signal stopping exposes thirty used traffic controls", () => {
+  const tuning = engine.match(/const NPC_STOPPING_TUNING = \{([\s\S]*?)\} as const;/);
+  assert.ok(tuning, "NPC stopping tuning must remain explicit");
+  const keys = [...tuning[1].matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
+  assert.equal(keys.length, 30);
+  for (const key of keys) {
+    assert.ok(engine.includes(`NPC_STOPPING_TUNING.${key}`), `unused NPC stopping tuning: ${key}`);
+  }
+  assert.match(engine, /NPC_STOPPING_TUNING\.microStopCaptureDistance/);
+  assert.match(engine, /NPC_STOPPING_TUNING\.tuktukStopChance/);
+  assert.match(engine, /NPC_STOPPING_TUNING\.redBrakeDeceleration/);
+  assert.match(engine, /NPC_STOPPING_TUNING\.greenQueueAcceleration/);
+});
