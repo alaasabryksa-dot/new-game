@@ -3551,6 +3551,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, play
     direction: number;
     speed: number;
     phase: number;
+    sidewalkOffset: number;
     sprite: THREE.Sprite;
   };
   const walkers: Walker[] = [];
@@ -3591,8 +3592,10 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, play
       s: p.s,
       side: index % 2 === 0 ? 1 : -1,
       direction: index % 3 === 0 ? -1 : 1,
-      speed: 0.55 + (index % 4) * 0.12,
+      speed: 0.48 + (index % 5) * 0.13,
       phase: index * 1.73,
+      // Small deterministic offsets prevent a perfectly straight, repeated crowd line.
+      sidewalkOffset: 3.35 + (index % 5) * 0.2,
       sprite,
     });
   }
@@ -3602,16 +3605,19 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, play
       const p = track.sample(walker.s + time * walker.speed * walker.direction);
       const rx = Math.cos(p.yaw);
       const rz = -Math.sin(p.yaw);
-      const baseOffset = ROAD_HALF + 3.65;
+      const lateralWalk = Math.sin(time * 0.72 + walker.phase) * 0.12;
+      const baseOffset = ROAD_HALF + walker.sidewalkOffset + lateralWalk;
       const baseX = p.x + rx * walker.side * baseOffset;
       const baseZ = p.z + rz * walker.side * baseOffset;
       const distanceToPlayer = Math.hypot(playerX - baseX, playerZ - baseZ);
-      // Keep pedestrians on the pavement and give the player a little clearance.
-      const avoidance = Math.max(0, 1 - distanceToPlayer / 9) * 1.15;
-      const sidewalkOffset = baseOffset + avoidance;
-      const x = p.x + rx * walker.side * sidewalkOffset;
-      const z = p.z + rz * walker.side * sidewalkOffset;
-      walker.sprite.position.set(x, 0.02 + Math.abs(Math.sin(time * 5 + walker.phase)) * 0.035, z);
+      // Smoothly move walkers toward the building edge when the player approaches.
+      const proximity = THREE.MathUtils.clamp((10 - distanceToPlayer) / 10, 0, 1);
+      const avoidance = proximity * proximity * 1.45;
+      const safeOffset = baseOffset + avoidance;
+      const x = p.x + rx * walker.side * safeOffset;
+      const z = p.z + rz * walker.side * safeOffset;
+      const bob = Math.abs(Math.sin(time * (4.4 + walker.speed) + walker.phase)) * 0.045;
+      walker.sprite.position.set(x, 0.02 + bob, z);
     });
   };
 }
