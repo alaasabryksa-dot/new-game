@@ -2726,6 +2726,18 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     scene.add(mesh);
     return mesh;
   });
+  // Common rooftop water tanks, instanced to keep the Android scene lightweight.
+  const roofTank = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.52, 0.56, 1.12, 9),
+    new THREE.MeshStandardMaterial({ color: "#647b83", roughness: 0.76, metalness: 0.12 }),
+    capacity,
+  );
+  const roofTankTop = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.53, 0.53, 0.08, 9),
+    new THREE.MeshStandardMaterial({ color: "#89999a", roughness: 0.72 }),
+    capacity,
+  );
+  scene.add(roofTank, roofTankTop);
 
   const shopPanelMat = new THREE.MeshStandardMaterial({ color: "#b7a58d", roughness: 0.88 });
   const shopGlassMat = new THREE.MeshStandardMaterial({
@@ -2776,6 +2788,7 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
   const counts = colors.map(() => 0);
   const signsCount = signMats.map(() => 0);
   const awningsCount = awningMats.map(() => 0);
+  let roofTankCount = 0;
   let shopCount = 0;
   const addInstance = (mesh: THREE.InstancedMesh, index: number, x: number, y: number, z: number,
     yaw: number, sx: number, sy: number, sz: number) => {
@@ -2795,21 +2808,30 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     const seed = Math.abs(Math.floor(Math.sin(i * 12.9898 + point.x * 0.17 + point.z * 0.13) * 43758.5453));
     const variation = (seed % 1000) / 1000;
     for (const side of [-1, 1]) {
-      const width = 8.2 + (seed % 7) * 0.72;
-      const depth = 14.5 + ((seed * 7) % 6) * 1.35;
-      const floors = 2 + ((seed * 11) % 4);
+      // Side-specific deterministic seeds avoid mirrored building pairs.
+      const sideSeed = seed + (side === 1 ? 7919 : 0);
+      const sideVariation = (sideSeed % 1000) / 1000;
+      const width = 7.4 + (sideSeed % 9) * 0.68;
+      const depth = 13.2 + ((sideSeed * 7) % 7) * 1.22;
+      const floors = 2 + ((sideSeed * 11) % 5);
       const height = 5.1 + floors * 2.45;
       const centerX = point.x + rx * side * (ROAD_HALF + depth * 0.5 + 2.5);
       const centerZ = point.z + rz * side * (ROAD_HALF + depth * 0.5 + 2.5);
-      const colorIndex = seed % materials.length;
+      const colorIndex = sideSeed % materials.length;
       const buildingIndex = counts[colorIndex]++;
       if (buildingIndex < capacity) {
         addInstance(buildings[colorIndex], buildingIndex, centerX, height * 0.5, centerZ,
           point.yaw, width, height, depth);
       }
 
-      // Alternate shop and residential ground floors; real names stay out until verified.
-      const isShop = variation > 0.24; // Denser mixed-use frontage with plausible fictional local businesses.
+      if (sideVariation > 0.62 && roofTankCount < capacity) {
+        addInstance(roofTank, roofTankCount, centerX, height + 0.58, centerZ, point.yaw, 1, 1, 1);
+        addInstance(roofTankTop, roofTankCount, centerX, height + 1.17, centerZ, point.yaw, 1, 1, 1);
+        roofTankCount++;
+      }
+
+      // Alternate fictional commercial and residential ground floors.
+      const isShop = sideVariation > 0.24;
       if (!isShop || shopCount >= capacity) continue;
       const frontOffset = -side * (width * 0.5 + 0.1);
       const frontX = point.x + rx * (side * (ROAD_HALF + depth * 0.5 + 2.5) + frontOffset);
@@ -2826,13 +2848,13 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
         point.yaw, hasShutter ? 0 : 1, 1, 1);
       addInstance(shopLights, panelIndex, frontX - side * 0.12, 2.12, frontZ, point.yaw, 1, 1, shopWidth * 0.8);
 
-      const signIndex = seed % signMats.length;
+      const signIndex = sideSeed % signMats.length;
       const signSlot = signsCount[signIndex]++;
       if (signSlot < capacity) {
         addInstance(signs[signIndex], signSlot, frontX - side * 0.13, 2.82, frontZ,
           point.yaw, 1, 1, shopWidth * 0.92);
       }
-      const awningIndex = seed % awningMats.length;
+      const awningIndex = sideSeed % awningMats.length;
       const awningSlot = awningsCount[awningIndex]++;
       if (awningSlot < capacity) {
         addInstance(awnings[awningIndex], awningSlot, frontX - side * 0.72, 2.28, frontZ,
@@ -2847,6 +2869,10 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     mesh.count = Math.min(counts[index], capacity);
     mesh.instanceMatrix.needsUpdate = true;
   });
+  roofTank.count = roofTankCount;
+  roofTank.instanceMatrix.needsUpdate = true;
+  roofTankTop.count = roofTankCount;
+  roofTankTop.instanceMatrix.needsUpdate = true;
   [panels, glass, shutters, doors, shopLights].forEach((mesh) => {
     mesh.count = Math.min(shopCount, capacity);
     mesh.instanceMatrix.needsUpdate = true;
