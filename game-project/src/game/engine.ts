@@ -1219,6 +1219,13 @@ export function mountGame(
       const proj = track.project(player.x, player.z, player.hint);
       player.hint = proj.i;
       const limit = ROAD_HALF - spec.width * 0.5 - 0.08;
+      const shoulderStart = Math.max(0, limit - 1.35);
+      const shoulderDepth = Math.max(0, Math.abs(proj.lat) - shoulderStart);
+      // Gradually scrub speed near the road edge before the hard safety boundary.
+      if (shoulderDepth > 0 && Math.abs(player.speed) > 0.2) {
+        const shoulderDrag = Math.min(0.9, shoulderDepth / Math.max(0.1, limit - shoulderStart));
+        player.speed *= Math.exp(-dt * shoulderDrag * 1.35);
+      }
       if (Math.abs(proj.lat) > limit) {
         const clamped = Math.sign(proj.lat) * limit;
         const rx = Math.cos(proj.yaw);
@@ -1244,7 +1251,8 @@ export function mountGame(
         const eff = Math.max(0.42, 1 - save.upgrades.fuel * 0.19);
         const moving = Math.abs(player.speed) > 0.35 ? 1 : 0.08;
         const loadFactor = pax.length > 0 ? 1 + Math.min(0.24, pax.length * 0.045) : 1;
-        fuel -= (0.3 * moving + throttle * 0.62) * eff * loadFactor * dt;
+        const speedFactor = 1 + Math.min(0.35, Math.abs(player.speed) / Math.max(1, spec.max) * 0.35);
+        fuel -= (0.3 * moving + throttle * 0.62) * eff * loadFactor * speedFactor * dt;
         if (fuel < 0 || !Number.isFinite(fuel)) fuel = 0;
         fuelBeep = Math.max(0, fuelBeep - dt);
         if (fuel < 20 && fuelBeep <= 0) {
