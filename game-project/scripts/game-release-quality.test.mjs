@@ -359,6 +359,17 @@ test("shift settlement preserves earnings when rent cannot yet be fully paid", (
   assert.match(engine, /if \(save\.wallet >= RENT - money\)[\s\S]*?save\.wallet -= RENT - money/);
 });
 
+test("shift summary reports exact rent paid, remaining balance and wallet delta", () => {
+  assert.match(engine, /let walletAtRunStart = save\.wallet/);
+  assert.match(engine, /settlementRentPaid = Math\.min\(RENT, availableForRent\)/);
+  assert.match(engine, /settlementRentRemaining = Math\.max\(0, RENT - availableForRent\)/);
+  assert.match(engine, /settlementWalletChange = save\.wallet - walletAtRunStart/);
+  assert.match(engine, /rentPaid: settlementRentPaid,[\s\S]*?rentRemaining: settlementRentRemaining,[\s\S]*?walletChange: settlementWalletChange/);
+  assert.match(ui, /الإيجار المسدد/);
+  assert.match(ui, /المتبقي من الإيجار/);
+  assert.match(ui, /صافي تغير المحفظة/);
+});
+
 test("fuel station charges proportionally to the amount of fuel added", () => {
   assert.match(engine, /const refuelCost = Math\.max\(1, Math\.ceil\(\(\(100 - fuel\) \/ 100\) \* GAS_COST\)\)/);
   assert.match(engine, /if \(pay\(refuelCost\)\)[\s\S]*?fuel = 100[\s\S]*?تملى التانك — \$\{refuelCost\} ج/);
