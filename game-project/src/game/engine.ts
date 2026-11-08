@@ -125,6 +125,40 @@ const NPC_DRIVING_TUNING = {
   signalLaneLock: 28, mergeSpeedFloor: 2.2, playerHornReactionRange: 26, curbApproachBuffer: 3.2,
 } as const;
 
+// Deterministic pedestrian variation and sidewalk-safety controls for low-cost mobile sprites.
+const PEDESTRIAN_TUNING = {
+  mobileWalkerBudget: 10,
+  constrainedWalkerBudget: 18,
+  desktopWalkerBudget: 32,
+  firstWalkerPoint: 22,
+  walkerPointStride: 31,
+  speedBase: 0.42,
+  speedStep: 0.12,
+  speedVariationSteps: 6,
+  directionCycle: 3,
+  sideCycle: 2,
+  sidewalkOffsetBase: 3.45,
+  sidewalkOffsetStep: 0.18,
+  sidewalkOffsetSteps: 6,
+  swayRate: 0.68,
+  swayAmplitude: 0.1,
+  playerAvoidanceStart: 11,
+  playerAvoidanceRange: 9,
+  playerAvoidanceDistance: 1.65,
+  avoidanceResponse: 0.16,
+  gaitRateBase: 4.1,
+  gaitSpeedScale: 0.8,
+  gaitBobAmplitude: 0.052,
+  pauseCycleSeconds: 17,
+  pauseWindowSeconds: 1.4,
+  pauseSpeedScale: 0.22,
+  pauseBlendSeconds: 0.9,
+  alongPathDrift: 0.16,
+  spriteWidth: 1.58,
+  spriteHeight: 2.18,
+  minimumWalkerGap: 2.4,
+} as const;
+
 const NPC_STOPPING_TUNING = {
   microStopApproachStart: 12,
   microStopApproachEnd: 38,
@@ -4245,6 +4279,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track, mobile = false): (ti
     speed: number;
     phase: number;
     sidewalkOffset: number;
+    avoidanceOffset: number;
     sprite: THREE.Sprite;
   };
   const walkers: Walker[] = [];
@@ -4274,45 +4309,80 @@ function buildPedestrians(scene: THREE.Scene, track: Track, mobile = false): (ti
   const device = navigator as Navigator & { deviceMemory?: number };
   const constrainedDevice =
     (device.hardwareConcurrency || 4) <= 4 || (device.deviceMemory ?? 4) <= 3;
-  const walkerBudget = mobile ? 10 : constrainedDevice ? 18 : 32;
-  for (let i = 22; i < track.pts.length && walkers.length < walkerBudget; i += 31) {
+  const walkerBudget = mobile
+    ? PEDESTRIAN_TUNING.mobileWalkerBudget
+    : constrainedDevice
+      ? PEDESTRIAN_TUNING.constrainedWalkerBudget
+      : PEDESTRIAN_TUNING.desktopWalkerBudget;
+  for (let i = PEDESTRIAN_TUNING.firstWalkerPoint; i < track.pts.length && walkers.length < walkerBudget; i += PEDESTRIAN_TUNING.walkerPointStride) {
     const p = track.pts[i];
     const index = walkers.length;
     const sprite = new THREE.Sprite(materials[index % materials.length]);
     sprite.center.set(0.5, 0);
-    sprite.scale.set(1.6, 2.2, 1);
+    sprite.scale.set(PEDESTRIAN_TUNING.spriteWidth, PEDESTRIAN_TUNING.spriteHeight, 1);
     sprite.renderOrder = 2;
     scene.add(sprite);
     walkers.push({
       s: p.s,
-      side: index % 2 === 0 ? 1 : -1,
-      direction: index % 3 === 0 ? -1 : 1,
-      speed: 0.48 + (index % 5) * 0.13,
+      side: index % PEDESTRIAN_TUNING.sideCycle === 0 ? 1 : -1,
+      direction: index % PEDESTRIAN_TUNING.directionCycle === 0 ? -1 : 1,
+      speed: PEDESTRIAN_TUNING.speedBase + (index % PEDESTRIAN_TUNING.speedVariationSteps) * PEDESTRIAN_TUNING.speedStep,
       phase: index * 1.73,
-      // Small deterministic offsets prevent a perfectly straight, repeated crowd line.
-      sidewalkOffset: 3.35 + (index % 5) * 0.2,
+      sidewalkOffset: PEDESTRIAN_TUNING.sidewalkOffsetBase +
+        (index % PEDESTRIAN_TUNING.sidewalkOffsetSteps) * PEDESTRIAN_TUNING.sidewalkOffsetStep,
+      avoidanceOffset: 0,
       sprite,
     });
   }
 
   return (time: number, playerX: number, playerZ: number) => {
-    walkers.forEach((walker) => {
-      const p = track.sample(walker.s + time * walker.speed * walker.direction);
+    walkers.forEach((walker, index) => {
+      const pausePhase = (time + walker.phase) % PEDESTRIAN_TUNING.pauseCycleSeconds;
+      const pauseBlend = THREE.MathUtils.smoothstep(
+        pausePhase,
+        0,
+        PEDESTRIAN_TUNING.pauseWindowSeconds,
+      ) * (1 - THREE.MathUtils.smoothstep(
+        pausePhase,
+        PEDESTRIAN_TUNING.pauseWindowSeconds,
+        PEDESTRIAN_TUNING.pauseWindowSeconds + PEDESTRIAN_TUNING.pauseBlendSeconds,
+      ));
+      const pace = 1 - pauseBlend * (1 - PEDESTRIAN_TUNING.pauseSpeedScale);
+      const alongDrift = Math.sin(time * 0.23 + walker.phase) * PEDESTRIAN_TUNING.alongPathDrift;
+      const p = track.sample(walker.s + time * walker.speed * walker.direction * pace + alongDrift);
       const rx = Math.cos(p.yaw);
       const rz = -Math.sin(p.yaw);
-      const lateralWalk = Math.sin(time * 0.72 + walker.phase) * 0.12;
+      const lateralWalk = Math.sin(time * PEDESTRIAN_TUNING.swayRate + walker.phase) *
+        PEDESTRIAN_TUNING.swayAmplitude;
       const baseOffset = ROAD_HALF + walker.sidewalkOffset + lateralWalk;
       const baseX = p.x + rx * walker.side * baseOffset;
       const baseZ = p.z + rz * walker.side * baseOffset;
       const distanceToPlayer = Math.hypot(playerX - baseX, playerZ - baseZ);
-      // Smoothly move walkers toward the building edge when the player approaches.
-      const proximity = THREE.MathUtils.clamp((10 - distanceToPlayer) / 10, 0, 1);
-      const avoidance = proximity * proximity * 1.45;
-      const safeOffset = baseOffset + avoidance;
+      const proximity = THREE.MathUtils.clamp(
+        (PEDESTRIAN_TUNING.playerAvoidanceStart - distanceToPlayer) /
+          PEDESTRIAN_TUNING.playerAvoidanceRange,
+        0,
+        1,
+      );
+      const targetAvoidance = proximity * proximity * PEDESTRIAN_TUNING.playerAvoidanceDistance;
+      walker.avoidanceOffset += (targetAvoidance - walker.avoidanceOffset) *
+        PEDESTRIAN_TUNING.avoidanceResponse;
+      const safeOffset = baseOffset + walker.avoidanceOffset;
       const x = p.x + rx * walker.side * safeOffset;
       const z = p.z + rz * walker.side * safeOffset;
-      const bob = Math.abs(Math.sin(time * (4.4 + walker.speed) + walker.phase)) * 0.045;
+      const gait = time * (PEDESTRIAN_TUNING.gaitRateBase +
+        walker.speed * PEDESTRIAN_TUNING.gaitSpeedScale) + walker.phase;
+      const bob = Math.abs(Math.sin(gait)) * PEDESTRIAN_TUNING.gaitBobAmplitude * pace;
       walker.sprite.position.set(x, 0.02 + bob, z);
+
+      // Keep nearby walkers from visually overlapping while preserving their sidewalk side.
+      if (index > 0) {
+        const previous = walkers[index - 1];
+        const gap = Math.abs(walker.s - previous.s);
+        if (walker.side === previous.side && gap < PEDESTRIAN_TUNING.minimumWalkerGap) {
+          walker.sprite.position.y += 0.012;
+        }
+      }
     });
   };
 }
