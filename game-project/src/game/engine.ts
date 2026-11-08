@@ -128,7 +128,7 @@ const NPC_DRIVING_TUNING = {
 
 // Deterministic pedestrian variation and sidewalk-safety controls for low-cost mobile sprites.
 const PEDESTRIAN_TUNING = {
-  mobileWalkerBudget: 10,
+  mobileWalkerBudget: 16,
   constrainedWalkerBudget: 18,
   desktopWalkerBudget: 32,
   firstWalkerPoint: 22,
@@ -3682,6 +3682,9 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
   const lampHeads: THREE.Matrix4[] = [];
   const carts: THREE.Matrix4[] = [];
   const cartCanopies: THREE.Matrix4[] = [];
+  const cartGoods: THREE.Matrix4[][] = [[], [], []];
+  const produce: THREE.Matrix4[][] = [[], [], []];
+  const displayCrates: THREE.Matrix4[] = [];
   const benches: THREE.Matrix4[] = [];
   const o = new THREE.Object3D();
   const put = (list: THREE.Matrix4[], p: MobileProp, y: number, sx: number, sy: number, sz: number) => {
@@ -3714,6 +3717,15 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
       const cart = { ...item, x: x + rx * side * 0.95, z: z + rz * side * 0.95 };
       put(carts, cart, 0.58, 0.95, 0.72, 0.68);
       put(cartCanopies, cart, 1.12, 1.12, 0.12, 0.86);
+      for (let goods = 0; goods < 3; goods++) {
+        const display = { ...cart, x: cart.x + rx * side * (goods - 1) * 0.22, z: cart.z + rz * side * (goods - 1) * 0.22 };
+        put(cartGoods[goods], display, 1.0 + (goods % 2) * 0.08, 0.3, 0.24, 0.28);
+        put(produce[goods], display, 1.2 + (goods % 2) * 0.08, 0.16, 0.16, 0.16);
+      }
+    }
+    if (i % 73 === 10) {
+      const crate = { ...item, x: x + rx * side * 0.85, z: z + rz * side * 0.85 };
+      put(displayCrates, crate, 0.38, 0.58, 0.72, 0.58);
     }
     if (i % 88 === 10) put(benches, { ...item, x: x + rx * side * 0.35, z: z + rz * side * 0.35 }, 0.48, 1.35, 0.16, 0.52);
   }
@@ -3731,6 +3743,11 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
   add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#e7d7a4", emissive: "#f4d78d", emissiveIntensity: 0.22 }), lampHeads);
   add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#8b6240", roughness: 0.9 }), carts);
   add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#b6533f", roughness: 0.9 }), cartCanopies);
+  ["#b54a36", "#e1b73e", "#4f8a4b"].forEach((color, index) => {
+    add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color, roughness: 0.9 }), cartGoods[index]);
+    add(new THREE.SphereGeometry(0.5, 7, 5), new THREE.MeshStandardMaterial({ color, roughness: 0.82 }), produce[index]);
+  });
+  add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#76533a", roughness: 0.94 }), displayCrates);
   add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#9b8060", roughness: 0.9 }), benches);
 }
 
