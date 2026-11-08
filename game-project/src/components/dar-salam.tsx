@@ -204,8 +204,8 @@ export function DarSalam() {
   };
 
   return (
-    <main className="relative h-screen h-dvh w-full overflow-hidden bg-asphalt font-sans text-ink touch-none select-none">
-      <canvas ref={viewRef} className="absolute inset-0 h-full w-full" />
+    <main aria-label="لعبة توكتوك دار السلام" className="game-root relative h-screen h-dvh w-full overflow-hidden bg-asphalt font-sans text-ink touch-none select-none">
+      <canvas ref={viewRef} aria-hidden="true" className="game-canvas absolute inset-0 h-full w-full" />
       <canvas
         ref={mapRef}
         width={180}
@@ -225,10 +225,10 @@ export function DarSalam() {
 
       {phase === "menu" ? (
         <div className="absolute inset-0 z-20 flex items-end justify-center p-3 sm:items-center sm:p-6">
-          <section className="flex max-h-full w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-line bg-panel/95 shadow-xl">
+          <section aria-label="القائمة الرئيسية وإعدادات اللعبة" className="flex max-h-full w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-line bg-panel/95 shadow-xl">
             <div className="h-1.5 bg-amber" />
-            <div className="overflow-y-auto p-4 sm:p-5">
-              <p className="text-xs font-bold text-brick">حلقة العشرين</p>
+            <div className="game-menu-scroll overflow-y-auto overscroll-contain p-4 sm:p-5">
+              <p className="text-xs font-bold tracking-wide text-brick">حلقة العشرين</p>
               <h1 className="mt-1 text-3xl font-extrabold leading-tight sm:text-4xl">توكتوك دار السلام</h1>
               <p className="mt-1 text-sm leading-relaxed text-muted">
                 ركّب من اليمين، نزّل الركاب، وخلّي بالك من البنزين والمطب والكمين.
@@ -310,7 +310,7 @@ export function DarSalam() {
                 <p className="text-sm font-extrabold">الورشة</p>
                 <p className="flex items-center gap-1 text-sm font-extrabold text-amber">
                   <Wallet className="size-4" />
-                  <span dir="ltr">{snap?.wallet ?? 0}</span>
+                  <span dir="ltr" className="tabular-nums">{snap?.wallet ?? 0}</span>
                   <span className="text-xs font-bold text-muted">ج</span>
                 </p>
               </div>
@@ -326,7 +326,7 @@ export function DarSalam() {
                       type="button"
                       disabled={!ready || maxed || !afford}
                       onClick={() => gameRef.current?.buy(u.id as UpgradeId)}
-                      className="rounded-xl bg-panel-2 px-3 py-2 text-right disabled:opacity-45"
+                      aria-label={`${u.name}: المستوى ${lvl} من ${u.max}${maxed ? "، مكتمل" : `، السعر ${cost} جنيه`}`}\n                      className="min-h-16 rounded-xl bg-panel-2 px-3 py-2 text-right focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber disabled:opacity-45"
                     >
                       <span className="flex items-center justify-between gap-2">
                         <span className="text-sm font-extrabold">{u.name}</span>
@@ -358,7 +358,7 @@ export function DarSalam() {
                 <br />
                 الإيجار {RENT} ج في ٣ دقايق · التانك {GAS_COST} ج يمين الشارع
               </p>
-              <p className="mt-3 text-center text-[10px] text-muted">
+              <p className="mt-3 text-center text-[10px] leading-relaxed text-muted">
                 بيانات الطريق © مساهمو OpenStreetMap ·
                 <a
                   href="https://www.openstreetmap.org/copyright"
@@ -375,7 +375,7 @@ export function DarSalam() {
                 type="button"
                 disabled={!ready}
                 onClick={startGame}
-                className="w-full rounded-xl bg-amber py-3 text-lg font-extrabold text-amber-ink disabled:opacity-60"
+                className="min-h-14 w-full rounded-xl bg-amber py-3 text-lg font-extrabold text-amber-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink disabled:opacity-60"
               >
                 {ready ? startLabel : "لحظة، بنجهّز التوكتوك"}
               </button>
@@ -388,7 +388,7 @@ export function DarSalam() {
         <PlayHud snap={snap} hold={hold} game={gameRef} onAgain={() => gameRef.current?.start(cfg)} />
       ) : null}
       {startupError ? (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-asphalt p-5 text-center">
+        <div role="alert" className="absolute inset-0 z-50 flex items-center justify-center bg-asphalt p-5 text-center">
           <section className="w-full max-w-lg rounded-2xl border border-line bg-panel p-5">
             <h1 className="text-xl font-extrabold text-brick">تعذر تشغيل محرك اللعبة</h1>
             <p className="mt-3 break-words text-sm leading-relaxed text-ink" dir="ltr">{startupError}</p>
@@ -420,8 +420,8 @@ function PlayHud({
   const rush = snap.mode === "rush";
   return (
     <>
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-3">
-        <div className="pointer-events-auto w-32 rounded-2xl border border-line bg-panel/90 px-3 py-2 sm:w-40" role="group" aria-label="عدادات القيادة">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="pointer-events-auto w-32 rounded-2xl border border-line bg-panel/95 px-3 py-2 shadow-lg sm:w-40" role="group" aria-label="عدادات القيادة">
           <div className="flex items-center gap-1 text-xs text-muted">
             <Gauge className="size-3.5 text-amber" />
             كم/س
@@ -434,7 +434,7 @@ function PlayHud({
             بنزين
           </div>
           <div
-            className="mt-1 h-1.5 overflow-hidden rounded-full bg-line"
+            className="mt-1 h-2 overflow-hidden rounded-full bg-line"
             role="progressbar"
             aria-label="مستوى البنزين"
             aria-valuemin={0}
@@ -533,10 +533,10 @@ function PlayHud({
         </p>
       ) : null}
 
-      <div className="absolute bottom-36 left-1/2 z-30 flex -translate-x-1/2 gap-2" role="group" aria-label="أزرار التحكم الإضافية">
+      <div className="absolute bottom-[calc(9rem+env(safe-area-inset-bottom))] left-1/2 z-30 flex -translate-x-1/2 gap-2" role="group" aria-label="أزرار التحكم الإضافية">
         <button
           type="button"
-          className="rounded-full bg-panel/90 p-3"
+          className="min-h-12 min-w-12 rounded-full bg-panel/95 p-3 shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
           aria-label={snap.phase === "pause" ? "استئناف القيادة" : "إيقاف مؤقت"}
           title={snap.phase === "pause" ? "استئناف القيادة" : "إيقاف مؤقت"}
           onClick={() => (snap.phase === "pause" ? game.current?.resume() : game.current?.pause())}
@@ -555,7 +555,7 @@ function PlayHud({
         <button
           type="button"
           aria-label="تغيير زاوية الكاميرا"
-          className="rounded-full bg-panel/90 px-3 py-2 text-xs font-bold"
+          className="min-h-12 rounded-full bg-panel/95 px-4 py-2 text-xs font-bold shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
           title="تغيير زاوية الكاميرا"
           onClick={() => game.current?.cycleCam()}
         >
@@ -573,9 +573,9 @@ function PlayHud({
         </button>
       </div>
 
-      <div dir="ltr" className="absolute inset-x-0 bottom-4 z-30 flex items-end justify-between px-3" role="group" aria-label="أزرار قيادة التوكتوك">
+      <div dir="ltr" className="absolute inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 flex items-end justify-between px-3" role="group" aria-label="أزرار قيادة التوكتوك">
         <div className="flex gap-2">
-          <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/90 text-ink" aria-label="يسار" {...hold("l")}>
+          <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/95 text-ink shadow-lg active:scale-95 active:bg-panel-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber" aria-label="يسار" {...hold("l")}>
             <ChevronLeft className="mx-auto size-8" />
           </button>
           <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/90 text-ink" aria-label="يمين" {...hold("r")}>
@@ -583,12 +583,12 @@ function PlayHud({
           </button>
         </div>
         <div className="flex gap-2">
-          <button type="button" aria-label="فرامل" className="h-16 w-20 touch-none rounded-2xl bg-panel-2 text-sm font-extrabold" {...hold("b")}>
+          <button type="button" aria-label="فرامل" className="h-16 w-20 touch-none rounded-2xl bg-panel-2 text-sm font-extrabold shadow-lg active:scale-95 active:bg-panel focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber" {...hold("b")}>
             فرامل
           </button>
           <button
             type="button"
-            className="h-16 w-20 touch-none rounded-2xl bg-amber text-sm font-extrabold text-amber-ink"
+            className="h-16 w-20 touch-none rounded-2xl bg-amber text-sm font-extrabold text-amber-ink shadow-lg active:scale-95 active:bg-amber/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
             aria-label="بنزين"
             {...hold("g")}
           >
@@ -599,7 +599,7 @@ function PlayHud({
 
       {snap.phase === "pause" || snap.phase === "summary" ? (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-asphalt/75 p-4">
-          <section role="dialog" aria-modal="true" aria-label={snap.phase === "pause" ? "قائمة الإيقاف المؤقت" : "ملخص المشوار"} className="w-full max-w-sm rounded-2xl border border-line bg-panel p-5 text-center">
+          <section role="dialog" aria-modal="true" aria-label={snap.phase === "pause" ? "قائمة الإيقاف المؤقت" : "ملخص المشوار"} className="w-full max-w-sm rounded-2xl border border-line bg-panel p-5 text-center shadow-2xl">
             <h2 className="text-2xl font-extrabold text-amber">
               {snap.phase === "pause" ? "وقفة" : rush ? "التوصيلات" : shift ? "خلصت الوردية" : "خلصت اللفة"}
             </h2>
@@ -640,7 +640,7 @@ function PlayHud({
               {snap.phase === "pause" ? (
                 <button
                   type="button"
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber py-3 font-extrabold text-amber-ink"
+                  className="min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber py-3 font-extrabold text-amber-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
                   onClick={() => game.current?.resume()}
                 >
                   <Play className="size-4" />
@@ -659,7 +659,7 @@ function PlayHud({
               {snap.phase === "pause" ? (
                 <button
                   type="button"
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-panel-2 py-3 font-bold"
+                  className="min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-panel-2 py-3 font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
                   onClick={() => game.current?.finish()}
                 >
                   <Flag className="size-4" />
@@ -668,7 +668,7 @@ function PlayHud({
               ) : null}
               <button
                 type="button"
-                className="flex-1 rounded-xl bg-panel-2 py-3 font-bold"
+                className="min-h-12 flex-1 rounded-xl bg-panel-2 py-3 font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
                 onClick={() => game.current?.quit()}
               >
                 القائمة
