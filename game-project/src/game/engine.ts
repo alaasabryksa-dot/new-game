@@ -2652,21 +2652,25 @@ function buildCity(scene: THREE.Scene, track: Track) {
   const awningCounts = [0, 0, 0, 0];
   const signCounts = signLabels.map(() => 0);
 
-  for (let i = 0; i < pts.length; i += 4) {
+  // Sample the route more densely and alternate building sides so both sidewalks
+  // read as a continuous mixed-use Cairo street rather than isolated blocks.
+  for (let i = 0; i < pts.length; i += 2) {
     const p = pts[i];
     const rx = Math.cos(p.yaw);
     const rz = -Math.sin(p.yaw);
     const fx = -Math.sin(p.yaw);
     const fz = -Math.cos(p.yaw);
     const hsh = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
-    const side = Math.floor(i / 4) % 2 === 0 ? -1 : 1;
-    const shop = hsh > 0.68;
+    const side = Math.floor(i / 2) % 2 === 0 ? -1 : 1;
+    // Slightly higher shop frontage frequency reflects the documented retail-heavy corridor.
+    // Individual businesses remain fictional until exact storefronts are visually verified.
+    const shop = hsh > 0.62;
     const depth = 15.5 + hsh * 5.5;
     const floors = shop ? 1 : 2 + Math.floor(hsh * 4.5);
     const height = shop ? 3.8 : 5.2 + floors * 2.65;
     const width = 8 + hsh * 5;
     const deep = 7 + (1 - hsh) * 4;
-    const idx = (i / 4) % meshes.length;
+    const idx = Math.floor(i / 4) % meshes.length;
     if (counts[idx] >= 180) continue;
 
     dummy.position.set(p.x + rx * side * depth, height / 2, p.z + rz * side * depth);
