@@ -82,3 +82,17 @@ test("passenger system exposes and uses twenty independent gameplay tuning contr
   assert.match(engine, /const stopChance = i % 5 === 4/);
   assert.match(engine, /const fare = Math\.max\(1, Math\.round\(\(PASSENGER_SYSTEM_TUNING\.baseFare/);
 });
+
+test("driving feedback exposes and uses thirty explicit fuel, collision, radar, toll and bump controls", () => {
+  const tuning = engine.match(/const DRIVING_FEEDBACK_TUNING = \{([\s\S]*?)\} as const;/);
+  assert.ok(tuning, "driving feedback tuning must remain explicit");
+  const keys = [...tuning[1].matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
+  assert.equal(keys.length, 30);
+  for (const key of keys) {
+    assert.ok(engine.includes(`DRIVING_FEEDBACK_TUNING.${key}`), `unused driving feedback tuning: ${key}`);
+  }
+  assert.match(engine, /DRIVING_FEEDBACK_TUNING\.collisionFineThreshold/);
+  assert.match(engine, /DRIVING_FEEDBACK_TUNING\.fuelThrottleRate/);
+  assert.match(engine, /DRIVING_FEEDBACK_TUNING\.radarRushTimePenalty/);
+  assert.match(engine, /DRIVING_FEEDBACK_TUNING\.gasStationStopSpeed/);
+});
