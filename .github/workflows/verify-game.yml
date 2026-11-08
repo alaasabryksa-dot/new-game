@@ -48,7 +48,7 @@ jobs:
           done
           cat /tmp/new-game-vite.log
           exit 1
-      - name: Smoke test desktop and mobile gameplay
+      - name: Smoke test landscape mobile gameplay
         run: npm run test:browser
       - name: Production build
         run: npm run build
