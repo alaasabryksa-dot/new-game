@@ -1144,6 +1144,30 @@ export function mountGame(
   };
   hideAll();
 
+  const paintNpc = (kind: VehicleId, s: number, yaw: number, lat: number, color?: THREE.Color, braking = false, turnDirection = 0) => {
+    const pool = pools.get(kind)!;
+    const i = cursors[kind]++;
+    if (i >= POOL) return;
+    const sm = track.sample(s);
+    const rx = Math.cos(sm.yaw);
+    const rz = -Math.sin(sm.yaw);
+    dummy.position.set(sm.x + rx * lat, 0, sm.z + rz * lat);
+    dummy.rotation.set(0, yaw, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    // InstancedMesh.setMatrixAt copies the matrix elements immediately.
+    // The shared dummy matrix is safe here and avoids one clone per NPC.
+    pool.body.setMatrixAt(i, vehicleMatrix);
+    pool.glass.setMatrixAt(i, vehicleMatrix);
+    pool.wheels.setMatrixAt(i, vehicleMatrix);
+    pool.lights.setMatrixAt(i, vehicleMatrix);
+    if (color) pool.body.setColorAt(i, color);
+    pool.brakes.setMatrixAt(i, braking ? vehicleMatrix : hiddenNpcMatrix);
+    const blinkOn = Math.floor(trafficClock * 3.2) % 2 === 0;
+    pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? vehicleMatrix : hiddenNpcMatrix);
+    pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? vehicleMatrix : hiddenNpcMatrix);
+  };
+
   let playerMesh = buildPlayer("tuktuk", "#f0b429");
   scene.add(playerMesh.group);
 
@@ -2464,30 +2488,6 @@ function rollJobs(fromStop: number) {
     playerMesh.rider.visible = pax.length > 0 && phase !== "menu";
 
     for (const kind of KINDS) cursors[kind] = 0;
-    const paintNpc = (kind: VehicleId, s: number, yaw: number, lat: number, color?: THREE.Color, braking = false, turnDirection = 0) => {
-      const pool = pools.get(kind)!;
-      const i = cursors[kind]++;
-      if (i >= POOL) return;
-      const sm = track.sample(s);
-      const rx = Math.cos(sm.yaw);
-      const rz = -Math.sin(sm.yaw);
-      dummy.position.set(sm.x + rx * lat, 0, sm.z + rz * lat);
-      dummy.rotation.set(0, yaw, 0);
-      dummy.scale.set(1, 1, 1);
-      dummy.updateMatrix();
-      // InstancedMesh.setMatrixAt copies the matrix elements immediately.
-      // The shared dummy matrix is safe here and avoids one clone per NPC.
-      pool.body.setMatrixAt(i, vehicleMatrix);
-      pool.glass.setMatrixAt(i, vehicleMatrix);
-      pool.wheels.setMatrixAt(i, vehicleMatrix);
-      pool.lights.setMatrixAt(i, vehicleMatrix);
-      if (color) pool.body.setColorAt(i, color);
-      pool.brakes.setMatrixAt(i, braking ? vehicleMatrix : hiddenNpcMatrix);
-      const blinkOn = Math.floor(trafficClock * 3.2) % 2 === 0;
-      pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? vehicleMatrix : hiddenNpcMatrix);
-      pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? vehicleMatrix : hiddenNpcMatrix);
-    };
-
     for (const n of npcs) {
       if (!n.alive) continue;
       const sm = track.sample(n.s);
