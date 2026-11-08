@@ -2621,48 +2621,133 @@ function buildElectricalPoles(scene: THREE.Scene, track: Track) {
 }
 
 function buildCityMobile(scene: THREE.Scene, track: Track) {
-  // Mobile-safe street shell: preserve the recognizable street corridor while
-  // avoiding the many shop-interior, rooftop and decorative instanced meshes.
+  // Mobile-safe, instanced street frontage. Keep draw calls low while making
+  // the Android scene read as a dense Cairo commercial/residential corridor.
   const colors = ["#e7d3b5", "#e2b39a", "#efe6d6", "#cfc8ba", "#c46a52"];
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const capacity = Math.max(1, Math.ceil(track.pts.length / 3) * 2);
+  const boxGeo = new THREE.BoxGeometry(1, 1, 1);
   const materials = colors.map((color) => new THREE.MeshStandardMaterial({
     color,
     roughness: 0.92,
     metalness: 0,
   }));
-  const capacity = Math.max(1, Math.ceil(track.pts.length / 10) * 2);
-  const meshes = materials.map((material) => {
-    const mesh = new THREE.InstancedMesh(geometry, material, capacity);
+  const buildings = materials.map((material) => {
+    const mesh = new THREE.InstancedMesh(boxGeo, material, capacity);
     mesh.count = 0;
     scene.add(mesh);
     return mesh;
   });
+
+  const shopPanelMat = new THREE.MeshStandardMaterial({ color: "#b7a58d", roughness: 0.88 });
+  const shopGlassMat = new THREE.MeshStandardMaterial({
+    color: "#477b86", roughness: 0.28, metalness: 0.08,
+    emissive: "#142c32", emissiveIntensity: 0.18,
+  });
+  const shutterMat = new THREE.MeshStandardMaterial({ color: "#737b7c", roughness: 0.72, metalness: 0.42 });
+  const signMats = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334"].map(
+    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.76 }),
+  );
+  const awningMats = ["#b84f3d", "#d6a23b", "#397f7a", "#e7e0d2"].map(
+    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.84, side: THREE.DoubleSide }),
+  );
+  const panels = new THREE.InstancedMesh(new THREE.BoxGeometry(0.16, 2.15, 1), shopPanelMat, capacity);
+  const glass = new THREE.InstancedMesh(new THREE.BoxGeometry(0.12, 1.45, 1), shopGlassMat, capacity);
+  const shutters = new THREE.InstancedMesh(new THREE.BoxGeometry(0.14, 1.5, 1), shutterMat, capacity);
+  const signs = signMats.map((mat) => new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.62, 1), mat, capacity));
+  const awnings = awningMats.map((mat) => new THREE.InstancedMesh(new THREE.BoxGeometry(1.05, 0.16, 1), mat, capacity));
+  const awningValances = awningMats.map((mat) => new THREE.InstancedMesh(new THREE.BoxGeometry(0.08, 0.22, 1), mat, capacity));
+  const doors = new THREE.InstancedMesh(new THREE.BoxGeometry(0.13, 1.9, 0.68), new THREE.MeshStandardMaterial({
+    color: "#493b32", roughness: 0.62,
+  }), capacity);
+  const shopLights = new THREE.InstancedMesh(new THREE.BoxGeometry(0.12, 0.1, 1.15), new THREE.MeshStandardMaterial({
+    color: "#ffe0a0", emissive: "#ffbd55", emissiveIntensity: 0.52, roughness: 0.45,
+  }), capacity);
+
   const dummy = new THREE.Object3D();
   const counts = colors.map(() => 0);
-  for (let i = 0; i < track.pts.length; i += 10) {
+  const signsCount = signMats.map(() => 0);
+  const awningsCount = awningMats.map(() => 0);
+  let shopCount = 0;
+  const addInstance = (mesh: THREE.InstancedMesh, index: number, x: number, y: number, z: number,
+    yaw: number, sx: number, sy: number, sz: number) => {
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(0, yaw, 0);
+    dummy.scale.set(sx, sy, sz);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(index, dummy.matrix);
+  };
+
+  // 4.5 m route samples; every third sample on both sides yields roughly
+  // 300+ varied building fronts on a 2.2 km corridor without per-shop draw calls.
+  for (let i = 0; i < track.pts.length; i += 3) {
     const point = track.pts[i];
     const rx = Math.cos(point.yaw);
     const rz = -Math.sin(point.yaw);
+    const seed = Math.abs(Math.floor(Math.sin(i * 12.9898 + point.x * 0.17 + point.z * 0.13) * 43758.5453));
+    const variation = (seed % 1000) / 1000;
     for (const side of [-1, 1]) {
-      const seed = Math.abs(Math.floor(point.x * 0.17 + point.z * 0.13 + i * 0.07));
-      const width = 9 + (seed % 5) * 1.6;
-      const height = 9 + ((seed * 7) % 8) * 1.8;
-      const depth = 13 + ((seed * 3) % 5) * 2.2;
+      const width = 8.2 + (seed % 7) * 0.72;
+      const depth = 14.5 + ((seed * 7) % 6) * 1.35;
+      const floors = 2 + ((seed * 11) % 4);
+      const height = 5.1 + floors * 2.45;
+      const centerX = point.x + rx * side * (ROAD_HALF + depth * 0.5 + 2.5);
+      const centerZ = point.z + rz * side * (ROAD_HALF + depth * 0.5 + 2.5);
       const colorIndex = seed % materials.length;
-      dummy.position.set(
-        point.x + rx * side * (ROAD_HALF + depth * 0.5 + 2.8),
-        height * 0.5,
-        point.z + rz * side * (ROAD_HALF + depth * 0.5 + 2.8),
-      );
-      dummy.rotation.set(0, point.yaw, 0);
-      dummy.scale.set(width, height, depth);
-      dummy.updateMatrix();
-      const index = counts[colorIndex]++;
-      if (index < capacity) meshes[colorIndex].setMatrixAt(index, dummy.matrix);
+      const buildingIndex = counts[colorIndex]++;
+      if (buildingIndex < capacity) {
+        addInstance(buildings[colorIndex], buildingIndex, centerX, height * 0.5, centerZ,
+          point.yaw, width, height, depth);
+      }
+
+      // Alternate shop and residential ground floors; real names stay out until verified.
+      const isShop = variation > 0.43;
+      if (!isShop || shopCount >= capacity) continue;
+      const frontOffset = -side * (width * 0.5 + 0.1);
+      const frontX = point.x + rx * (side * (ROAD_HALF + depth * 0.5 + 2.5) + frontOffset);
+      const frontZ = point.z + rz * (side * (ROAD_HALF + depth * 0.5 + 2.5) + frontOffset);
+      const shopWidth = Math.min(width * 0.88, 10.5);
+      const panelIndex = shopCount++;
+      addInstance(panels, panelIndex, frontX, 1.18, frontZ, point.yaw, 1, 1, shopWidth);
+      if ((seed % 5) === 0) {
+        addInstance(shutters, panelIndex, frontX - side * 0.035, 1.12, frontZ, point.yaw, 1, 1, shopWidth * 0.72);
+      } else {
+        addInstance(glass, panelIndex, frontX - side * 0.035, 1.22, frontZ, point.yaw, 1, 1, shopWidth * 0.72);
+        addInstance(doors, panelIndex, frontX - side * 0.055, 1.05, frontZ + rz * shopWidth * 0.31,
+          point.yaw, 1, 1, 1);
+      }
+      addInstance(shopLights, panelIndex, frontX - side * 0.12, 2.12, frontZ, point.yaw, 1, 1, shopWidth * 0.8);
+
+      const signIndex = seed % signMats.length;
+      const signSlot = signsCount[signIndex]++;
+      if (signSlot < capacity) {
+        addInstance(signs[signIndex], signSlot, frontX - side * 0.13, 2.82, frontZ,
+          point.yaw, 1, 1, shopWidth * 0.92);
+      }
+      const awningIndex = seed % awningMats.length;
+      const awningSlot = awningsCount[awningIndex]++;
+      if (awningSlot < capacity) {
+        addInstance(awnings[awningIndex], awningSlot, frontX - side * 0.72, 2.28, frontZ,
+          point.yaw, 1, 1, shopWidth * 0.98);
+        addInstance(awningValances[awningIndex], awningSlot, frontX - side * 1.35, 2.17, frontZ,
+          point.yaw, 1, 1, shopWidth * 0.98);
+      }
     }
   }
-  meshes.forEach((mesh, index) => {
-    mesh.count = counts[index];
+
+  buildings.forEach((mesh, index) => {
+    mesh.count = Math.min(counts[index], capacity);
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+  [panels, glass, shutters, doors, shopLights, ...signs, ...awnings, ...awningValances].forEach((mesh) => {
+    mesh.count = Math.min(mesh === panels || mesh === glass || mesh === shutters || mesh === doors || mesh === shopLights
+      ? shopCount
+      : mesh === signs[0] ? signsCount[0]
+      : mesh === signs[1] ? signsCount[1]
+      : mesh === signs[2] ? signsCount[2]
+      : mesh === signs[3] ? signsCount[3]
+      : mesh === signs[4] ? signsCount[4]
+      : awnings.includes(mesh) ? awningsCount[awnings.indexOf(mesh)]
+      : awningsCount[awningValances.indexOf(mesh)], capacity);
     mesh.instanceMatrix.needsUpdate = true;
   });
   return materials;
