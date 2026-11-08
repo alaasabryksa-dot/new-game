@@ -1745,13 +1745,6 @@ function rollJobs(fromStop: number) {
     // and speed multipliers as the live fuel model. It is guidance, not a promise.
     const estimateSpeed = Math.min(8, Math.max(4, spec.max * 0.5));
     const estimateThrottle = 0.65;
-    const estimateLoad = pax.length > 0
-      ? 1 + Math.min(DRIVING_FEEDBACK_TUNING.passengerFuelLoadCap, pax.length * DRIVING_FEEDBACK_TUNING.passengerFuelLoadStep)
-      : 1;
-    const estimateSpeedFactor = 1 + Math.min(
-      DRIVING_FEEDBACK_TUNING.speedFuelLoadCap,
-      estimateSpeed / Math.max(1, spec.max) * DRIVING_FEEDBACK_TUNING.speedFuelLoadCap,
-    );
     const estimateFuelRate = calculateFuelBurnRate(
       estimateThrottle,
       true,
