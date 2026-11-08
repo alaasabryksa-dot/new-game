@@ -53,13 +53,15 @@ test("the player can only drive a tuk-tuk; other vehicle types are traffic NPCs"
 });
 
 test("mobile performance budgets pedestrians and render pixel ratio", () => {
-  assert.match(engine, /walkerBudget = mobile \\? 10 : constrainedDevice \\? 18 : 32/);
+  assert.match(engine, /walkerBudget = mobile \? 10 : constrainedDevice \? 18 : 32/);
   assert.match(engine, /const androidDevice = \/Android\/i\.test\(navigator\.userAgent\)/);
   assert.match(engine, /pixelRatioCap = androidDevice/);
   assert.match(engine, /const POOL = androidDevice \? 12 : 64/);
   assert.match(engine, /function buildCityMobile\(/);
   assert.match(engine, /buildCity\(scene, track, androidDevice\)/);
-  assert.match(engine, /if \(!androidDevice\) buildStreetFurniture/);
+  assert.match(engine, /if \(androidDevice\) buildStreetFurnitureMobile\(scene, track\)/);
+  assert.match(engine, /else buildStreetFurniture\(scene, track\)/);
+  assert.match(engine, /const animatePedestrians = buildPedestrians\(scene, track, androidDevice\)/);
 });
 
 test("traffic lane changes increase front and rear clearance for closing speed", () => {
