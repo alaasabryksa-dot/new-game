@@ -25,7 +25,7 @@ try {
     const response = await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
     assert.equal(response?.status(), 200, `${viewport.name}: app should return HTTP 200`);
     assert.ok(viewport.width > viewport.height, `${viewport.name}: viewport must be landscape`);
-    await page.getByText("توكتوك شارع الفيوم", { exact: true }).waitFor({ timeout: 30000 });
+    await page.getByText("توكتوك دار السلام", { exact: true }).waitFor({ timeout: 30000 });
     await page.locator("canvas").first().waitFor({ state: "attached" });
     await page.getByRole("button", { name: /ابدأ الوردية/ }).waitFor({ state: "visible", timeout: 30000 });
 
