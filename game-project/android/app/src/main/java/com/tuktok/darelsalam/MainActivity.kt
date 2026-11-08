@@ -30,6 +30,10 @@ class MainActivity : Activity() {
         Log.i(TAG, "Activity created")
 
         try {
+            // Keep the visible WebView renderer attached to the foreground Activity.
+            // This helps prevent renderer eviction while the software-rendered emulator is under memory pressure.
+            WebView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_BOUND, false)
+
             val assetLoader = WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
                 .build()
