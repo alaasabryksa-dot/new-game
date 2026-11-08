@@ -1,11 +1,7 @@
 name: Android offline APK
 on:
-  push:
-    branches: [main]
-    paths:
-      - "game-project/**"
-      - ".github/workflows/android-build.yml"
-      - ".github/scripts/**"
+  # APK packaging is deliberately deferred until the full game is complete.
+  # Run this workflow manually only after the user approves the final build.
   workflow_dispatch:
 
 permissions:
