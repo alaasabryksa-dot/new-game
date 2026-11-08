@@ -4604,16 +4604,24 @@ function buildPedestrians(scene: THREE.Scene, track: Track, mobile = false): (ti
       const gait = time * (PEDESTRIAN_TUNING.gaitRateBase +
         walker.speed * PEDESTRIAN_TUNING.gaitSpeedScale) + walker.phase;
       const bob = Math.abs(Math.sin(gait)) * PEDESTRIAN_TUNING.gaitBobAmplitude * pace;
-      walker.sprite.position.set(x, 0.02 + bob, z);
-
-      // Keep nearby walkers from visually overlapping while preserving their sidewalk side.
-      if (index > 0) {
-        const previous = walkers[index - 1];
-        const gap = Math.abs(walker.s - previous.s);
-        if (walker.side === previous.side && gap < PEDESTRIAN_TUNING.minimumWalkerGap) {
-          walker.sprite.position.y += 0.012;
-        }
+      // Separate sprites in world space, not by a barely visible vertical nudge.
+      // Apply the correction outwards from the carriageway so walkers remain on
+      // their original sidewalk and never drift into the traffic lanes.
+      let separatedX = x;
+      let separatedZ = z;
+      for (let prior = 0; prior < index; prior++) {
+        const other = walkers[prior];
+        if (other.side !== walker.side) continue;
+        const dx = separatedX - other.sprite.position.x;
+        const dz = separatedZ - other.sprite.position.z;
+        const distance = Math.hypot(dx, dz);
+        const minimumDistance = PEDESTRIAN_TUNING.minimumWalkerGap;
+        if (distance >= minimumDistance) continue;
+        const correction = minimumDistance - distance;
+        separatedX += rx * walker.side * correction;
+        separatedZ += rz * walker.side * correction;
       }
+      walker.sprite.position.set(separatedX, 0.02 + bob, separatedZ);
     });
   };
 }
