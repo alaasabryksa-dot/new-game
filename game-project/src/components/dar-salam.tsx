@@ -22,6 +22,7 @@ import {
   MODES,
   PAINTS,
   RENT,
+  STREET_ENTRANCES,
   UPGRADES,
   type Hud,
   type PreviewCfg,
@@ -99,12 +100,11 @@ export function DarSalam() {
     // active pointer globally so releasing outside a control cannot leave it held.
     const onGlobalPointerUp = (event: PointerEvent) => {
       const h = holds.current;
-      const changed =
-        h.l.delete(event.pointerId) ||
-        h.r.delete(event.pointerId) ||
-        h.g.delete(event.pointerId) ||
-        h.b.delete(event.pointerId);
-      if (!changed) return;
+      const releasedLeft = h.l.delete(event.pointerId);
+      const releasedRight = h.r.delete(event.pointerId);
+      const releasedThrottle = h.g.delete(event.pointerId);
+      const releasedBrake = h.b.delete(event.pointerId);
+      if (!releasedLeft && !releasedRight && !releasedThrottle && !releasedBrake) return;
       gameRef.current?.setTouch({
         steer: (h.l.size ? 1 : 0) + (h.r.size ? -1 : 0),
         throttle: h.g.size ? 1 : 0,
@@ -115,6 +115,7 @@ export function DarSalam() {
       if (document.visibilityState === "hidden") releaseInputs();
     };
     window.addEventListener("blur", releaseInputs);
+    window.addEventListener("pagehide", releaseInputs);
     window.addEventListener("pointercancel", releaseInputs);
     window.addEventListener("pointerup", onGlobalPointerUp);
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -169,6 +170,7 @@ export function DarSalam() {
       if (readyFrame) cancelAnimationFrame(readyFrame);
       if (readyFrame2) cancelAnimationFrame(readyFrame2);
       window.removeEventListener("blur", releaseInputs);
+      window.removeEventListener("pagehide", releaseInputs);
       window.removeEventListener("pointercancel", releaseInputs);
       window.removeEventListener("pointerup", onGlobalPointerUp);
       document.removeEventListener("visibilitychange", onVisibilityChange);
@@ -272,6 +274,34 @@ export function DarSalam() {
               <p className="mt-1 text-sm leading-relaxed text-muted">
                 ركّب من اليمين، نزّل الركاب، وخلّي بالك من البنزين والمطب والكمين.
               </p>
+
+              <details className="mt-4 rounded-xl border border-line bg-panel-2/60 p-3">
+                <summary className="cursor-pointer text-sm font-extrabold focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber">
+                  دليل الشوارع المثبتة ({STREET_ENTRANCES.length})
+                </summary>
+                <p className="mt-2 text-[11px] leading-relaxed text-muted">
+                  الترتيب داخل كل جانب حسب تأكيدك. لم نحدد بعد ترتيب المرور بين الجانبين أو موقع النزول الدقيق على الخريطة.
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  {(["left", "right"] as const).map((side) => (
+                    <section key={side} aria-label={side === "left" ? "الشوارع على الشمال" : "الشوارع على اليمين"}>
+                      <h2 className="mb-2 text-xs font-extrabold text-amber">
+                        {side === "left" ? "الشمال" : "اليمين"}
+                      </h2>
+                      <ol className="space-y-1 text-xs leading-relaxed">
+                        {STREET_ENTRANCES.filter((entry) => entry.side === side)
+                          .sort((a, b) => a.sideOrder - b.sideOrder)
+                          .map((entry) => (
+                            <li key={entry.side + "-" + entry.sideOrder} className="flex gap-1.5">
+                              <span className="tabular-nums text-muted">{entry.sideOrder}.</span>
+                              <span>{entry.name}</span>
+                            </li>
+                          ))}
+                      </ol>
+                    </section>
+                  ))}
+                </div>
+              </details>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {MODES.map((m) => (
