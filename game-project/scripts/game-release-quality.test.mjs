@@ -62,6 +62,13 @@ test("mobile performance budgets pedestrians and render pixel ratio", () => {
   assert.match(engine, /if \(!androidDevice\) buildStreetFurniture/);
 });
 
+test("opposing traffic collision checks road-aligned length and lane width", () => {
+  assert.match(engine, /wrongLongitudinalGap = Math\.abs\(wrapDelta\(w\.s, proj\.s, track\.total\)\)/);
+  assert.match(engine, /wrongLateralGap = Math\.abs\(w\.lat - proj\.lat\)/);
+  assert.match(engine, /wrongLongitudinalGap >= \(specNow\(\)\.length \+ wrongLength\) \* 0\.5/);
+  assert.match(engine, /wrongLateralGap >= \(specNow\(\)\.width \+ wrongWidth\) \* 0\.5 \+ 0\.18/);
+});
+
 test("steering input eases smoothly with a frame-rate-independent response", () => {
   assert.match(engine, /let steeringInput = 0/);
   assert.match(engine, /const steeringResponse = 1 - Math\.exp\(-dt \* 9\)/);
