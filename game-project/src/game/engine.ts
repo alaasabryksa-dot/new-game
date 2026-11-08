@@ -752,6 +752,7 @@ export function mountGame(
   let camMode = 1;
   let shake = 0;
   let steerVis = 0;
+  let steeringInput = 0;
   let wheelSpin = 0;
   let saveTick = 0;
   const npcs: Npc[] = [];
@@ -1186,7 +1187,11 @@ export function mountGame(
       steer = Math.max(-1, Math.min(1, err * 0.18 + dy * 1.4));
     }
 
-    steerVis = steer;
+    // Smooth steering input with a frame-rate-independent response so touch and keyboard
+    // controls do not snap the front end instantly between full lock and center.
+    const steeringResponse = 1 - Math.exp(-dt * 9);
+    steeringInput += (steer - steeringInput) * steeringResponse;
+    steerVis = steeringInput;
 
     if (phase === "play" || phase === "menu") {
       if (throttle > 0 && brake === 0) player.speed += spec.accel * throttle * (fuel <= 0 ? 0.35 : 1) * dt;
@@ -1204,7 +1209,7 @@ export function mountGame(
       const sp = Math.min(1, Math.abs(player.speed) / 8);
       const reverse = player.speed < -0.5 ? -1 : 1;
       const turnMul = 0.3 + 0.7 * sp;
-      player.yaw += steer * spec.turn * turnMul * reverse * dt * (Math.abs(player.speed) < 1 ? 0.82 : 1);
+      player.yaw += steeringInput * spec.turn * turnMul * reverse * dt * (Math.abs(player.speed) < 1 ? 0.82 : 1);
 
       const fx = -Math.sin(player.yaw);
       const fz = -Math.cos(player.yaw);
