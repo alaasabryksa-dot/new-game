@@ -1805,6 +1805,7 @@ function rollJobs(fromStop: number) {
       waitingPassengers: Math.max(0, waiting[targetI] ?? 0),
       seats: spec.seats,
       stopName: stop?.name ?? "",
+      stopSide: stop?.side ?? "right",
       stopDist: Math.max(0, Math.round(targetD)),
       hint,
       mode: cfg.mode,
