@@ -78,6 +78,16 @@ test("touch controls and game lifecycle retain focus-loss safeguards", () => {
   assert.match(engine, /window\.addEventListener\("keydown", onDown\)/);
 });
 
+test("visible traffic lights and NPC stopping share one signal cycle", () => {
+  assert.ok(engine.includes("const TRAFFIC_SIGNAL_CYCLE = 15"));
+  assert.ok(engine.includes("const TRAFFIC_RED_SECONDS = 7.5"));
+  assert.ok(engine.includes("const TRAFFIC_AMBER_SECONDS = 1.3"));
+  assert.ok(engine.includes("const signalCycle = trafficClock % TRAFFIC_SIGNAL_CYCLE"));
+  assert.ok(engine.includes("const cycle = time % TRAFFIC_SIGNAL_CYCLE"));
+  assert.ok(engine.includes("signalCycle < TRAFFIC_RED_SECONDS"));
+  assert.ok(engine.includes("cycle < TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS"));
+});
+
 test("the project has reproducible typecheck, test and production build scripts", () => {
   assert.equal(typeof packageJson.scripts.typecheck, "string");
   assert.equal(typeof packageJson.scripts.test, "string");
