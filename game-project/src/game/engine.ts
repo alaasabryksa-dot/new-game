@@ -136,7 +136,8 @@ function trafficGeoms(kind: VehicleId) {
   const wheels: THREE.BufferGeometry[] = [];
   const lights: THREE.BufferGeometry[] = [];
   const brakes: THREE.BufferGeometry[] = [];
-  const signals: THREE.BufferGeometry[] = [];
+  const signalsLeft: THREE.BufferGeometry[] = [];
+  const signalsRight: THREE.BufferGeometry[] = [];
   const wheel = () => {
     const g = new THREE.CylinderGeometry(0.34, 0.34, 0.22, 8);
     g.rotateZ(Math.PI / 2);
@@ -157,10 +158,10 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.2, 0.22, 0.08, 0.75, 0.95, 2.5));
     brakes.push(box(0.24, 0.2, 0.09, -0.75, 0.95, 2.5));
     brakes.push(box(0.24, 0.2, 0.09, 0.75, 0.95, 2.5));
-    signals.push(box(0.13, 0.13, 0.1, -0.98, 0.95, 2.5));
-    signals.push(box(0.13, 0.13, 0.1, 0.98, 0.95, 2.5));
-    signals.push(box(0.13, 0.13, 0.1, -0.98, 0.95, -2.4));
-    signals.push(box(0.13, 0.13, 0.1, 0.98, 0.95, -2.4));
+    signalsLeft.push(box(0.13, 0.13, 0.1, -0.98, 0.95, 2.5));
+    signalsRight.push(box(0.13, 0.13, 0.1, 0.98, 0.95, 2.5));
+    signalsLeft.push(box(0.13, 0.13, 0.1, -0.98, 0.95, -2.4));
+    signalsRight.push(box(0.13, 0.13, 0.1, 0.98, 0.95, -2.4));
     addW(-1.05, 0.36, -1.6, 1.05);
     addW(1.05, 0.36, -1.6, 1.05);
     addW(-1.05, 0.36, 1.5, 1.05);
@@ -185,10 +186,10 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.12, 0.12, 0.06, 0.45, 0.7, 1.15));
     brakes.push(box(0.16, 0.14, 0.07, -0.45, 0.7, 1.15));
     brakes.push(box(0.16, 0.14, 0.07, 0.45, 0.7, 1.15));
-    signals.push(box(0.11, 0.12, 0.08, -0.58, 0.72, 1.15));
-    signals.push(box(0.11, 0.12, 0.08, 0.58, 0.72, 1.15));
-    signals.push(box(0.11, 0.12, 0.08, -0.58, 0.72, -1.08));
-    signals.push(box(0.11, 0.12, 0.08, 0.58, 0.72, -1.08));
+    signalsLeft.push(box(0.11, 0.12, 0.08, -0.58, 0.72, 1.15));
+    signalsRight.push(box(0.11, 0.12, 0.08, 0.58, 0.72, 1.15));
+    signalsLeft.push(box(0.11, 0.12, 0.08, -0.58, 0.72, -1.08));
+    signalsRight.push(box(0.11, 0.12, 0.08, 0.58, 0.72, -1.08));
     addW(-0.62, 0.3, 0.55, 0.85);
     addW(0.62, 0.3, 0.55, 0.85);
     addW(0, 0.3, -0.85, 0.85);
@@ -200,10 +201,10 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.22, 0.18, 0.08, 0.8, 0.85, 4.95));
     brakes.push(box(0.28, 0.22, 0.09, -0.8, 0.85, 4.95));
     brakes.push(box(0.28, 0.22, 0.09, 0.8, 0.85, 4.95));
-    signals.push(box(0.14, 0.15, 0.1, -1.02, 0.85, 4.95));
-    signals.push(box(0.14, 0.15, 0.1, 1.02, 0.85, 4.95));
-    signals.push(box(0.14, 0.15, 0.1, -1.02, 0.85, -4.28));
-    signals.push(box(0.14, 0.15, 0.1, 1.02, 0.85, -4.28));
+    signalsLeft.push(box(0.14, 0.15, 0.1, -1.02, 0.85, 4.95));
+    signalsRight.push(box(0.14, 0.15, 0.1, 1.02, 0.85, 4.95));
+    signalsLeft.push(box(0.14, 0.15, 0.1, -1.02, 0.85, -4.28));
+    signalsRight.push(box(0.14, 0.15, 0.1, 1.02, 0.85, -4.28));
     addW(-1.15, 0.42, -3.3, 1.2);
     addW(1.15, 0.42, -3.3, 1.2);
     addW(-1.15, 0.42, 1.2, 1.2);
@@ -219,10 +220,10 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.22, 0.14, 0.06, 0.62, 0.72, 2.12));
     brakes.push(box(0.26, 0.18, 0.07, -0.62, 0.72, 2.12));
     brakes.push(box(0.26, 0.18, 0.07, 0.62, 0.72, 2.12));
-    signals.push(box(0.13, 0.13, 0.08, -0.88, 0.72, 2.12));
-    signals.push(box(0.13, 0.13, 0.08, 0.88, 0.72, 2.12));
-    signals.push(box(0.13, 0.13, 0.08, -0.88, 0.72, -2.12));
-    signals.push(box(0.13, 0.13, 0.08, 0.88, 0.72, -2.12));
+    signalsLeft.push(box(0.13, 0.13, 0.08, -0.88, 0.72, 2.12));
+    signalsRight.push(box(0.13, 0.13, 0.08, 0.88, 0.72, 2.12));
+    signalsLeft.push(box(0.13, 0.13, 0.08, -0.88, 0.72, -2.12));
+    signalsRight.push(box(0.13, 0.13, 0.08, 0.88, 0.72, -2.12));
     addW(-0.78, 0.32, -1.35);
     addW(0.78, 0.32, -1.35);
     addW(-0.78, 0.32, 1.28);
@@ -234,7 +235,8 @@ function trafficGeoms(kind: VehicleId) {
     wheels: merge(wheels),
     lights: merge(lights),
     brakes: merge(brakes),
-    signals: merge(signals),
+    signalsLeft: merge(signalsLeft),
+    signalsRight: merge(signalsRight),
   };
 }
 
@@ -617,7 +619,7 @@ export function mountGame(
   buildQuarter(scene, track);
   const signs: THREE.Mesh[] = [];
 
-  const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh; brakes: THREE.InstancedMesh; signals: THREE.InstancedMesh }>();
+  const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh; brakes: THREE.InstancedMesh; signalsLeft: THREE.InstancedMesh; signalsRight: THREE.InstancedMesh }>();
   const POOL = 64;
   const glassMat = new THREE.MeshStandardMaterial({ color: "#1c3c48", roughness: 0.18, metalness: 0.2 });
   const wheelMat = new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.7 });
@@ -640,7 +642,8 @@ export function mountGame(
       wheels: mk(ge.wheels, wheelMat),
       lights: mk(ge.lights, lightMat),
       brakes: mk(ge.brakes, brakeMat),
-      signals: mk(ge.signals, signalMat),
+      signalsLeft: mk(ge.signalsLeft, signalMat),
+      signalsRight: mk(ge.signalsRight, signalMat),
     });
   }
 
@@ -666,7 +669,8 @@ export function mountGame(
         p.wheels.setMatrixAt(i, dummy.matrix);
         p.lights.setMatrixAt(i, dummy.matrix);
         p.brakes.setMatrixAt(i, dummy.matrix);
-        p.signals.setMatrixAt(i, dummy.matrix);
+        p.signalsLeft.setMatrixAt(i, dummy.matrix);
+        p.signalsRight.setMatrixAt(i, dummy.matrix);
       }
     }
   };
@@ -1778,7 +1782,7 @@ export function mountGame(
       tuktuk: 0,
       truck: 0,
     };
-    const paintNpc = (kind: VehicleId, s: number, yaw: number, lat: number, color?: THREE.Color, braking = false) => {
+    const paintNpc = (kind: VehicleId, s: number, yaw: number, lat: number, color?: THREE.Color, braking = false, turnDirection = 0) => {
       const pool = pools.get(kind)!;
       const i = cursors[kind]++;
       if (i >= POOL) return;
@@ -1793,34 +1797,23 @@ export function mountGame(
       pool.glass.setMatrixAt(i, dummy.matrix);
       pool.wheels.setMatrixAt(i, dummy.matrix);
       pool.lights.setMatrixAt(i, dummy.matrix);
-      if (braking) {
-        pool.brakes.setMatrixAt(i, dummy.matrix);
-        pool.signals.setMatrixAt(i, dummy.matrix);
-      } else {
-        dummy.position.set(0, -30, 0);
-        dummy.scale.set(0, 0, 0);
-        dummy.updateMatrix();
-        pool.brakes.setMatrixAt(i, dummy.matrix);
-        dummy.position.set(sm.x + rx * lat, 0, sm.z + rz * lat);
-        dummy.rotation.set(0, yaw, 0);
-        dummy.scale.set(1, 1, 1);
-        dummy.updateMatrix();
-      }
       if (color) pool.body.setColorAt(i, color);
-      if (braking) pool.brakes.setMatrixAt(i, dummy.matrix);
-      if (color && npcs[cursors[kind] - 1]?.turning) pool.signals.setMatrixAt(i, dummy.matrix);
-      else {
+      const hidden = () => {
         dummy.position.set(0, -30, 0);
         dummy.scale.set(0, 0, 0);
         dummy.updateMatrix();
-        pool.signals.setMatrixAt(i, dummy.matrix);
-      }
+        return dummy.matrix;
+      };
+      pool.brakes.setMatrixAt(i, braking ? dummy.matrix : hidden());
+      const blinkOn = Math.floor(trafficClock * 3.2) % 2 === 0;
+      pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? dummy.matrix : hidden());
+      pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? dummy.matrix : hidden());
     };
 
     for (const n of npcs) {
       if (!n.alive) continue;
       const sm = track.sample(n.s);
-      paintNpc(n.kind, n.s, sm.yaw, laneLat(n.lane), n.color, n.braking);
+      paintNpc(n.kind, n.s, sm.yaw, laneLat(n.lane), n.color, n.braking, n.turning ? Math.sign(n.laneTarget - n.lane) : 0);
     }
     for (const w of wrongs) {
       const sm = track.sample(w.s);
@@ -1843,7 +1836,8 @@ export function mountGame(
       pool.wheels.instanceMatrix.needsUpdate = true;
       pool.lights.instanceMatrix.needsUpdate = true;
       pool.brakes.instanceMatrix.needsUpdate = true;
-      pool.signals.instanceMatrix.needsUpdate = true;
+      pool.signalsLeft.instanceMatrix.needsUpdate = true;
+      pool.signalsRight.instanceMatrix.needsUpdate = true;
       if (pool.body.instanceColor) pool.body.instanceColor.needsUpdate = true;
     }
 
