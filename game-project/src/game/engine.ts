@@ -2709,7 +2709,7 @@ function buildElectricalPoles(scene: THREE.Scene, track: Track) {
 function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
   // Compact Android-only street life: six instanced draw calls instead of the
   // richer desktop prop set. Keep props outside the drivable carriageway.
-  const props: Array<{ x: number; y: number; z: number; yaw: number; sx?: number; sy?: number; sz?: number }> = [];
+  type MobileProp = { x: number; y: number; z: number; yaw: number };
   const bins: THREE.Matrix4[] = [];
   const trees: THREE.Matrix4[] = [];
   const treeCrowns: THREE.Matrix4[] = [];
@@ -2719,7 +2719,7 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
   const cartCanopies: THREE.Matrix4[] = [];
   const benches: THREE.Matrix4[] = [];
   const o = new THREE.Object3D();
-  const put = (list: THREE.Matrix4[], p: typeof props[number], y: number, sx: number, sy: number, sz: number) => {
+  const put = (list: THREE.Matrix4[], p: MobileProp, y: number, sx: number, sy: number, sz: number) => {
     o.position.set(p.x, y, p.z);
     o.rotation.set(0, p.yaw, 0);
     o.scale.set(sx, sy, sz);
