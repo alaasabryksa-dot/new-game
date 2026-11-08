@@ -136,13 +136,11 @@ class MainActivity : Activity() {
         // Release any held driving input before Android backgrounds the Activity.
         webView?.evaluateJavascript("window.dispatchEvent(new Event('blur'))", null)
         webView?.onPause()
-        WebView.pauseTimers()
         super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
-        WebView.resumeTimers()
         webView?.onResume()
         window.decorView.post { hideSystemBars() }
     }
