@@ -236,7 +236,9 @@ test("mobile HUD exposes an in-game sound toggle", () => {
 test("cancelled touch gestures release every driving input", () => {
   assert.match(ui, /window\.addEventListener\("pointercancel", releaseInputs\)/);
   assert.match(ui, /window\.removeEventListener\("pointercancel", releaseInputs\)/);
-  assert.match(ui, /const releaseInputs = \(\) => \{[\s\S]*?holds\.current = \{ l: false, r: false, g: false, b: false \}/);
+  assert.match(ui, /const releaseInputs = \(\) => \{[\s\S]*?holds\.current\.l\.clear\(\)[\s\S]*?holds\.current\.r\.clear\(\)[\s\S]*?holds\.current\.g\.clear\(\)[\s\S]*?holds\.current\.b\.clear\(\)/);
+  assert.match(ui, /window\.addEventListener\("pointerup", onGlobalPointerUp\)/);
+  assert.match(ui, /window\.removeEventListener\("pointerup", onGlobalPointerUp\)/);
 });
 
 
@@ -318,6 +320,7 @@ test("Android backgrounding stops the render loop and safely restarts it on retu
 
 
 test("Android touch input remains active when pointer capture is unavailable", () => {
-  assert.match(ui, /holds\.current\[key\] = true;\s*syncTouch\(\);\s*try \{[\s\S]*?setPointerCapture\(e\.pointerId\)/);
+  assert.match(ui, /holds\.current\[key\]\.add\(e\.pointerId\);\s*syncTouch\(\);\s*try \{[\s\S]*?setPointerCapture\(e\.pointerId\)/);
+  assert.match(ui, /onPointerUp: \(e: ReactPointer<HTMLButtonElement>\) => \{[\s\S]*?delete\(e\.pointerId\)/);
   assert.match(ui, /Pointer capture is an enhancement; the touch control must still work/);
 });
