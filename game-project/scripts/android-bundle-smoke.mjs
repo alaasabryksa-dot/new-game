@@ -64,6 +64,16 @@ try {
     userAgent: "Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
   });
   const page = await context.newPage();
+  // Simulate the native Android bridge so this browser test also verifies the
+  // same GAME_READY signal that the emulator startup test waits for.
+  await page.addInitScript(() => {
+    window.__androidGameReady = false;
+    window.__androidStartupError = null;
+    window.AndroidDiagnostics = {
+      onGameReady: () => { window.__androidGameReady = true; },
+      onGameError: (message) => { window.__androidStartupError = String(message); },
+    };
+  });
   const pageErrors = [];
   const failedRequests = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -80,6 +90,8 @@ try {
   assert.equal(response?.status(), 200, "Android local entry must load from packaged assets");
   await page.getByText("توكتوك دار السلام", { exact: true }).waitFor({ timeout: 30000 });
   await page.waitForFunction(() => typeof window.__controlsTest?.getYaw === "function", null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__androidGameReady === true, null, { timeout: 30000 });
+  assert.equal(await page.evaluate(() => window.__androidStartupError), null, "Android bridge must not report a startup error");
   const graphics = await page.locator("canvas").first().evaluate((canvas) => ({
     width: canvas.width,
     height: canvas.height,
