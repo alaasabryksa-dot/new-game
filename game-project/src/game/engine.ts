@@ -59,6 +59,16 @@ const TRAFFIC_SIGNAL_CYCLE = 15;
 const TRAFFIC_RED_SECONDS = 7.5;
 const TRAFFIC_AMBER_SECONDS = 1.3;
 
+// Fine-grained traffic tuning keeps NPC behavior readable and predictable on phones.
+const NPC_DRIVING_TUNING = {
+  curveLookAhead: 9, curveLookBehind: 5, curveSlowdown: 7.5, curveYawScale: 0.72,
+  curveSpeedFloor: 0.62, curveSpeedCeiling: 1,
+  speedWaveA: 0.045, speedWaveB: 0.025, speedWaveC: 0.018,
+  speedWaveRateA: 0.11, speedWaveRateB: 0.047, speedWaveRateC: 0.19,
+  truckWaveScale: 0.45, microWaveScale: 0.72, tukTukWaveScale: 1.15, taxiWaveScale: 0.92,
+  signalLaneLock: 28, mergeSpeedFloor: 2.2, playerHornReactionRange: 26, curbApproachBuffer: 3.2,
+} as const;
+
 type Save = {
   v: 2;
   bestMoney: number;
@@ -1458,15 +1468,33 @@ export function mountGame(
     for (const n of npcs) {
       if (!n.alive) continue;
       const spec = vehicleById(n.kind);
-      let target = n.cruise;
+      // A stable per-vehicle speed signature avoids a synchronized, robotic convoy.
+      const kindWaveScale = n.kind === "truck" ? NPC_DRIVING_TUNING.truckWaveScale
+        : n.kind === "micro" ? NPC_DRIVING_TUNING.microWaveScale
+        : n.kind === "tuktuk" ? NPC_DRIVING_TUNING.tukTukWaveScale
+        : n.kind === "taxi" ? NPC_DRIVING_TUNING.taxiWaveScale : 1;
+      const speedSignature = n.s * NPC_DRIVING_TUNING.speedWaveRateA + trafficClock * NPC_DRIVING_TUNING.speedWaveRateB;
+      const speedVariation = 1
+        + Math.sin(speedSignature) * NPC_DRIVING_TUNING.speedWaveA * kindWaveScale
+        + Math.sin(n.s * NPC_DRIVING_TUNING.speedWaveRateC + trafficClock) * NPC_DRIVING_TUNING.speedWaveB
+        + Math.cos(n.s * 0.031 + trafficClock * 0.7) * NPC_DRIVING_TUNING.speedWaveC;
+      let target = n.cruise * speedVariation;
       const ahead = wrapDelta(n.s, proj.s, track.total);
+      // Ease vehicles through bends instead of carrying straight-road speed.
+      const curveAhead = track.sample(n.s + NPC_DRIVING_TUNING.curveLookAhead);
+      const curveBehind = track.sample(n.s - NPC_DRIVING_TUNING.curveLookBehind);
+      const curveYaw = Math.abs(wrapAngle(curveAhead.yaw - curveBehind.yaw));
+      const curveFactor = Math.max(NPC_DRIVING_TUNING.curveSpeedFloor,
+        Math.min(NPC_DRIVING_TUNING.curveSpeedCeiling,
+          1 - curveYaw * NPC_DRIVING_TUNING.curveSlowdown * NPC_DRIVING_TUNING.curveYawScale));
+      target *= curveFactor;
       if (n.kind === "micro") {
         n.stopTimer = Math.max(0, n.stopTimer - dt);
         for (let i = 0; i < track.stops.length; i++) {
           const d = wrapDelta(track.stops[i].s, n.s, track.total);
           // Microbuses in the curb-side lanes slow down and briefly wait at stops.
           if (n.lane > 1.5 && d > -12 && d < 38) {
-            const stopApproachSpeed = Math.min(3, Math.max(0, (d - 2.5) * 0.46));
+            const stopApproachSpeed = Math.min(3, Math.max(0, (d - NPC_DRIVING_TUNING.curbApproachBuffer) * 0.46));
             target = Math.min(target, stopApproachSpeed);
             if (d < 3.5 && d > -1.2 && n.stopAt !== i && n.stopTimer <= 0 && n.speed < 4.5) {
               n.stopAt = i;
@@ -1663,7 +1691,7 @@ export function mountGame(
 
       // Keep vehicles committed to their approach lane close to a signal.
       // This prevents late lane changes from cutting around a stopped queue.
-      if (nearestSignalDistance < 28) {
+      if (nearestSignalDistance < NPC_DRIVING_TUNING.signalLaneLock) {
         n.laneTarget = Math.round(n.lane);
       }
 
@@ -1831,7 +1859,7 @@ export function mountGame(
     if (hornCd > 0.72) {
       for (const n of npcs) {
         const gap = wrapDelta(n.s, proj.s, track.total);
-        if (gap > 0 && gap < 26 && Math.abs(laneLat(n.lane) - proj.lat) < 4.5) {
+        if (gap > 0 && gap < NPC_DRIVING_TUNING.playerHornReactionRange && Math.abs(laneLat(n.lane) - proj.lat) < 4.5) {
           n.laneTarget = proj.lat > laneLat(n.lane) ? Math.max(0, n.lane - 1) : Math.min(3, n.lane + 1);
         }
       }
