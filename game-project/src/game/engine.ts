@@ -3007,8 +3007,8 @@ function buildCity(scene: THREE.Scene, track: Track, mobile = false) {
   const mats: THREE.MeshStandardMaterial[] = [];
   const geos = new THREE.BoxGeometry(1, 1, 1);
   const meshes: THREE.InstancedMesh[] = [];
-  bases.forEach((hex) => {
-    const map = facadeTexture(hex);
+  bases.forEach((hex, variant) => {
+    const map = facadeTexture(hex, variant);
     const mat = new THREE.MeshStandardMaterial({
       color: "#ffffff",
       map: map ?? undefined,
