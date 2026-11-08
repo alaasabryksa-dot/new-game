@@ -289,11 +289,33 @@ export const RIGHT_SIDE_STOPS = [
   "شارع الحرية",
 ] as const;
 
-// Keep one passenger destination inventory while retaining the side-specific order
-// for later map-accurate placement. Cross-side interleaving still needs coordinates.
+// Interleave the user-confirmed left/right entrances in travel order from the bridge
+// toward Fayda Kamel. The user prioritizes a useful ordered route over survey-grade accuracy.
 export const STOP_NAMES = [
-  ...LEFT_SIDE_STOPS,
-  ...RIGHT_SIDE_STOPS,
+  "شارع حسن مطر",
+  "شارع أحمد عسلاقي",
+  "شارع محمد رزق",
+  "شارع محمد حسين مطر",
+  "كشري الدكتور",
+  "شارع أحمد محمود",
+  "شارع قدري الصياد",
+  "شارع أحمد المصري",
+  "شارع كمال عبد الحميد",
+  "شارع السيد أبو كريشة",
+  "شارع فهيم عبد الخالق",
+  "شارع أبو طالب",
+  "شارع تاج الدين عمرو",
+  "شارع علي زينهم",
+  "شارع أبو أشرف",
+  "شارع عبد الغفار عزيز",
+  "شارع عزت مطر",
+  "شارع أحمد زكي",
+  "شارع عبد القادر",
+  "شارع صالح عبدين",
+  "شارع أحمد متولي",
+  "شارع المشير",
+  "شارع إسماعيل الليثي",
+  "شارع الحرية",
   ...LEGACY_STOP_NAMES,
 ];
 export function vehicleById(id: VehicleId) {
