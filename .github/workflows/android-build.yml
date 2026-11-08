@@ -33,6 +33,15 @@ jobs:
         working-directory: game-project
         run: npm run build:android-web
 
+      - name: Verify Android web entry and local assets
+        run: |
+          set -euo pipefail
+          ASSETS="game-project/android/app/src/main/assets/public"
+          test -s "$ASSETS/android.html"
+          grep -q "assets/" "$ASSETS/android.html" || true
+          find "$ASSETS" -type f -printf '%s %p\\n' | sort -nr | head -20
+          test "$(find "$ASSETS" -type f | wc -l)" -gt 5
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -56,12 +65,14 @@ jobs:
         working-directory: game-project/android
         run: gradle --no-daemon :app:assembleDebug
 
-      - name: Verify APK package and signature
+      - name: Verify APK package, assets and signature
         run: |
           set -euo pipefail
           APK="game-project/android/app/build/outputs/apk/debug/app-debug.apk"
           test -s "$APK"
           unzip -t "$APK"
+          unzip -l "$APK" | grep -q "assets/public/android.html"
+          unzip -l "$APK" | grep -q "assets/public/assets/"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | tee apk-badging.txt
           grep -q "package: name='com.tuktok.darelsalam'" apk-badging.txt
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
@@ -94,8 +105,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -memory 3072 -cores 2 -camera-back none -camera-front none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -memory 3072 -cores 2
           emulator-boot-timeout: 900
           script: APK_PATH=artifacts/app-debug.apk bash .github/scripts/test-android-startup.sh
 
