@@ -29,9 +29,9 @@ test("storefront category palettes and adaptive Arabic sign typography are kept 
 });
 
 test("Android procedural frontage uses the denser commercial mix without claiming real shop identities", () => {
-  assert.match(engine, /const isShop = variation > 0\.24;/);
-  assert.match(engine, /real names stay out until verified/);
-  assert.match(engine, /plausible fictional local businesses/);
+  assert.match(engine, /const isShop = sideVariation > 0\.24;/);
+  assert.match(engine, /Alternate fictional commercial and residential ground floors/);
+  assert.match(engine, /const sideSeed = seed \+ \(side === 1 \? 7919 : 0\);/);
 });
 
 test("Android street facades vary independently by side and include lightweight rooftop water tanks", () => {
