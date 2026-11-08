@@ -68,11 +68,25 @@ export function DarSalam() {
         onGameError?: (message: string) => void;
       };
     }).AndroidDiagnostics;
-    const reportContextLoss = () => {
-      const message = "فقد محرك الرسوم اتصال WebGL 2 أثناء التشغيل";
+    const reportContextLoss = (event: Event) => {
+      // Allow Three.js to observe the loss and restore its WebGL resources.
+      event.preventDefault();
+      const message = "فقد محرك الرسوم اتصال WebGL 2 أثناء التشغيل — جارٍ محاولة الاستعادة";
       console.error(message);
       androidBridge?.onGameError?.(message);
       if (!dead) setStartupError(message);
+    };
+    const reportContextRestored = () => {
+      // Wait one browser frame for the restored context and Three.js renderer
+      // to become usable before clearing the recoverable error state.
+      requestAnimationFrame(() => {
+        if (dead) return;
+        const gl = canvas.getContext("webgl2");
+        if (!gl || gl.isContextLost()) return;
+        setStartupError(null);
+        setReady(true);
+        androidBridge?.onGameReady?.();
+      });
     };
     const releaseInputs = () => {
       holds.current = { l: false, r: false, g: false, b: false };
@@ -85,6 +99,7 @@ export function DarSalam() {
     window.addEventListener("pointercancel", releaseInputs);
     document.addEventListener("visibilitychange", onVisibilityChange);
     canvas.addEventListener("webglcontextlost", reportContextLoss);
+    canvas.addEventListener("webglcontextrestored", reportContextRestored);
     void import("@/game/engine")
       .then(({ mountGame }) => {
         if (dead) return;
@@ -137,6 +152,7 @@ export function DarSalam() {
       window.removeEventListener("pointercancel", releaseInputs);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       canvas.removeEventListener("webglcontextlost", reportContextLoss);
+      canvas.removeEventListener("webglcontextrestored", reportContextRestored);
       releaseInputs();
       handle?.dispose();
       gameRef.current = null;
