@@ -61,8 +61,8 @@ const TRAFFIC_RED_SECONDS = 7.5;
 const TRAFFIC_AMBER_SECONDS = 1.3;
 
 const DRIVING_FEEDBACK_TUNING = {
-  fuelIdleRate: 0.3,
-  fuelThrottleRate: 0.62,
+  fuelIdleRate: 0.2,
+  fuelThrottleRate: 0.4,
   passengerFuelLoadStep: 0.045,
   passengerFuelLoadCap: 0.24,
   speedFuelLoadCap: 0.35,
@@ -74,15 +74,15 @@ const DRIVING_FEEDBACK_TUNING = {
   collisionSpeedRetention: 0.58,
   collisionCooldown: 0.8,
   collisionFineThreshold: 4.2,
-  collisionFineAmount: 35,
+  collisionFineAmount: 25,
   collisionRushTimePenalty: 2,
   radarTriggerDistance: 19,
   radarCooldown: 8,
   radarRushTimePenalty: 1.5,
-  radarFineAmount: 70,
+  radarFineAmount: 45,
   tollApproachStart: -8,
   tollApproachEnd: 16,
-  tollFineAmount: 15,
+  tollFineAmount: 10,
   bumpTriggerDistance: 3.2,
   bumpSpeedThreshold: 9,
   bumpCooldown: 1.15,
@@ -218,6 +218,27 @@ function calculateShiftSettlement(earnings: number, wallet: number, rent: number
       ? safeWallet - (safeRent - safeEarnings)
       : safeWallet + safeEarnings;
   return { rentPaid, rentRemaining, walletAfter };
+}
+
+function calculateFuelBurnRate(
+  throttle: number,
+  moving: boolean,
+  speedRatio: number,
+  passengerCount: number,
+  fuelUpgrade: number,
+) {
+  const safeThrottle = Math.min(1, finiteNonNegative(throttle, 1));
+  const movingFactor = moving ? 1 : 0.08;
+  const efficiency = Math.max(0.42, 1 - clampLvl(fuelUpgrade) * 0.19);
+  const loadFactor = 1 + Math.min(
+    DRIVING_FEEDBACK_TUNING.passengerFuelLoadCap,
+    finiteNonNegative(passengerCount, 20) * DRIVING_FEEDBACK_TUNING.passengerFuelLoadStep,
+  );
+  const speedFactor = 1 + Math.min(
+    DRIVING_FEEDBACK_TUNING.speedFuelLoadCap,
+    finiteNonNegative(speedRatio, 2) * DRIVING_FEEDBACK_TUNING.speedFuelLoadCap,
+  );
+  return (DRIVING_FEEDBACK_TUNING.fuelIdleRate * movingFactor + safeThrottle * DRIVING_FEEDBACK_TUNING.fuelThrottleRate) * efficiency * loadFactor * speedFactor;
 }
 
 function calculatePassengerFare(hopCount: number, fareMultiplier: number) {
@@ -1731,11 +1752,13 @@ function rollJobs(fromStop: number) {
       DRIVING_FEEDBACK_TUNING.speedFuelLoadCap,
       estimateSpeed / Math.max(1, spec.max) * DRIVING_FEEDBACK_TUNING.speedFuelLoadCap,
     );
-    const estimateFuelRate =
-      (DRIVING_FEEDBACK_TUNING.fuelIdleRate + estimateThrottle * DRIVING_FEEDBACK_TUNING.fuelThrottleRate) *
-      Math.max(0.42, 1 - save.upgrades.fuel * 0.19) *
-      estimateLoad *
-      estimateSpeedFactor;
+    const estimateFuelRate = calculateFuelBurnRate(
+      estimateThrottle,
+      true,
+      estimateSpeed / Math.max(1, spec.max),
+      pax.length,
+      save.upgrades.fuel,
+    );
     const fuelRange = Math.max(0, Math.round((fuel / Math.max(0.01, estimateFuelRate) * estimateSpeed / 1000) * 10) / 10);
     let hint = "";
     if (phase === "play") {
@@ -1898,11 +1921,15 @@ function rollJobs(fromStop: number) {
       if (phase === "play") {
         if (along > 0) km += (along * dt) / 1000;
         time += dt;
-        const eff = Math.max(0.42, 1 - save.upgrades.fuel * 0.19);
-        const moving = Math.abs(player.speed) > 0.35 ? 1 : 0.08;
-        const loadFactor = pax.length > 0 ? 1 + Math.min(DRIVING_FEEDBACK_TUNING.passengerFuelLoadCap, pax.length * DRIVING_FEEDBACK_TUNING.passengerFuelLoadStep) : 1;
-        const speedFactor = 1 + Math.min(DRIVING_FEEDBACK_TUNING.speedFuelLoadCap, Math.abs(player.speed) / Math.max(1, spec.max) * DRIVING_FEEDBACK_TUNING.speedFuelLoadCap);
-        fuel -= (DRIVING_FEEDBACK_TUNING.fuelIdleRate * moving + throttle * DRIVING_FEEDBACK_TUNING.fuelThrottleRate) * eff * loadFactor * speedFactor * dt;
+        const moving = Math.abs(player.speed) > 0.35;
+        const fuelBurnRate = calculateFuelBurnRate(
+          throttle,
+          moving,
+          Math.abs(player.speed) / Math.max(1, spec.max),
+          pax.length,
+          save.upgrades.fuel,
+        );
+        fuel -= fuelBurnRate * dt;
         if (fuel < 0 || !Number.isFinite(fuel)) fuel = 0;
         fuelBeep = Math.max(0, fuelBeep - dt);
         if (fuel < DRIVING_FEEDBACK_TUNING.lowFuelBeepThreshold && fuelBeep <= 0) {
