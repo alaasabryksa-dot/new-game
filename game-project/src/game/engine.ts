@@ -1679,6 +1679,23 @@ function rollJobs(fromStop: number) {
       }
     }
     const gasStationDist = Math.round(forwardDist(track.gasS, proj.s));
+    // A conservative cruise estimate uses the same efficiency, passenger-load,
+    // and speed multipliers as the live fuel model. It is guidance, not a promise.
+    const estimateSpeed = Math.min(8, Math.max(4, spec.max * 0.5));
+    const estimateThrottle = 0.65;
+    const estimateLoad = pax.length > 0
+      ? 1 + Math.min(DRIVING_FEEDBACK_TUNING.passengerFuelLoadCap, pax.length * DRIVING_FEEDBACK_TUNING.passengerFuelLoadStep)
+      : 1;
+    const estimateSpeedFactor = 1 + Math.min(
+      DRIVING_FEEDBACK_TUNING.speedFuelLoadCap,
+      estimateSpeed / Math.max(1, spec.max) * DRIVING_FEEDBACK_TUNING.speedFuelLoadCap,
+    );
+    const estimateFuelRate =
+      (DRIVING_FEEDBACK_TUNING.fuelIdleRate + estimateThrottle * DRIVING_FEEDBACK_TUNING.fuelThrottleRate) *
+      Math.max(0.42, 1 - save.upgrades.fuel * 0.19) *
+      estimateLoad *
+      estimateSpeedFactor;
+    const fuelRange = Math.max(0, Math.round((fuel / Math.max(0.01, estimateFuelRate) * estimateSpeed / 1000) * 10) / 10);
     let hint = "";
     if (phase === "play") {
       const gasD = gasStationDist;
@@ -1723,6 +1740,7 @@ function rollJobs(fromStop: number) {
       message: messageT > 0 ? message : "",
       alert: alertT > 0 ? alert : null,
       fuel: Math.max(0, Math.min(100, fuel)),
+      fuelRange,
       gasStationDist,
       rent: RENT,
       shiftLeft: Math.max(0, SHIFT_SECONDS - time),
