@@ -2459,6 +2459,10 @@ function rollJobs(fromStop: number) {
       tuktuk: 0,
       truck: 0,
     };
+    // Reuse one invisible instance transform instead of allocating a closure
+    // and rewriting the shared dummy matrix for every hidden NPC lamp each frame.
+    const hiddenNpcMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+    hiddenNpcMatrix.setPosition(0, -30, 0);
     const paintNpc = (kind: VehicleId, s: number, yaw: number, lat: number, color?: THREE.Color, braking = false, turnDirection = 0) => {
       const pool = pools.get(kind)!;
       const i = cursors[kind]++;
@@ -2476,16 +2480,10 @@ function rollJobs(fromStop: number) {
       pool.wheels.setMatrixAt(i, vehicleMatrix);
       pool.lights.setMatrixAt(i, vehicleMatrix);
       if (color) pool.body.setColorAt(i, color);
-      const hidden = () => {
-        dummy.position.set(0, -30, 0);
-        dummy.scale.set(0, 0, 0);
-        dummy.updateMatrix();
-        return dummy.matrix;
-      };
-      pool.brakes.setMatrixAt(i, braking ? vehicleMatrix : hidden());
+      pool.brakes.setMatrixAt(i, braking ? vehicleMatrix : hiddenNpcMatrix);
       const blinkOn = Math.floor(trafficClock * 3.2) % 2 === 0;
-      pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? vehicleMatrix : hidden());
-      pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? vehicleMatrix : hidden());
+      pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? vehicleMatrix : hiddenNpcMatrix);
+      pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? vehicleMatrix : hiddenNpcMatrix);
     };
 
     for (const n of npcs) {
