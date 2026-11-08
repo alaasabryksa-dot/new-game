@@ -45,6 +45,7 @@ type Npc = {
   stopTimer: number;
   stopAt: number;
   color: THREE.Color;
+  braking: boolean;
   nextLane: number;
 };
 
@@ -133,6 +134,7 @@ function trafficGeoms(kind: VehicleId) {
   const glass: THREE.BufferGeometry[] = [];
   const wheels: THREE.BufferGeometry[] = [];
   const lights: THREE.BufferGeometry[] = [];
+  const brakes: THREE.BufferGeometry[] = [];
   const wheel = () => {
     const g = new THREE.CylinderGeometry(0.34, 0.34, 0.22, 8);
     g.rotateZ(Math.PI / 2);
@@ -151,6 +153,8 @@ function trafficGeoms(kind: VehicleId) {
     glass.push(box(1.7, 0.42, 2.2, 0, 1.78, 0.85));
     lights.push(box(0.2, 0.22, 0.08, -0.75, 0.95, 2.5));
     lights.push(box(0.2, 0.22, 0.08, 0.75, 0.95, 2.5));
+    brakes.push(box(0.24, 0.2, 0.09, -0.75, 0.95, 2.5));
+    brakes.push(box(0.24, 0.2, 0.09, 0.75, 0.95, 2.5));
     addW(-1.05, 0.36, -1.6, 1.05);
     addW(1.05, 0.36, -1.6, 1.05);
     addW(-1.05, 0.36, 1.5, 1.05);
@@ -173,6 +177,8 @@ function trafficGeoms(kind: VehicleId) {
     lights.push(box(0.2, 0.16, 0.07, 0.4, 0.82, -1.1));
     lights.push(box(0.12, 0.12, 0.06, -0.45, 0.7, 1.15));
     lights.push(box(0.12, 0.12, 0.06, 0.45, 0.7, 1.15));
+    brakes.push(box(0.16, 0.14, 0.07, -0.45, 0.7, 1.15));
+    brakes.push(box(0.16, 0.14, 0.07, 0.45, 0.7, 1.15));
     addW(-0.62, 0.3, 0.55, 0.85);
     addW(0.62, 0.3, 0.55, 0.85);
     addW(0, 0.3, -0.85, 0.85);
@@ -182,6 +188,8 @@ function trafficGeoms(kind: VehicleId) {
     glass.push(box(1.9, 0.55, 0.9, 0, 1.9, -3.55));
     lights.push(box(0.22, 0.18, 0.08, -0.8, 0.85, 4.95));
     lights.push(box(0.22, 0.18, 0.08, 0.8, 0.85, 4.95));
+    brakes.push(box(0.28, 0.22, 0.09, -0.8, 0.85, 4.95));
+    brakes.push(box(0.28, 0.22, 0.09, 0.8, 0.85, 4.95));
     addW(-1.15, 0.42, -3.3, 1.2);
     addW(1.15, 0.42, -3.3, 1.2);
     addW(-1.15, 0.42, 1.2, 1.2);
@@ -195,6 +203,8 @@ function trafficGeoms(kind: VehicleId) {
     glass.push(box(1.4, 0.36, 1.15, 0, 1.08, -0.15));
     lights.push(box(0.22, 0.14, 0.06, -0.62, 0.72, 2.12));
     lights.push(box(0.22, 0.14, 0.06, 0.62, 0.72, 2.12));
+    brakes.push(box(0.26, 0.18, 0.07, -0.62, 0.72, 2.12));
+    brakes.push(box(0.26, 0.18, 0.07, 0.62, 0.72, 2.12));
     addW(-0.78, 0.32, -1.35);
     addW(0.78, 0.32, -1.35);
     addW(-0.78, 0.32, 1.28);
@@ -205,6 +215,7 @@ function trafficGeoms(kind: VehicleId) {
     glass: merge(glass),
     wheels: merge(wheels),
     lights: merge(lights),
+    brakes: merge(brakes),
   };
 }
 
@@ -587,11 +598,12 @@ export function mountGame(
   buildQuarter(scene, track);
   const signs: THREE.Mesh[] = [];
 
-  const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh }>();
+  const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh; brakes: THREE.InstancedMesh }>();
   const POOL = 64;
   const glassMat = new THREE.MeshStandardMaterial({ color: "#1c3c48", roughness: 0.18, metalness: 0.2 });
   const wheelMat = new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.7 });
   const lightMat = new THREE.MeshStandardMaterial({ color: "#ff3030", emissive: "#ff2020", emissiveIntensity: 0.85 });
+  const brakeMat = new THREE.MeshStandardMaterial({ color: "#ff2525", emissive: "#ff1010", emissiveIntensity: 1.8 });
   for (const kind of KINDS) {
     const ge = trafficGeoms(kind);
     const bodyMat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.55, metalness: 0.08 });
@@ -607,6 +619,7 @@ export function mountGame(
       glass: mk(ge.glass, glassMat),
       wheels: mk(ge.wheels, wheelMat),
       lights: mk(ge.lights, lightMat),
+      brakes: mk(ge.brakes, brakeMat),
     });
   }
 
@@ -631,6 +644,7 @@ export function mountGame(
         p.glass.setMatrixAt(i, dummy.matrix);
         p.wheels.setMatrixAt(i, dummy.matrix);
         p.lights.setMatrixAt(i, dummy.matrix);
+        p.brakes.setMatrixAt(i, dummy.matrix);
       }
     }
   };
@@ -770,6 +784,7 @@ export function mountGame(
         stopTimer: 0,
         stopAt: -1,
         color: col,
+        braking: false,
         nextLane: 5 + (i % 7),
       });
     }
@@ -1328,6 +1343,7 @@ export function mountGame(
       // Allow a true standstill at red lights and in queues. Keep a small
       // physical buffer before the line so vehicles do not creep through it.
       n.speed = Math.max(0, n.speed);
+      n.braking = target < n.speed - 0.35 || n.stopTimer > 0 || (redStopDistance < 5 && n.speed < 2.5);
       if (redStopDistance < Infinity) {
         const room = Math.max(0, redStopDistance - 2.8);
         if (n.speed * dt > room) n.speed = room / Math.max(dt, 0.0001);
@@ -1738,7 +1754,7 @@ export function mountGame(
       tuktuk: 0,
       truck: 0,
     };
-    const paintNpc = (kind: VehicleId, s: number, yaw: number, lat: number, color?: THREE.Color) => {
+    const paintNpc = (kind: VehicleId, s: number, yaw: number, lat: number, color?: THREE.Color, braking = false) => {
       const pool = pools.get(kind)!;
       const i = cursors[kind]++;
       if (i >= POOL) return;
@@ -1753,13 +1769,25 @@ export function mountGame(
       pool.glass.setMatrixAt(i, dummy.matrix);
       pool.wheels.setMatrixAt(i, dummy.matrix);
       pool.lights.setMatrixAt(i, dummy.matrix);
+      if (braking) {
+        pool.brakes.setMatrixAt(i, dummy.matrix);
+      } else {
+        dummy.position.set(0, -30, 0);
+        dummy.scale.set(0, 0, 0);
+        dummy.updateMatrix();
+        pool.brakes.setMatrixAt(i, dummy.matrix);
+        dummy.position.set(sm.x + rx * lat, 0, sm.z + rz * lat);
+        dummy.rotation.set(0, yaw, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+      }
       if (color) pool.body.setColorAt(i, color);
     };
 
     for (const n of npcs) {
       if (!n.alive) continue;
       const sm = track.sample(n.s);
-      paintNpc(n.kind, n.s, sm.yaw, laneLat(n.lane), n.color);
+      paintNpc(n.kind, n.s, sm.yaw, laneLat(n.lane), n.color, n.braking);
     }
     for (const w of wrongs) {
       const sm = track.sample(w.s);
@@ -1775,11 +1803,13 @@ export function mountGame(
         pool.glass.setMatrixAt(i, dummy.matrix);
         pool.wheels.setMatrixAt(i, dummy.matrix);
         pool.lights.setMatrixAt(i, dummy.matrix);
+        pool.brakes.setMatrixAt(i, dummy.matrix);
       }
       pool.body.instanceMatrix.needsUpdate = true;
       pool.glass.instanceMatrix.needsUpdate = true;
       pool.wheels.instanceMatrix.needsUpdate = true;
       pool.lights.instanceMatrix.needsUpdate = true;
+      pool.brakes.instanceMatrix.needsUpdate = true;
       if (pool.body.instanceColor) pool.body.instanceColor.needsUpdate = true;
     }
 
