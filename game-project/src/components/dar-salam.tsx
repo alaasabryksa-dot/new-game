@@ -92,6 +92,16 @@ export function DarSalam() {
 
   const phase = snap?.phase ?? "menu";
 
+  useEffect(() => {
+    if (phase !== "summary") return;
+    // Native Android may show an interstitial only after a completed round.
+    // Browsers and offline/no-fill devices continue without any interruption.
+    const nativeAds = (window as Window & {
+      AndroidAds?: { showInterstitial?: () => void };
+    }).AndroidAds;
+    nativeAds?.showInterstitial?.();
+  }, [phase]);
+
   const syncTouch = () => {
     const h = holds.current;
     const steer = (h.l ? 1 : 0) + (h.r ? -1 : 0);
