@@ -1124,6 +1124,27 @@ export function mountGame(
   let hornCd = 0;
   let radarCd = 0;
   let tollLatch = false;
+  const CAMERA_TUNING = {
+    nearDistance: 6.5,
+    farDistance: 16,
+    defaultDistance: 11,
+    followHeight: 3.1,
+    heightPerMode: 0.45,
+    cockpitHeight: 1.35,
+    cockpitBackOffset: -1.15,
+    followSmoothing: 5.8,
+    menuSmoothingScale: 1.2,
+    lookAhead: 8,
+    cockpitLookAhead: 15,
+    lookHeight: 1.2,
+    cockpitLookHeight: 1.1,
+    defaultFov: 68,
+    cockpitFov: 78,
+    speedFovBoost: 7,
+    speedFovScale: 34,
+    shakePositionScale: 1.4,
+    shakeHeightScale: 1,
+  } as const;
   let camMode = 1;
   let shake = 0;
   let steerVis = 0;
@@ -2345,22 +2366,22 @@ function rollJobs(fromStop: number) {
     applyDusk(duskNow());
     const fwX = -Math.sin(player.yaw);
     const fwZ = -Math.cos(player.yaw);
-    const dist = camMode === 0 ? 6.5 : camMode === 2 ? 16 : camMode === 3 ? 0.2 : 11;
-    const height = camMode === 3 ? 1.35 : 3.1 + camMode * 0.45;
-    const back = camMode === 3 ? -1.15 : dist;
+    const dist = camMode === 0 ? CAMERA_TUNING.nearDistance : camMode === 2 ? CAMERA_TUNING.farDistance : camMode === 3 ? 0.2 : CAMERA_TUNING.defaultDistance;
+    const height = camMode === 3 ? CAMERA_TUNING.cockpitHeight : CAMERA_TUNING.followHeight + camMode * CAMERA_TUNING.heightPerMode;
+    const back = camMode === 3 ? CAMERA_TUNING.cockpitBackOffset : dist;
     desired.set(player.x - fwX * back, height, player.z - fwZ * back);
     if (shake > 0 && !reduceMotion) {
-      desired.x += (Math.random() - 0.5) * shake * 1.4;
-      desired.y += (Math.random() - 0.5) * shake;
+      desired.x += (Math.random() - 0.5) * shake * CAMERA_TUNING.shakePositionScale;
+      desired.y += (Math.random() - 0.5) * shake * CAMERA_TUNING.shakeHeightScale;
     }
-    const k = 1 - Math.exp(-5.8 * dt);
-    camPos.lerp(desired, phase === "menu" ? Math.min(1, k * 1.2) : k);
+    const k = 1 - Math.exp(-CAMERA_TUNING.followSmoothing * dt);
+    camPos.lerp(desired, phase === "menu" ? Math.min(1, k * CAMERA_TUNING.menuSmoothingScale) : k);
     camera.position.copy(camPos);
-    const lookAhead = camMode === 3 ? 15 : 8;
-    look.set(player.x + fwX * lookAhead, camMode === 3 ? 1.1 : 1.2, player.z + fwZ * lookAhead);
+    const lookAhead = camMode === 3 ? CAMERA_TUNING.cockpitLookAhead : CAMERA_TUNING.lookAhead;
+    look.set(player.x + fwX * lookAhead, camMode === 3 ? CAMERA_TUNING.cockpitLookHeight : CAMERA_TUNING.lookHeight, player.z + fwZ * lookAhead);
     camera.lookAt(look);
-    const base = camMode === 3 ? 78 : 68;
-    camera.fov = base + Math.min(1, Math.abs(player.speed) / 34) * 7;
+    const base = camMode === 3 ? CAMERA_TUNING.cockpitFov : CAMERA_TUNING.defaultFov;
+    camera.fov = base + Math.min(1, Math.abs(player.speed) / CAMERA_TUNING.speedFovScale) * CAMERA_TUNING.speedFovBoost;
     camera.updateProjectionMatrix();
 
     playerMesh.group.position.set(player.x, 0, player.z);
