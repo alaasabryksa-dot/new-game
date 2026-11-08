@@ -3163,6 +3163,63 @@ function buildRoad(scene: THREE.Scene, track: Track) {
   dashes.forEach((m, i) => dashMesh.setMatrixAt(i, m));
   scene.add(dashMesh);
 
+  // Road repairs and utility covers add small, grounded street details.
+  const patchMatrices: THREE.Matrix4[] = [];
+  const coverMatrices: THREE.Matrix4[] = [];
+  const patchObject = new THREE.Object3D();
+  const coverObject = new THREE.Object3D();
+  for (let i = 24; i < n; i += 31) {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const seed = Math.abs(Math.floor(Math.sin(i * 19.19 + p.x * 0.73) * 100000));
+    const side = seed % 2 === 0 ? -1 : 1;
+    patchObject.position.set(
+      p.x + rx * side * (3.2 + (seed % 4) * 0.65),
+      0.046,
+      p.z + rz * side * (3.2 + (seed % 4) * 0.65),
+    );
+    patchObject.rotation.set(0, p.yaw + (seed % 3) * 0.12, 0);
+    patchObject.scale.set(1.2 + (seed % 5) * 0.32, 1, 0.7 + (seed % 4) * 0.18);
+    patchObject.updateMatrix();
+    patchMatrices.push(patchObject.matrix.clone());
+    if (i % 3 === 0) {
+      coverObject.position.set(
+        p.x - rx * side * 5.6,
+        0.06,
+        p.z - rz * side * 5.6,
+      );
+      coverObject.rotation.set(0, p.yaw, 0);
+      coverObject.scale.set(1, 1, 1);
+      coverObject.updateMatrix();
+      coverMatrices.push(coverObject.matrix.clone());
+    }
+  }
+  const patchMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 0.012, 1),
+    new THREE.MeshStandardMaterial({ color: "#414345", roughness: 1 }),
+    Math.max(1, patchMatrices.length),
+  );
+  patchMatrices.forEach((matrix, index) => patchMesh.setMatrixAt(index, matrix));
+  patchMesh.count = patchMatrices.length;
+  const coverRim = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.48, 0.48, 0.035, 12),
+    new THREE.MeshStandardMaterial({ color: "#777a79", roughness: 0.84, metalness: 0.3 }),
+    Math.max(1, coverMatrices.length),
+  );
+  const coverCenter = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.37, 0.37, 0.04, 12),
+    new THREE.MeshStandardMaterial({ color: "#44494b", roughness: 0.9, metalness: 0.18 }),
+    Math.max(1, coverMatrices.length),
+  );
+  coverMatrices.forEach((matrix, index) => {
+    coverRim.setMatrixAt(index, matrix);
+    coverCenter.setMatrixAt(index, matrix);
+  });
+  coverRim.count = coverMatrices.length;
+  coverCenter.count = coverMatrices.length;
+  scene.add(patchMesh, coverRim, coverCenter);
+
   const bars: THREE.Matrix4[] = [];
   const bar = new THREE.Object3D();
   for (let i = 0; i < n; i += 2) {
