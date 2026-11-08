@@ -257,6 +257,8 @@ test("traffic signals are staggered per stop and NPCs obey each visible phase", 
   assert.match(engine, /time \+ signalIndex \* 2\.4/);
   assert.match(engine, /const stopCycle = \(trafficClock \+ stopIndex \* 2\.4\) % TRAFFIC_SIGNAL_CYCLE/);
   assert.match(engine, /nearestSignalCycle = stopCycle/);
+  assert.match(engine, /redStopDistance = Math\.min\(redStopDistance, distanceToLine\)/);
+  assert.match(engine, /if \(redStopDistance < Infinity\)/);
   assert.match(engine, /nearestSignalCycle >= TRAFFIC_RED_SECONDS \+ TRAFFIC_AMBER_SECONDS/);
   assert.match(engine, /greenElapsed = Math\.max\(0, nearestSignalCycle - releaseAt\)/);
 });
