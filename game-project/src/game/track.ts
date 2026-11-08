@@ -91,8 +91,8 @@ export function buildTrack(): Track {
   }
   const total = s;
 
-  // Provisional prototype placement: named Fayoum-side-street entrances are spaced evenly around the mapped loop.
-  // Names have public/local references, but their order and exact s positions are approximations pending field validation.
+  // Provisional prototype placement: gameplay pickup points, not surveyed or named street stops.
+  // Confirmed side-street entrance order is stored separately until exact positions are mapped.
   const stops = STOP_NAMES.map((name, i) => ({
     name,
     s: ((i + 0.06) / STOP_NAMES.length) * total,
