@@ -2063,12 +2063,14 @@ export function mountGame(
     }
   };
   const onBlur = () => pauseForInterruption();
+  const onPageHide = () => pauseForInterruption();
   const onVisibilityChange = () => {
     if (document.visibilityState === "hidden") pauseForInterruption();
   };
   window.addEventListener("keydown", onDown);
   window.addEventListener("keyup", onUp);
   window.addEventListener("blur", onBlur);
+  window.addEventListener("pagehide", onPageHide);
   document.addEventListener("visibilitychange", onVisibilityChange);
 
   function honk() {
@@ -2184,6 +2186,7 @@ export function mountGame(
       window.removeEventListener("keydown", onDown);
       window.removeEventListener("keyup", onUp);
       window.removeEventListener("blur", onBlur);
+      window.removeEventListener("pagehide", onPageHide);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       if (window.__controlsTest?.getYaw === (() => player.yaw) || window.__controlsTest) {
         delete window.__controlsTest;
