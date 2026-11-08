@@ -1333,22 +1333,23 @@ export function mountGame(
       }
       // Keep NPC stopping behavior synchronized with the visible signal heads.
       // Red: 0-7.5s, amber: 7.5-8.8s, green: remainder.
-      const signalCycle = trafficClock % TRAFFIC_SIGNAL_CYCLE;
-      const redLight = signalCycle < TRAFFIC_RED_SECONDS;
-      const amberLight = signalCycle >= TRAFFIC_RED_SECONDS
-        && signalCycle < TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS;
-      let redStopDistance = Infinity;
       let nearestSignalDistance = Infinity;
       let nearestSignalStopS = -1;
-      for (const stop of track.stops) {
+      let nearestSignalCycle = 0;
+      for (let stopIndex = 0; stopIndex < track.stops.length; stopIndex++) {
+        const stop = track.stops[stopIndex];
         const distanceToLine = wrapDelta(stop.s, n.s, track.total);
         if (distanceToLine <= 0 || distanceToLine > 38) continue;
+        const stopCycle = (trafficClock + stopIndex * 2.4) % TRAFFIC_SIGNAL_CYCLE;
+        const redLight = stopCycle < TRAFFIC_RED_SECONDS;
+        const amberLight = stopCycle >= TRAFFIC_RED_SECONDS
+          && stopCycle < TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS;
         if (distanceToLine < nearestSignalDistance) {
           nearestSignalDistance = distanceToLine;
           nearestSignalStopS = stop.s;
+          nearestSignalCycle = stopCycle;
         }
         if (redLight) {
-          redStopDistance = Math.min(redStopDistance, distanceToLine);
           const stoppingDistance = (n.speed * n.speed) / (2 * 3.1) + 3.2;
           const approachSpeed = distanceToLine > stoppingDistance
             ? Math.min(target, Math.sqrt(Math.max(0, 2 * 3.1 * (distanceToLine - 3.2))))
@@ -1363,7 +1364,7 @@ export function mountGame(
       }
       // Release a queue in sequence after green: vehicles closest to the line
       // move first, while following vehicles wait briefly for space to open.
-      if (!redLight && !amberLight && nearestSignalDistance < Infinity) {
+      if (nearestSignalCycle >= TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS && nearestSignalDistance < Infinity) {
         let queueAhead = 0;
         for (const other of npcs) {
           if (other === n || !other.alive || Math.abs(other.lane - n.lane) > 0.72) continue;
@@ -1373,7 +1374,7 @@ export function mountGame(
           }
         }
         const releaseAt = Math.min(14.2, 8.8 + queueAhead * 0.62);
-        const greenElapsed = Math.max(0, signalCycle - releaseAt);
+        const greenElapsed = Math.max(0, nearestSignalCycle - releaseAt);
         target = Math.min(target, greenElapsed <= 0 ? 0 : greenElapsed * 2.65);
       }
       // Follow traffic with a longer buffer for large vehicles and higher closing speeds.
@@ -2533,12 +2534,13 @@ function buildTrafficSignals(scene: THREE.Scene, track: Track) {
   }
 
   return (time: number) => {
-    const cycle = time % TRAFFIC_SIGNAL_CYCLE;
-    const active = cycle < TRAFFIC_RED_SECONDS
-      ? 0
-      : cycle < TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS ? 1 : 2;
-    for (const bulbs of heads) {
-      bulbs.forEach((bulb, index) => {
+    for (let headIndex = 0; headIndex < heads.length; headIndex++) {
+      const signalIndex = Math.floor(headIndex / 2);
+      const cycle = (time + signalIndex * 2.4) % TRAFFIC_SIGNAL_CYCLE;
+      const active = cycle < TRAFFIC_RED_SECONDS
+        ? 0
+        : cycle < TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS ? 1 : 2;
+      heads[headIndex].forEach((bulb, index) => {
         const material = bulb.material as THREE.MeshStandardMaterial;
         material.emissiveIntensity = index === active ? 1.8 : 0.06;
       });
