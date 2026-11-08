@@ -66,20 +66,27 @@ echo "$launch_output"
 echo "$launch_output" | grep -q "Starting: Intent" || fail_with_diagnostics "Android did not accept the Activity launch request"
 
 ready=0
-for attempt in $(seq 1 90); do
+process_seen=0
+for attempt in $(seq 1 120); do
   if adb logcat -d -s TuktokDarElsalam:I TuktokDarElsalam:E chromium:E AndroidRuntime:E | grep -q "GAME_READY"; then
     ready=1
     break
   fi
+
+  # Android may acknowledge am start before Zygote has created the app process.
+  # Allow startup time before treating an empty pidof result as a real exit.
   pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' || true)"
-  if [[ -z "$pid" ]]; then
+  if [[ -n "$pid" ]]; then
+    process_seen=1
+  elif [[ "$process_seen" -eq 1 ]]; then
     fail_with_diagnostics "Game process exited before GAME_READY"
   fi
   sleep 2
 done
 
 adb logcat -d -v threadtime -s TuktokDarElsalam:I TuktokDarElsalam:E chromium:E AndroidRuntime:E
-[[ "$ready" -eq 1 ]] || fail_with_diagnostics "WebView did not report GAME_READY within 180 seconds"
+[[ "$process_seen" -eq 1 ]] || fail_with_diagnostics "Game process did not appear within 240 seconds after launch"
+[[ "$ready" -eq 1 ]] || fail_with_diagnostics "WebView did not report GAME_READY within 240 seconds"
 
 pid="$(adb shell pidof "$PACKAGE" 2>/dev/null | tr -d '\r' || true)"
 [[ -n "$pid" ]] || fail_with_diagnostics "Game process exited after GAME_READY"
