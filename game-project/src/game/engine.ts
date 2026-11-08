@@ -1271,6 +1271,11 @@ const POOL = androidDevice ? 20 : 64;
   let mapDrawClock = 0.1;
   let raf = 0;
   let running = true;
+  // Adapt render resolution on sustained slow frames, then recover gradually.
+  // This changes only pixel density; simulation and physics remain fixed at 60 Hz.
+  let adaptivePixelScale = 1;
+  let slowFrameSeconds = 0;
+  let smoothFrameSeconds = 0;
 
   const placeOn = (s: number, lane: number) => {
     const sm = track.sample(s);
@@ -2643,8 +2648,29 @@ function rollJobs(fromStop: number) {
       raf = 0;
       return;
     }
-    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
+    const rawFrameSeconds = Math.max(0, (now - last) / 1000);
+    const dt = Math.min(0.05, rawFrameSeconds);
     last = now;
+    if (androidDevice || (navigator.hardwareConcurrency || 4) <= 4) {
+      if (rawFrameSeconds > 0.034) {
+        slowFrameSeconds += Math.min(rawFrameSeconds, 0.1);
+        smoothFrameSeconds = 0;
+      } else {
+        smoothFrameSeconds += rawFrameSeconds;
+        slowFrameSeconds = Math.max(0, slowFrameSeconds - rawFrameSeconds * 0.35);
+      }
+      if (slowFrameSeconds >= 2 && adaptivePixelScale > 0.72) {
+        adaptivePixelScale = Math.max(0.72, adaptivePixelScale - 0.08);
+        slowFrameSeconds = 0;
+        smoothFrameSeconds = 0;
+        resize();
+      } else if (smoothFrameSeconds >= 14 && adaptivePixelScale < 1) {
+        adaptivePixelScale = Math.min(1, adaptivePixelScale + 0.04);
+        slowFrameSeconds = 0;
+        smoothFrameSeconds = 0;
+        resize();
+      }
+    }
     acc += dt;
     let steps = 0;
     while (acc >= 1 / 60 && steps < 5) {
@@ -2677,7 +2703,9 @@ function rollJobs(fromStop: number) {
       : coarsePointer
         ? (constrainedDevice ? 1.0 : 1.2)
         : (constrainedDevice ? 1.35 : 1.6);
-    const dpr = Math.max(androidDevice ? 0.65 : 0.75, Math.min(window.devicePixelRatio || 1, androidDevice ? 0.7 : pixelRatioCap));
+    const baseDpr = Math.min(window.devicePixelRatio || 1, androidDevice ? 0.7 : pixelRatioCap);
+    const dprFloor = androidDevice ? 0.5 : 0.65;
+    const dpr = Math.max(dprFloor, baseDpr * adaptivePixelScale);
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
