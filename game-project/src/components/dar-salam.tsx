@@ -48,7 +48,7 @@ export function DarSalam() {
   const viewRef = useRef<HTMLCanvasElement>(null);
   const mapRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<GameHandle | null>(null);
-  const holds = useRef({ l: false, r: false, g: false, b: false });
+  const holds = useRef({ l: new Set<number>(), r: new Set<number>(), g: new Set<number>(), b: new Set<number>() });
   const [ready, setReady] = useState(false);
   const [startupError, setStartupError] = useState<string | null>(null);
   const [cfg, setCfg] = useState<PreviewCfg>(INITIAL);
@@ -89,14 +89,34 @@ export function DarSalam() {
       });
     };
     const releaseInputs = () => {
-      holds.current = { l: false, r: false, g: false, b: false };
+      holds.current.l.clear();
+      holds.current.r.clear();
+      holds.current.g.clear();
+      holds.current.b.clear();
       gameRef.current?.setTouch({ steer: 0, throttle: 0, brake: 0 });
+    };
+    // Pointer capture is not reliable in every Android WebView. Track each
+    // active pointer globally so releasing outside a control cannot leave it held.
+    const onGlobalPointerUp = (event: PointerEvent) => {
+      const h = holds.current;
+      const changed =
+        h.l.delete(event.pointerId) ||
+        h.r.delete(event.pointerId) ||
+        h.g.delete(event.pointerId) ||
+        h.b.delete(event.pointerId);
+      if (!changed) return;
+      gameRef.current?.setTouch({
+        steer: (h.l.size ? 1 : 0) + (h.r.size ? -1 : 0),
+        throttle: h.g.size ? 1 : 0,
+        brake: h.b.size ? 1 : 0,
+      });
     };
     const onVisibilityChange = () => {
       if (document.visibilityState === "hidden") releaseInputs();
     };
     window.addEventListener("blur", releaseInputs);
     window.addEventListener("pointercancel", releaseInputs);
+    window.addEventListener("pointerup", onGlobalPointerUp);
     document.addEventListener("visibilitychange", onVisibilityChange);
     canvas.addEventListener("webglcontextlost", reportContextLoss);
     canvas.addEventListener("webglcontextrestored", reportContextRestored);
@@ -150,6 +170,7 @@ export function DarSalam() {
       if (readyFrame2) cancelAnimationFrame(readyFrame2);
       window.removeEventListener("blur", releaseInputs);
       window.removeEventListener("pointercancel", releaseInputs);
+      window.removeEventListener("pointerup", onGlobalPointerUp);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       canvas.removeEventListener("webglcontextlost", reportContextLoss);
       canvas.removeEventListener("webglcontextrestored", reportContextRestored);
@@ -168,11 +189,11 @@ export function DarSalam() {
 
   const syncTouch = () => {
     const h = holds.current;
-    const steer = (h.l ? 1 : 0) + (h.r ? -1 : 0);
+    const steer = (h.l.size ? 1 : 0) + (h.r.size ? -1 : 0);
     gameRef.current?.setTouch({
       steer,
-      throttle: h.g ? 1 : 0,
-      brake: h.b ? 1 : 0,
+      throttle: h.g.size ? 1 : 0,
+      brake: h.b.size ? 1 : 0,
     });
   };
 
@@ -180,7 +201,7 @@ export function DarSalam() {
     onPointerDown: (e: ReactPointer<HTMLButtonElement>) => {
       e.preventDefault();
       // Engage the control even if an older Android WebView rejects pointer capture.
-      holds.current[key] = true;
+      holds.current[key].add(e.pointerId);
       syncTouch();
       try {
         if (typeof e.currentTarget.setPointerCapture === "function") {
@@ -190,16 +211,16 @@ export function DarSalam() {
         // Pointer capture is an enhancement; the touch control must still work.
       }
     },
-    onPointerUp: () => {
-      holds.current[key] = false;
+    onPointerUp: (e: ReactPointer<HTMLButtonElement>) => {
+      holds.current[key].delete(e.pointerId);
       syncTouch();
     },
-    onPointerCancel: () => {
-      holds.current[key] = false;
+    onPointerCancel: (e: ReactPointer<HTMLButtonElement>) => {
+      holds.current[key].delete(e.pointerId);
       syncTouch();
     },
-    onLostPointerCapture: () => {
-      holds.current[key] = false;
+    onLostPointerCapture: (e: ReactPointer<HTMLButtonElement>) => {
+      holds.current[key].delete(e.pointerId);
       syncTouch();
     },
   });
