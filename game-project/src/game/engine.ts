@@ -2577,8 +2577,25 @@ function buildCity(scene: THREE.Scene, track: Track) {
   const shopGlass = new THREE.InstancedMesh(shopGlassGeo, shopGlassMat, 100);
   // A portion of shops use closed ribbed metal shutters instead of display glazing.
   const shutterGeo = new THREE.BoxGeometry(0.1, 1.62, 1.42);
+  // Procedural horizontal slats make the closed shutters read as ribbed metal at street distance.
+  const shutterCanvas = document.createElement("canvas");
+  shutterCanvas.width = 128;
+  shutterCanvas.height = 256;
+  const shutterContext = shutterCanvas.getContext("2d");
+  if (shutterContext) {
+    shutterContext.fillStyle = "#858a89";
+    shutterContext.fillRect(0, 0, 128, 256);
+    for (let y = 0; y < 256; y += 12) {
+      shutterContext.fillStyle = y % 24 === 0 ? "#626a6b" : "#a5aaa7";
+      shutterContext.fillRect(0, y, 128, 3);
+      shutterContext.fillStyle = "#454d50";
+      shutterContext.fillRect(0, y + 4, 128, 2);
+    }
+  }
+  const shutterTexture = new THREE.CanvasTexture(shutterCanvas);
+  shutterTexture.colorSpace = THREE.SRGBColorSpace;
   const shutterMat = new THREE.MeshStandardMaterial({
-    color: "#777b7b", metalness: 0.62, roughness: 0.7,
+    color: "#ffffff", map: shutterTexture, metalness: 0.62, roughness: 0.7,
   });
   const shopShutters = new THREE.InstancedMesh(shutterGeo, shutterMat, 100);
   const shopDoorGeo = new THREE.BoxGeometry(0.14, 1.9, 0.72);
