@@ -23,6 +23,7 @@
 - The minimap now distinguishes passenger drop-off destinations from ordinary pickup points, while retaining the active rush-delivery marker.
 - The passenger HUD now identifies the nearest upcoming onboard drop-off and its forward route distance, so the driver can prepare for the next stop without guessing from the passenger list.
 - When fuel falls to 35% or below, the driving HUD displays the forward route distance to the next gas-station pass, rather than the shortest geometric distance that could point backward after passing it.
+- The low-fuel HUD now also shows a conservative estimated remaining range in kilometres, calculated from the same fuel-efficiency upgrade, passenger-load, and speed multipliers used by the live fuel model; the estimate is labelled as approximate.
 - Stop approach prompts now distinguish drop-off-only stops, pickup-only stops, and stops that serve both actions; the prompt no longer incorrectly describes every passenger stop as a pickup.
 - Pedestrian avoidance now uses elapsed-time exponential smoothing with a clamped frame delta, so sidewalk retreat remains consistent across different frame rates and cannot jump after a long suspended frame.
 - Resuming with the Escape key now follows the same lifecycle as the on-screen resume control: it resets the frame clock and unlocks audio from the user gesture, preventing a silent resume or stale-frame catch-up. Escape is handled globally even when a menu button retains focus.
