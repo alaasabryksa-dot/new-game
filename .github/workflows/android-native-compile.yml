@@ -1,0 +1,59 @@
+name: Verify native Android source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "game-project/android/**"
+      - "game-project/src/components/dar-salam.tsx"
+      - "game-project/scripts/android-release-hardening.test.mjs"
+      - ".github/workflows/android-native-compile.yml"
+  pull_request:
+    paths:
+      - "game-project/android/**"
+      - "game-project/src/components/dar-salam.tsx"
+      - "game-project/scripts/android-release-hardening.test.mjs"
+      - ".github/workflows/android-native-compile.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-native-android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game-project/android
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "8.13"
+
+      # Compile and process the native project without assembling an APK/AAB.
+      # Packaging and emulator/device validation remain behind the user's release approval.
+      - name: Compile Kotlin and process Android manifest
+        run: gradle --no-daemon --stacktrace :app:compileDebugKotlin :app:processDebugManifest
+
+      - name: Confirm this check did not package an APK
+        run: |
+          if find app/build/outputs -type f \\( -name "*.apk" -o -name "*.aab" \\) -print -quit | grep -q .; then
+            echo "Unexpected Android package output in compile-only verification"
+            exit 1
+          fi
