@@ -580,12 +580,23 @@ export function mountGame(
   map: HTMLCanvasElement,
   onHud: (h: Hud) => void,
 ): GameHandle {
+  const androidDevice = /Android/i.test(navigator.userAgent);
   const track = buildTrack();
   const save = loadSave();
   const sfx = new Sfx();
   sfx.on = save.sound;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "low-power", failIfMajorPerformanceCaveat: false });
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: false,
+    alpha: false,
+    powerPreference: "low-power",
+    failIfMajorPerformanceCaveat: false,
+    precision: "mediump",
+    depth: true,
+    stencil: false,
+    preserveDrawingBuffer: false,
+  });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor("#9ec9e8");
   const scene = new THREE.Scene();
@@ -609,18 +620,18 @@ export function mountGame(
   buildCrosswalks(scene, track);
   const animateTrafficSignals = buildTrafficSignals(scene, track);
   buildStreetSigns(scene, track);
-  buildElectricalPoles(scene, track);
+  if (!androidDevice) buildElectricalPoles(scene, track);
   const buildings = buildCity(scene, track);
-  buildRooftopLife(scene, track);
+  if (!androidDevice) buildRooftopLife(scene, track);
   const lamps = buildLamps(scene, track);
-  buildStreetFurniture(scene, track);
-  const animatePedestrians = buildPedestrians(scene, track);
-  buildGantries(scene, track);
+  if (!androidDevice) buildStreetFurniture(scene, track);
+  const animatePedestrians = androidDevice ? (() => undefined) : buildPedestrians(scene, track);
+  if (!androidDevice) buildGantries(scene, track);
   buildQuarter(scene, track);
   const signs: THREE.Mesh[] = [];
 
   const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh; brakes: THREE.InstancedMesh; signalsLeft: THREE.InstancedMesh; signalsRight: THREE.InstancedMesh }>();
-  const POOL = 64;
+  const POOL = androidDevice ? 24 : 64;
   const glassMat = new THREE.MeshStandardMaterial({ color: "#1c3c48", roughness: 0.18, metalness: 0.2 });
   const wheelMat = new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.7 });
   const lightMat = new THREE.MeshStandardMaterial({ color: "#ff3030", emissive: "#ff2020", emissiveIntensity: 0.85 });
@@ -649,7 +660,7 @@ export function mountGame(
 
   const dummy = new THREE.Object3D();
   const tukColor = new THREE.Color("#d4654a");
-  const PEOPLE = 80;
+  const PEOPLE = androidDevice ? 24 : 80;
   const people = new THREE.InstancedMesh(
     new THREE.CapsuleGeometry(0.22, 0.5, 4, 7),
     new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.78 }),
@@ -1980,9 +1991,11 @@ export function mountGame(
     const constrainedDevice =
       (device.hardwareConcurrency || 4) <= 4 || (device.deviceMemory ?? 4) <= 3;
     const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
-    const pixelRatioCap = coarsePointer
-      ? (constrainedDevice ? 1.0 : 1.2)
-      : (constrainedDevice ? 1.35 : 1.6);
+    const pixelRatioCap = androidDevice
+      ? 0.85
+      : coarsePointer
+        ? (constrainedDevice ? 1.0 : 1.2)
+        : (constrainedDevice ? 1.35 : 1.6);
     const dpr = Math.max(0.75, Math.min(window.devicePixelRatio || 1, pixelRatioCap));
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
