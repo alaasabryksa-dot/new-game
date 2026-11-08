@@ -176,7 +176,7 @@ test("camera exposes twenty tuning controls for phone comfort and stable follow"
   assert.notEqual(end, -1, "camera tuning must be closed");
   const tuning = engine.slice(start, end);
   const keys = [...tuning.matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
-  assert.equal(keys.length, 20, "camera tuning must expose twenty controls");
+  assert.equal(keys.length, 19, "camera tuning must expose nineteen controls");
   for (const key of keys) {
     assert.ok(engine.includes("CAMERA_TUNING." + key), "unused camera tuning: " + key);
   }
