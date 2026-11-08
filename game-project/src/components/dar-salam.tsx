@@ -532,7 +532,7 @@ function PlayHud({
           className="rounded-full bg-panel/90 p-3"
           aria-label={snap.phase === "pause" ? "استئناف القيادة" : "إيقاف مؤقت"}
           title={snap.phase === "pause" ? "استئناف القيادة" : "إيقاف مؤقت"}
-          onClick={() => (snap.phase === "pause" ? game.current?.resume() : game.current?.pause())
+          onClick={() => (snap.phase === "pause" ? game.current?.resume() : game.current?.pause())}
         >
           {snap.phase === "pause" ? <Play className="size-5" /> : <Pause className="size-5" />}
         </button>
