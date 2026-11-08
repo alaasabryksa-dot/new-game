@@ -1536,7 +1536,7 @@ export function mountGame(
       if (ahead < -35 || ahead > 320) {
         n.s = proj.s + 190 + Math.random() * 150;
         const safeLanes = [0, 1, 2, 3].filter((lane) => {
-          if (Math.abs(lane - playerLane) < 0.72 && wrapDelta(proj.s, n.s, track.total) < 45) return false;
+          if (Math.abs(lane - playerLane) < 0.72 && Math.abs(wrapDelta(proj.s, n.s, track.total)) < 45) return false;
           return npcs.every((other) => other === n || !other.alive
             || Math.abs(other.lane - lane) > 0.68
             || Math.abs(wrapDelta(other.s, n.s, track.total)) > 22 + spec.length);
