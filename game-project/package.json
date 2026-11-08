@@ -20,7 +20,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "osm:fayoum": "node scripts/fetch-fayoum-osm.mjs",
-    "test:browser": "node scripts/game-browser-smoke.mjs"
+    "test:browser": "node scripts/game-browser-smoke.mjs",
+    "build:android-web": "vite build --config vite.android.config.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",
