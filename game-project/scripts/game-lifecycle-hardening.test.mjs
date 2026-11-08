@@ -29,3 +29,9 @@ test("WebGL context loss is recoverable and the restoration listener is cleaned 
   assert.match(ui, /addEventListener\("webglcontextrestored", reportContextRestored\)/);
   assert.match(ui, /removeEventListener\("webglcontextrestored", reportContextRestored\)/);
 });
+
+test("stop crowds respect the total InstancedMesh capacity on Android", () => {
+  assert.match(engine, /for \(let sIdx = 0; sIdx < track\.stops\.length && i < PEOPLE; sIdx\+\+\)/);
+  assert.match(engine, /Math\.min\(8, waiting\[sIdx\] \?\? 0, PEOPLE - i\)/);
+  assert.match(engine, /for \(let k = 0; k < n && i < PEOPLE; k\+\+\)/);
+});
