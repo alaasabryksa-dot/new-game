@@ -4600,7 +4600,15 @@ function buildPedestrians(scene: THREE.Scene, track: Track, mobile = false): (ti
     });
   }
 
+  let previousUpdateTime: number | null = null;
   return (time: number, playerX: number, playerZ: number) => {
+    // Exponential smoothing makes avoidance respond consistently at 30, 60,
+    // and variable WebView frame rates instead of depending on frame count.
+    const elapsed = previousUpdateTime == null
+      ? 1 / 60
+      : THREE.MathUtils.clamp(time - previousUpdateTime, 0, 0.1);
+    previousUpdateTime = time;
+    const avoidanceBlend = 1 - Math.exp(-PEDESTRIAN_TUNING.avoidanceResponse * 60 * elapsed);
     walkers.forEach((walker, index) => {
       const pausePhase = (time + walker.phase) % PEDESTRIAN_TUNING.pauseCycleSeconds;
       const pauseBlend = THREE.MathUtils.smoothstep(
@@ -4630,8 +4638,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track, mobile = false): (ti
         1,
       );
       const targetAvoidance = proximity * proximity * PEDESTRIAN_TUNING.playerAvoidanceDistance;
-      walker.avoidanceOffset += (targetAvoidance - walker.avoidanceOffset) *
-        PEDESTRIAN_TUNING.avoidanceResponse;
+      walker.avoidanceOffset += (targetAvoidance - walker.avoidanceOffset) * avoidanceBlend;
       const safeOffset = baseOffset + walker.avoidanceOffset;
       const x = p.x + rx * walker.side * safeOffset;
       const z = p.z + rz * walker.side * safeOffset;
