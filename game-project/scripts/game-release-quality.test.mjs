@@ -359,6 +359,24 @@ test("shift settlement preserves earnings when rent cannot yet be fully paid", (
   assert.match(engine, /if \(save\.wallet >= RENT - money\)[\s\S]*?save\.wallet -= RENT - money/);
 });
 
+test("shift settlement math preserves money across paid, partial and overpaid rent cases", () => {
+  const match = engine.match(/function calculateShiftSettlement\(earnings: number, wallet: number, rent: number\): ShiftSettlement \{([\\s\\S]*?)\\n\}/);
+  assert.ok(match, "pure settlement calculation must remain independently testable");
+  const calculate = new Function("finiteNonNegative", match[1] + "\\nreturn { rentPaid, rentRemaining, walletAfter };");
+  const finite = (value, max = 1_000_000_000) => {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(parsed)) return 0;
+    return Math.min(max, Math.max(0, parsed));
+  };
+  const settle = (earnings, wallet, rent) => calculate(finite, earnings, wallet, rent);
+  assert.deepEqual(settle(200, 30, 160), { rentPaid: 160, rentRemaining: 0, walletAfter: 70 });
+  assert.deepEqual(settle(100, 100, 160), { rentPaid: 160, rentRemaining: 0, walletAfter: 40 });
+  assert.deepEqual(settle(70, 20, 160), { rentPaid: 90, rentRemaining: 70, walletAfter: 90 });
+  assert.deepEqual(settle(0, 0, 160), { rentPaid: 0, rentRemaining: 160, walletAfter: 0 });
+  assert.deepEqual(settle(-50, 100, 160), { rentPaid: 100, rentRemaining: 60, walletAfter: 100 });
+  assert.deepEqual(settle(Number.NaN, 100, 160), { rentPaid: 100, rentRemaining: 60, walletAfter: 100 });
+});
+
 test("shift summary reports exact rent paid, remaining balance and wallet delta", () => {
   assert.match(engine, /let walletAtRunStart = save\.wallet/);
   assert.match(engine, /settlementRentPaid = Math\.min\(RENT, availableForRent\)/);
