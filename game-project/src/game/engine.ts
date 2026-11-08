@@ -3211,12 +3211,14 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     cartBodyMatrices.length,
   );
   cartBodyMatrices.forEach((m, i) => cartBodies.setMatrixAt(i, m));
+  cartBodies.instanceMatrix.needsUpdate = true;
   const cartTops = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1.12, 0.12, 0.84),
     new THREE.MeshStandardMaterial({ color: "#c9b28b", roughness: 0.82 }),
     cartTopMatrices.length,
   );
   cartTopMatrices.forEach((m, i) => cartTops.setMatrixAt(i, m));
+  cartTops.instanceMatrix.needsUpdate = true;
   const cartCanopies = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1.18, 0.1, 0.96),
     new THREE.MeshStandardMaterial({ color: "#b6533f", roughness: 0.9 }),
@@ -3224,12 +3226,14 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   );
   cartCanopyMatrices.forEach((m, i) => cartCanopies.setMatrixAt(i, m));
   cartCanopies.count = cartCanopyMatrices.length;
+  cartCanopies.instanceMatrix.needsUpdate = true;
   const cartWheels = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.16, 0.16, 0.09, 8),
     new THREE.MeshStandardMaterial({ color: "#343638", roughness: 0.78 }),
     cartWheelMatrices.length,
   );
   cartWheelMatrices.forEach((m, i) => cartWheels.setMatrixAt(i, m));
+  cartWheels.instanceMatrix.needsUpdate = true;
   const produceColors = ["#c94b37", "#6b9a43", "#e2b53f"];
   const produceMeshes = cartProduceMatrices.map((matrices, index) => {
     const mesh = new THREE.InstancedMesh(
@@ -3239,6 +3243,7 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
     );
     matrices.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
     mesh.count = matrices.length;
+    mesh.instanceMatrix.needsUpdate = true;
     return mesh;
   });
   scene.add(trunk, canopy, bins, bollards, cartBodies, cartTops, cartCanopies, cartWheels, ...produceMeshes);
