@@ -3800,12 +3800,13 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     new THREE.MeshStandardMaterial({ color: "#d7cbb7", roughness: 0.86 }),
     capacity * 18,
   );
+  const windowGlassMaterial = new THREE.MeshStandardMaterial({
+    color: "#527d89", roughness: 0.26, metalness: 0.08,
+    emissive: "#d89b4d", emissiveIntensity: 0.015,
+  });
   const windowGlass = new THREE.InstancedMesh(
     new THREE.BoxGeometry(0.12, 0.94, 0.7),
-    new THREE.MeshStandardMaterial({
-      color: "#527d89", roughness: 0.26, metalness: 0.08,
-      emissive: "#17313b", emissiveIntensity: 0.12,
-    }),
+    windowGlassMaterial,
     capacity * 18,
   );
   const balconySlabs = new THREE.InstancedMesh(
@@ -3978,6 +3979,7 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     mesh.count = Math.min(awningsCount[index], capacity);
     mesh.instanceMatrix.needsUpdate = true;
   });
+  materials.push(windowGlassMaterial);
   return materials;
 }
 
