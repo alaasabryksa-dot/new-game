@@ -4,16 +4,35 @@ import test from "node:test";
 
 const types = await readFile(new URL("../src/game/types.ts", import.meta.url), "utf8");
 const track = await readFile(new URL("../src/game/track.ts", import.meta.url), "utf8");
-const block = types.match(/export const STOP_NAMES = \[([\s\S]*?)\];/);
+const engine = await readFile(new URL("../src/game/engine.ts", import.meta.url), "utf8");
 
-test("passenger pickup labels are explicitly generic, not invented real stops", () => {
-  assert.ok(block, "STOP_NAMES must remain exported");
-  const labels = [...block[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
-  assert.equal(labels.length, 10, "the game should retain ten passenger pickup points");
-  assert.deepEqual(labels, Array.from({ length: 10 }, (_, i) => `نقطة ركاب ${["١","٢","٣","٤","٥","٦","٧","٨","٩","١٠"][i]}`));
-  assert.ok(labels.every((label) => !/موقف|محطة|شارع الفيوم/.test(label)), "generated labels must not imply verified real-world stop names");
+const entranceBlock = types.match(/export const STREET_ENTRANCES = \[([\s\S]*?)\];/);
+
+test("all 24 player-confirmed side-street names are retained in their side-local order", () => {
+  assert.ok(entranceBlock, "STREET_ENTRANCES must remain exported");
+  const names = [...entranceBlock[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(names.length, 24);
+  assert.deepEqual(names.slice(0, 12), [
+    "شارع حسن مطر", "شارع محمد رزق", "كشري الدكتور", "شارع قدري الصياد",
+    "شارع كمال عبد الحميد", "شارع فهيم عبد الخالق", "شارع تاج الدين عمرو",
+    "شارع أبو أشرف", "شارع عزت مطر", "شارع عبد القادر",
+    "شارع أحمد متولي", "شارع إسماعيل الليثي",
+  ]);
+  assert.deepEqual(names.slice(12), [
+    "شارع أحمد عسلاقي", "شارع محمد حسين مطر", "شارع أحمد محمود", "شارع أحمد المصري",
+    "شارع السيد أبو كريشة", "شارع أبو طالب", "شارع علي زينهم", "شارع عبد الغفار عزيز",
+    "شارع أحمد زكي", "شارع صالح عبدين", "شارع المشير", "شارع الحرية",
+  ]);
 });
 
-test("track documents generated pickup points as gameplay-only", () => {
-  assert.match(track, /gameplay pickup points, not surveyed or named street stops/);
+test("passenger stops are named and preserve the side for curb-side servicing", () => {
+  assert.match(track, /const stops = entrances/);
+  assert.match(track, /side: "left" \| "right"/);
+  assert.match(engine, /proj\.lat \* sideSign > PASSENGER_SYSTEM_TUNING\.curbLaneMinimum/);
+  assert.match(engine, /اتجه ناحية \\u\{sideWord\}/);
+});
+
+test("opposite-side names are paired only as provisional visual cross-sections", () => {
+  assert.match(track, /share a provisional cross-section/);
+  assert.match(track, /without claiming surveyed cross-side alignment/);
 });
