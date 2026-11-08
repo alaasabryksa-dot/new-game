@@ -5,6 +5,15 @@ import test from "node:test";
 const engine = await readFile(new URL("../src/game/engine.ts", import.meta.url), "utf8");
 const ui = await readFile(new URL("../src/components/dar-salam.tsx", import.meta.url), "utf8");
 
+test("mobile controls release individual pointers even when pointer capture is unavailable", () => {
+  assert.match(ui, /holds = useRef\(\{ l: new Set<number>\(\), r: new Set<number>\(\), g: new Set<number>\(\), b: new Set<number>\(\) \}\)/);
+  assert.match(ui, /const onGlobalPointerUp = \(event: PointerEvent\) => \{[\s\S]*?delete\(event\.pointerId\)[\s\S]*?gameRef\.current\?\.setTouch/);
+  assert.match(ui, /window\.addEventListener\("pointerup", onGlobalPointerUp\)/);
+  assert.match(ui, /window\.removeEventListener\("pointerup", onGlobalPointerUp\)/);
+  assert.match(ui, /onPointerUp: \(e: ReactPointer<HTMLButtonElement>\) => \{[\s\S]*?delete\(e\.pointerId\)/);
+  assert.match(ui, /onPointerCancel: \(e: ReactPointer<HTMLButtonElement>\) => \{[\s\S]*?delete\(e\.pointerId\)/);
+});
+
 test("scene teardown persists progress before stopping the game loop", () => {
   const dispose = engine.slice(engine.lastIndexOf("    dispose: () => {"));
   assert.ok(dispose.indexOf("persist();") >= 0);
