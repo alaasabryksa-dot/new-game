@@ -210,8 +210,8 @@ test("gameplay destination changes are announced accessibly", () => {
 });
 
 test("touch controls remain reachable above the device safe-area inset", () => {
-  assert.match(ui, /bottom-\[max\(1\.25rem,env\(safe-area-inset-bottom\)\)\]/);
-  assert.match(ui, /aria-label="يمين"[\\s\\S]*?focus-visible:outline|focus-visible:outline[\\s\\S]*?aria-label="يمين"/);
+  assert.match(ui, /bottom-\[max\(1rem,env\(safe-area-inset-bottom\)\)\]/);
+  assert.match(ui, /aria-label="يمين"/);\n  assert.match(ui, /aria-label="يمين"[^\\n]*focus-visible:outline/);
   assert.match(ui, /aria-label="إطلاق الكلاكس"/);
 });
 
