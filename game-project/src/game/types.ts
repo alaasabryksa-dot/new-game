@@ -256,68 +256,52 @@ const LEGACY_STOP_NAMES = [
   "امتداد شارع رشاد عبد الهادي",
 ];
 
-// User-confirmed order while driving from the bridge toward Fayda Kamel.
-// Left side is listed from the lower part of the map upward.
-export const LEFT_SIDE_STOPS = [
-  "شارع حسن مطر",
-  "شارع محمد رزق",
-  "كشري الدكتور",
-  "شارع قدري الصياد",
-  "شارع كمال عبد الحميد",
-  "شارع فهيم عبد الخالق",
-  "شارع تاج الدين عمرو",
-  "شارع أبو أشرف",
-  "شارع عزت مطر",
-  "شارع عبد القادر",
-  "شارع أحمد متولي",
-  "شارع إسماعيل الليثي",
-] as const;
+// Street entrance reference data supplied by the player.
+// Side-local order is preserved; cross-side timing and exact route positions remain unassigned
+// until the real entrances are mapped against the route.
+export type StreetEntrance = {
+  name: string;
+  side: "left" | "right";
+  sideOrder: number;
+};
 
-// Right side, in the same bridge-to-Fayda-Kamel direction.
-export const RIGHT_SIDE_STOPS = [
-  "شارع أحمد عسلاقي",
-  "شارع محمد حسين مطر",
-  "شارع أحمد محمود",
-  "شارع أحمد المصري",
-  "شارع السيد أبو كريشة",
-  "شارع أبو طالب",
-  "شارع علي زينهم",
-  "شارع عبد الغفار عزيز",
-  "شارع أحمد زكي",
-  "شارع صالح عبدين",
-  "شارع المشير",
-  "شارع الحرية",
-] as const;
-
-// Interleave the user-confirmed left/right entrances in travel order from the bridge
-// toward Fayda Kamel. The user prioritizes a useful ordered route over survey-grade accuracy.
-export const STOP_NAMES = [
-  "شارع حسن مطر",
-  "شارع أحمد عسلاقي",
-  "شارع محمد رزق",
-  "شارع محمد حسين مطر",
-  "كشري الدكتور",
-  "شارع أحمد محمود",
-  "شارع قدري الصياد",
-  "شارع أحمد المصري",
-  "شارع كمال عبد الحميد",
-  "شارع السيد أبو كريشة",
-  "شارع فهيم عبد الخالق",
-  "شارع أبو طالب",
-  "شارع تاج الدين عمرو",
-  "شارع علي زينهم",
-  "شارع أبو أشرف",
-  "شارع عبد الغفار عزيز",
-  "شارع عزت مطر",
-  "شارع أحمد زكي",
-  "شارع عبد القادر",
-  "شارع صالح عبدين",
-  "شارع أحمد متولي",
-  "شارع المشير",
-  "شارع إسماعيل الليثي",
-  "شارع الحرية",
-  ...LEGACY_STOP_NAMES,
+export const STREET_ENTRANCES: readonly StreetEntrance[] = [
+  ...[
+    "شارع حسن مطر",
+    "شارع محمد رزق",
+    "كشري الدكتور",
+    "شارع قدري الصياد",
+    "شارع كمال عبد الحميد",
+    "شارع فهيم عبد الخالق",
+    "شارع تاج الدين عمرو",
+    "شارع أبو أشرف",
+    "شارع عزت مطر",
+    "شارع عبد القادر",
+    "شارع أحمد متولي",
+    "شارع إسماعيل الليثي",
+  ].map((name, index) => ({ name, side: "left" as const, sideOrder: index + 1 })),
+  ...[
+    "شارع أحمد عسلاقي",
+    "شارع محمد حسين مطر",
+    "شارع أحمد محمود",
+    "شارع أحمد المصري",
+    "شارع السيد أبو كريشة",
+    "شارع أبو طالب",
+    "شارع علي زينهم",
+    "شارع عبد الغفار عزيز",
+    "شارع أحمد زكي",
+    "شارع صالح عبدين",
+    "شارع المشير",
+    "شارع الحرية",
+  ].map((name, index) => ({ name, side: "right" as const, sideOrder: index + 1 })),
 ];
+
+// Ten neutral gameplay pickup points. These are not claims about real street entrances.
+export const STOP_NAMES = Array.from(
+  { length: 10 },
+  (_, index) => `نقطة ركاب ${["١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩", "١٠"][index]}`,
+);
+
 export function vehicleById(id: VehicleId) {
   return VEHICLES.find((v) => v.id === id) ?? VEHICLES[3];
 }
