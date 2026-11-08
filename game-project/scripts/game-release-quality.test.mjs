@@ -115,7 +115,7 @@ test("passenger boarding widens destination choices before reusing a drop-off", 
 });
 
 test("fuel consumption accounts for speed as well as passenger load", () => {
-  assert.match(engine, /const speedFactor = 1 \\+ Math\\.min\\(DRIVING_FEEDBACK_TUNING\\.speedFuelLoadCap, Math\\.abs\\(player\\.speed\\) \\/ Math\\.max\\(1, spec\\.max\\) \\* DRIVING_FEEDBACK_TUNING\\.speedFuelLoadCap\\)/);
+  assert.match(engine, /const speedFactor = 1 \+ Math\.min\(DRIVING_FEEDBACK_TUNING\.speedFuelLoadCap, Math\.abs\(player\.speed\) \/ Math\.max\(1, spec\.max\) \* DRIVING_FEEDBACK_TUNING\.speedFuelLoadCap\)/);
   assert.match(engine, /loadFactor \* speedFactor \* dt/);
 });
 
