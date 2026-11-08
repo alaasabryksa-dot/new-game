@@ -1533,7 +1533,20 @@ export function mountGame(
             || Math.abs(other.lane - lane) > 0.68
             || Math.abs(wrapDelta(other.s, n.s, track.total)) > 22 + spec.length);
         });
-        n.lane = safeLanes.length ? safeLanes[Math.floor(Math.random() * safeLanes.length)] : Math.floor(Math.random() * 4);
+        // Prefer a lane with the most clearance when every lane is technically occupied.
+        // Random fallback could respawn a vehicle directly beside another car.
+        const fallbackLane = [0, 1, 2, 3].map((lane) => {
+          let clearance = Infinity;
+          if (lane === playerLane) {
+            clearance = Math.min(clearance, Math.abs(wrapDelta(proj.s, n.s, track.total)));
+          }
+          for (const other of npcs) {
+            if (other === n || !other.alive || Math.abs(other.lane - lane) > 0.68) continue;
+            clearance = Math.min(clearance, Math.abs(wrapDelta(other.s, n.s, track.total)));
+          }
+          return { lane, clearance };
+        }).sort((a, b) => b.clearance - a.clearance)[0].lane;
+        n.lane = safeLanes.length ? safeLanes[Math.floor(Math.random() * safeLanes.length)] : fallbackLane;
         n.laneTarget = n.lane;
         n.speed = Math.min(n.speed, spec.max * 0.55);
         n.cruise = spec.max * (0.4 + Math.random() * 0.35);
