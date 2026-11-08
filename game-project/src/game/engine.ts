@@ -1798,7 +1798,7 @@ function rollJobs(fromStop: number) {
       km: Math.round(km * 10) / 10,
       time,
       crashes,
-      passengers: pax.map((person) => ({ dest: track.stops[person.dest].name, fare: person.fare })),
+      passengers: pax.map((person) => ({ dest: track.stops[person.dest].name, side: track.stops[person.dest].side, fare: person.fare })),
       onboardFareTotal: pax.reduce((sum, person) => sum + person.fare, 0),
       nextDropoffName,
       nextDropoffDist: Number.isFinite(nextDropoffDist) ? Math.max(0, Math.round(nextDropoffDist)) : 0,
