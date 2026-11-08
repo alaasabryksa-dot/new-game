@@ -1,0 +1,53 @@
+{
+  "title": "Fayoum Street, Dar El Salam — landmark candidates",
+  "purpose": "Public map/business listings are research leads. They do not prove current operation, exact facade position, or current appearance. Keep real names out of game signage until independently verified.",
+  "checkedOn": "2026-11-08",
+  "landmarks": [
+    {
+      "id": "gamal-abdel-nasser-school-2",
+      "name": "مدارس جمال عبد الناصر القومية المشتركة لغات",
+      "nameEn": "Gamal Abdel Nasser National Mixed Language School",
+      "address": "2 El Fayoum St., Dar El-Salam, Cairo",
+      "source": "Google Maps business listing",
+      "sourceId": "ChIJUc79IptHWBQRKDTorutqpI4",
+      "evidence": "Listing gives a numbered address directly on El Fayoum Street and identifies the school. It may be part of the wider school complex; exact campus footprint and facade still need visual review.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "telecom-egypt-central-126",
+      "name": "سنترال دار السلام / Telecom Egypt - WE",
+      "address": "126 ش الفيوم، دار السلام، القاهرة",
+      "source": "Google Maps business listing",
+      "sourceId": "ChIJt-fLBZxHWBQRhZfO-udSXks",
+      "evidence": "Listing gives the direct street number 126 and describes a public-facing Telecom Egypt central. Verify current sign, entrance, and exact facade placement.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "nahdet-dar-elsalam-mosque",
+      "name": "مسجد نهضة دار السلام",
+      "address": "شارع الفيوم، الملاءة، دار السلام، القاهرة، أمام الجمعية الاستهلاكية",
+      "source": "Google Maps business listing",
+      "sourceId": "ChIJXxKbrZ5HWBQRM92_Ko9BQw8",
+      "evidence": "Listing associates the mosque with Fayoum Street and a local landmark. No exact street number; retain as an approximate landmark lead only.",
+      "confidence": "medium",
+      "status": "needs_exact_position_and_current_visual_verification"
+    },
+    {
+      "id": "el-karim-mosque-fayoumy",
+      "name": "مسجد الكريم",
+      "address": "منطقة الفيومي / عزبة نافع، دار السلام، القاهرة؛ مرتبط بنطاق شارع الفيوم",
+      "source": "Google Maps business listing",
+      "sourceId": "ChIJNSn4L4NHWBQRsa1UYiK9f9U",
+      "evidence": "Listing associates the mosque with the wider Fayoumy/Fayoum Street corridor but does not establish a precise frontage on the main street.",
+      "confidence": "low",
+      "status": "needs_exact_position_and_current_visual_verification"
+    }
+  ],
+  "policy": [
+    "Do not convert street association into an exact coordinate.",
+    "Do not use these records as photo references or real in-game signage until current facade and position are independently confirmed.",
+    "Keep side-street landmarks separate from main-street frontage."
+  ]
+}
