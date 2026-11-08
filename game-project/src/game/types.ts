@@ -173,6 +173,7 @@ export type Hud = {
   message: string;
   alert: null | "radar" | "crash" | "cash" | "fuel";
   fuel: number;
+  gasStationDist: number;
   rent: number;
   shiftLeft: number;
   wallet: number;
