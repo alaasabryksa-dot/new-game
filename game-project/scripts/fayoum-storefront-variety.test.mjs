@@ -1,0 +1,35 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const engine = readFileSync(new URL("../src/game/engine.ts", import.meta.url), "utf8");
+
+test("Android and desktop scenes expose the expanded fictional Egyptian storefront set", () => {
+  const matches = [...engine.matchAll(/const signLabels = \[([^\]]+)\];/g)];
+  assert.equal(matches.length, 2, "both mobile and desktop scene paths must define storefront categories");
+  for (const match of matches) {
+    const labels = [...match[1].matchAll(/"([^"]+)"/g)].map((entry) => entry[1]);
+    assert.equal(labels.length, 20, "each renderer must expose 20 category labels");
+    assert.ok(labels.includes("جزارة"));
+    assert.ok(labels.includes("مكتبة"));
+    assert.ok(labels.includes("قطع غيار"));
+    assert.ok(labels.includes("ملابس"));
+  }
+});
+
+test("storefront category palettes and adaptive Arabic sign typography are kept in sync", () => {
+  const palettes = [...engine.matchAll(/const signColors = \[([^\]]+)\];/g)];
+  assert.equal(palettes.length, 2);
+  for (const match of palettes) {
+    assert.equal([...match[1].matchAll(/"#[0-9a-fA-F]{6}"/g)].length, 20);
+  }
+  assert.match(engine, /label\.length > 10 \? 43/);
+  assert.match(engine, /label\.length > 7 \? 52/);
+  assert.match(engine, /label\.length > 7 \? 54/);
+});
+
+test("Android procedural frontage uses the denser commercial mix without claiming real shop identities", () => {
+  assert.match(engine, /const isShop = variation > 0\.24;/);
+  assert.match(engine, /real names stay out until verified/);
+  assert.match(engine, /plausible fictional local businesses/);
+});
