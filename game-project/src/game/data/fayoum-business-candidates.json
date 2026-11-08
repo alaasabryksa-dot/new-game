@@ -189,6 +189,28 @@
       "evidence": "Report names the grocery store and describes its shop-display footprint; no street number or current facade photo match supplied.",
       "confidence": "medium_for_historical_identity_low_for_position",
       "status": "context_only_needs_exact_position_and_current_verification"
+    },
+    {
+      "id": "paris-clothes-92",
+      "name": "Paris For Clothes / باريس للملابس",
+      "address": "92 Al Fayoum St., Dar El-Salam, Cairo",
+      "source": "Google Maps business listing",
+      "sourceId": "ChIJUc79IptHWBQR2UKgy_V_Cbo",
+      "evidence": "Current directory search result lists a clothing store at 92 Al Fayoum and associates it with Fayoum Street; exact facade side and present occupancy still require visual confirmation.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification",
+      "checkedOn": "2026-11-08"
+    },
+    {
+      "id": "orange-express-matar",
+      "name": "Orange Express (Dar El Salam 2)",
+      "address": "1 Matar Street, from Al Fayoum, Dar El Salam, Cairo",
+      "source": "Google Maps business listing",
+      "sourceId": "ChIJcbFd05hHWBQRxw9dML8rk3Y",
+      "evidence": "Listing places the Orange branch on Matar Street off/near Fayoum Street; record as a side-street lead, not a confirmed Fayoum Street frontage.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification",
+      "checkedOn": "2026-11-08"
     }
   ],
   "policy": [
