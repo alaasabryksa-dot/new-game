@@ -60,6 +60,20 @@ export function DarSalam() {
     if (!canvas || !map) return;
     let dead = false;
     let handle: GameHandle | null = null;
+    let readyFrame = 0;
+    let readyFrame2 = 0;
+    const androidBridge = (window as Window & {
+      AndroidDiagnostics?: {
+        onGameReady?: () => void;
+        onGameError?: (message: string) => void;
+      };
+    }).AndroidDiagnostics;
+    const reportContextLoss = () => {
+      const message = "فقد محرك الرسوم اتصال WebGL 2 أثناء التشغيل";
+      console.error(message);
+      androidBridge?.onGameError?.(message);
+      if (!dead) setStartupError(message);
+    };
     const releaseInputs = () => {
       holds.current = { l: false, r: false, g: false, b: false };
       gameRef.current?.setTouch({ steer: 0, throttle: 0, brake: 0 });
@@ -69,6 +83,7 @@ export function DarSalam() {
     };
     window.addEventListener("blur", releaseInputs);
     document.addEventListener("visibilitychange", onVisibilityChange);
+    canvas.addEventListener("webglcontextlost", reportContextLoss);
     void import("@/game/engine")
       .then(({ mountGame }) => {
         if (dead) return;
@@ -77,10 +92,23 @@ export function DarSalam() {
           gameRef.current = handle;
           const heard = handle.getHud();
           setCfg((c) => ({ ...c, sound: heard.sound }));
-          setReady(true);
-          (window as Window & {
-            AndroidDiagnostics?: { onGameReady?: () => void };
-          }).AndroidDiagnostics?.onGameReady?.();
+
+          // mountGame creates the renderer synchronously, but that alone does not
+          // prove WebGL can draw. Wait until its first animation frame has rendered.
+          readyFrame = requestAnimationFrame(() => {
+            readyFrame2 = requestAnimationFrame(() => {
+              if (dead) return;
+              const gl = canvas.getContext("webgl2");
+              if (!gl || gl.isContextLost() || canvas.width < 1 || canvas.height < 1) {
+                const message = "لم ينجح إنشاء إطار رسومي WebGL 2 صالح للعبة";
+                androidBridge?.onGameError?.(message);
+                setStartupError(message);
+                return;
+              }
+              setReady(true);
+              androidBridge?.onGameReady?.();
+            });
+          });
         } catch (error) {
           console.error("Game engine startup failed", error);
           const message = error instanceof Error ? error.message : String(error);
@@ -102,8 +130,11 @@ export function DarSalam() {
       });
     return () => {
       dead = true;
+      if (readyFrame) cancelAnimationFrame(readyFrame);
+      if (readyFrame2) cancelAnimationFrame(readyFrame2);
       window.removeEventListener("blur", releaseInputs);
       document.removeEventListener("visibilitychange", onVisibilityChange);
+      canvas.removeEventListener("webglcontextlost", reportContextLoss);
       releaseInputs();
       handle?.dispose();
       gameRef.current = null;
