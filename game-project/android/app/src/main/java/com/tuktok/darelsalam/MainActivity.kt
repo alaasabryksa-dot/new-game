@@ -14,7 +14,9 @@ import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.RenderProcessGoneDetail
+import java.io.ByteArrayInputStream
 import android.webkit.WebView
 import android.widget.TextView
 import androidx.webkit.WebResourceErrorCompat
@@ -51,8 +53,36 @@ class MainActivity : Activity() {
                 setSupportMultipleWindows(false)
             }
             gameView.webViewClient = object : WebViewClientCompat() {
-                override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest) =
-                    assetLoader.shouldInterceptRequest(request.url)
+                private fun isPackagedGameUrl(url: android.net.Uri): Boolean =
+                    url.scheme == "https" &&
+                        url.host == "appassets.androidplatform.net" &&
+                        url.path.orEmpty().startsWith("/assets/")
+
+                override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+                    val url = request.url
+                    if (isPackagedGameUrl(url)) return assetLoader.shouldInterceptRequest(url)
+                    // The Android game is self-contained: fail closed for remote HTTP(S)
+                    // resources so an accidental CDN/API dependency cannot break offline play.
+                    if (url.scheme == "http" || url.scheme == "https") {
+                        Log.w(TAG, "Blocked non-packaged game resource: $url")
+                        return WebResourceResponse(
+                            "text/plain",
+                            "UTF-8",
+                            403,
+                            "Blocked by offline game policy",
+                            mapOf("Cache-Control" to "no-store"),
+                            ByteArrayInputStream("Network resources are disabled".toByteArray())
+                        )
+                    }
+                    return null
+                }
+
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    val url = request.url
+                    if (isPackagedGameUrl(url)) return false
+                    Log.w(TAG, "Blocked navigation outside packaged game: $url")
+                    return true
+                }
 
                 override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
                     Log.i(TAG, "Page started: $url")
