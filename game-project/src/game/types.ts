@@ -203,9 +203,9 @@ export type PreviewCfg = {
   sound: boolean;
 };
 
-// Candidate Fayoum Street branch destinations collected from local map listings
-// and address references. This is a working name inventory, not a verified
-// along-road sequence; track positions must be assigned from junction geometry.
+// Working inventory of named side-street destinations found around Fayoum Street.
+// Order and exact junction positions are still approximate until the map junctions
+// are matched to the route geometry in track.ts.
 export const STOP_NAMES = [
   "شارع خيرى الجندي",
   "شارع محمد حسنين مطر",
@@ -220,6 +220,12 @@ export const STOP_NAMES = [
   "شارع لاشين",
   "شارع المهدي",
   "امتداد شارع رشاد عبد الهادي",
+  "شارع عزت مطر",
+  "شارع الهدى",
+  "شارع سيد عبد الرازق",
+  "شارع فهيم عبد الخالق",
+  "شارع المحجر",
+
 ];
 
 export function vehicleById(id: VehicleId) {
