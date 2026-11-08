@@ -38,6 +38,23 @@ Sources:
 
 The candidate catalog currently includes businesses and addresses from public listings, including numbered entries around 36–165 El Fayoum Street. Some directory records conflict or use nearby streets as the address. Every candidate remains excluded from in-game real signage until its exact branch, current occupancy, and facade are independently checked.
 
+## Additional directory/map research — 8 Nov 2026
+
+A fresh public business/map lookup produced additional location leads for the corridor. These are catalogued separately from verified facades:
+
+- **Paris For Clothes / باريس للملابس** — listed at 92 Al Fayoum St.; a current facade photo and exact frontage position are still required.
+- **Orange Express (Dar El Salam 2)** — listed at 1 Matar Street, off/near Al Fayoum. This is a side-street lead, not evidence of a main-street shopfront.
+- **Gamal Abdel Nasser National Mixed Language School** — listed at 2 El Fayoum St.; this supports the school-complex context, but not the exact campus footprint or current facade.
+- **Telecom Egypt / WE — Dar El Salam Central** — listed at 126 El Fayoum St.; verify the current sign, entrance, and frontage.
+- **Nahdet Dar El Salam Mosque** — associated with Fayoum Street in El-Mala'a, opposite the consumer association; approximate landmark only because no numbered address was returned.
+- **El-Karim Mosque** — associated with the wider El-Fayoumy / Ezbet Nafie corridor; do not place it as a main-street frontage without exact positioning.
+
+Source record IDs and evidence notes are stored in:
+- `src/game/data/fayoum-business-candidates.json`
+- `src/game/data/fayoum-landmark-candidates.json`
+
+The business catalog now has 21 leads; the separate landmark catalog has 4 leads. These counts are research records, **not** verified current tenants or completed facade models. No new real-world sign has been enabled in the game.
+
 ## Environment modeling guidance
 
 - Build a believable continuous commercial corridor with varied narrow shop bays, upper-floor residential facades, balconies, shutters, awnings, Arabic signboards, utility cables, and occasional sidewalk displays.
