@@ -29,6 +29,21 @@ jobs:
         working-directory: game-project
         run: npm ci
 
+      - name: Capture dependency security audit
+        working-directory: game-project
+        run: |
+          set +e
+          npm audit --json > npm-audit.json
+          audit_status=$?
+          node --input-type=module <<\x27NODE\x27
+          import fs from "node:fs";
+          const report = JSON.parse(fs.readFileSync("npm-audit.json", "utf8"));
+          console.log("Dependency audit summary:", JSON.stringify(report.metadata?.vulnerabilities ?? {}));
+          for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
+            console.log(JSON.stringify({ package: name, severity: item.severity, direct: item.isDirect, range: item.range, fixAvailable: item.fixAvailable, via: item.via }));
+          }
+          NODE
+          echo "npm audit exit code: $audit_status"
       - name: Build the self-contained offline game bundle
         working-directory: game-project
         run: npm run build:android-web
@@ -84,6 +99,15 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | tee apk-badging.txt
           grep -q "package: name='com.tuktok.darelsalam'" apk-badging.txt
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
+
+      - name: Save dependency audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-dependency-audit
+          path: game-project/npm-audit.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Save APK for isolated device test
         uses: actions/upload-artifact@v4
