@@ -157,6 +157,25 @@ export default defineConfig(({ command, isPreview }) => ({
     strictPort: true,
   },
   resolve: { tsconfigPaths: true },
+  build: {
+    // Keep the browser game engine in bounded chunks as well as the Android
+    // bundle; Three.js should not inflate the initial app entry point.
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "three-engine",
+              test: /node_modules[\\/]three[\\/]/,
+              maxSize: 280 * 1024,
+              minSize: 40 * 1024,
+              priority: 20,
+            },
+          ],
+        },
+      },
+    },
+  },
   plugins: [
     pgliteBootstrapPlugin(),
     // Before tanstackStart so /auth/popup never falls through to the SPA.
