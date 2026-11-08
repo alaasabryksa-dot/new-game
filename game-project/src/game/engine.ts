@@ -2866,6 +2866,8 @@ function rollJobs(fromStop: number) {
       publish();
     },
     dispose: () => {
+      // Persist even when React tears down the scene without a preceding blur/pagehide.
+      persist();
       running = false;
       cancelAnimationFrame(raf);
       ro?.disconnect();
