@@ -73,6 +73,7 @@ class MainActivity : Activity() {
                 }
             }
             addJavascriptInterface(AndroidAdsBridge(), "AndroidAds")
+            addJavascriptInterface(AndroidDiagnosticsBridge(), "AndroidDiagnostics")
         }
         setContentView(webView)
 
@@ -99,6 +100,18 @@ class MainActivity : Activity() {
         }
     }
 
+    inner class AndroidDiagnosticsBridge {
+        @JavascriptInterface
+        fun onGameReady() {
+            Log.i(TAG, "GAME_READY")
+        }
+
+        @JavascriptInterface
+        fun onGameError(message: String) {
+            Log.e(TAG, "GAME_STARTUP_ERROR: " + message)
+        }
+    }
+
     // AdMob is paused in this diagnostic build to isolate startup crashes.
     inner class AndroidAdsBridge {
         @JavascriptInterface
@@ -110,6 +123,7 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         if (::webView.isInitialized) {
             webView.removeJavascriptInterface("AndroidAds")
+            webView.removeJavascriptInterface("AndroidDiagnostics")
             webView.stopLoading()
             webView.loadUrl("about:blank")
             webView.destroy()
