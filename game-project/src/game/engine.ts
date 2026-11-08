@@ -478,6 +478,38 @@ function facadeTexture(base: string, variant = 0) {
     }
   }
 
+  // A few closed shutters and balcony laundry add recognizable street-life
+  // details to the texture without increasing the scene's mesh or draw-call count.
+  for (let floor = 0; floor < 4; floor++) {
+    for (let col = 0; col < 4; col++) {
+      const detail = (floor * 23 + col * 7 + variant * 5 + base.length) % 13;
+      const x = 12 + col * 88;
+      const y = 20 + floor * 124;
+      if (detail === 2 || detail === 8) {
+        g.fillStyle = "#777d7a";
+        g.fillRect(x + 1, y + 1, 35, 68);
+        g.fillStyle = variant % 2 ? "#b6b0a2" : "#9eaaab";
+        for (let slat = 0; slat < 9; slat++) {
+          g.fillRect(x + 3, y + 4 + slat * 7, 31, 3);
+        }
+        g.fillStyle = "rgba(35,42,43,0.34)";
+        g.fillRect(x + 1, y + 67, 35, 3);
+      }
+      if (detail === 4 || detail === 10) {
+        const clothX = x - 2;
+        const clothY = y + 77;
+        g.fillStyle = "#ded7c8";
+        g.fillRect(clothX, clothY, 45, 3);
+        g.fillStyle = variant % 3 === 0 ? "#b85f4c" : "#e4dfd1";
+        g.fillRect(clothX + 5, clothY + 3, 10, 13);
+        g.fillStyle = variant % 2 ? "#6e8c91" : "#c8b36e";
+        g.fillRect(clothX + 19, clothY + 3, 12, 11);
+        g.fillStyle = "#b9b5a9";
+        g.fillRect(clothX + 35, clothY + 3, 8, 14);
+      }
+    }
+  }
+
   // A few exterior drain pipes and utility meter boxes break up the repeated
   // apartment pattern while remaining part of the shared facade texture.
   for (let pipe = 0; pipe < 2; pipe++) {
