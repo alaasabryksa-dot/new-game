@@ -1698,6 +1698,8 @@ function rollJobs(fromStop: number) {
       crashes,
       passengers: pax.map((person) => ({ dest: track.stops[person.dest].name, fare: person.fare })),
       onboardFareTotal: pax.reduce((sum, person) => sum + person.fare, 0),
+      nextDropoffName,
+      nextDropoffDist: Number.isFinite(nextDropoffDist) ? Math.max(0, Math.round(nextDropoffDist)) : 0,
       waitingPassengers: Math.max(0, waiting[targetI] ?? 0),
       seats: spec.seats,
       stopName: stop?.name ?? "",
