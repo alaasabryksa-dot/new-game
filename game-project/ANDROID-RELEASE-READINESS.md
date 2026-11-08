@@ -44,6 +44,8 @@
 - Automated release-quality checks cover the shift carryover, proportional refueling, and distance-based rush reward rules.
 - These are code-level economy changes; the resulting economy still needs hands-on play balancing on a physical Android device during the later device-validation stage.
 
+- The end-of-run summary now itemizes the rent actually paid, the unpaid remainder (if any), and the net wallet change from the start of the run. This makes partial rent carryover and in-run wallet spending visible instead of showing only the final wallet balance.
+
 ## Remaining Android release work
 
 1. Preserve the packaged-local-assets-only WebView policy. If optional online services (such as ads) are later approved, isolate them behind a separately reviewed allowlist and ensure they cannot block gameplay; do not introduce remote game dependencies or server/auth requirements into the Android entry.
