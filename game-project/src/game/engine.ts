@@ -1080,6 +1080,9 @@ export function mountGame(
 ): GameHandle {
   const androidDevice = /Android/i.test(navigator.userAgent);
   const track = buildTrack();
+  const signalStops = track.stops.filter((stop, index, all) =>
+    all.findIndex((other) => Math.abs(other.s - stop.s) < 1) === index,
+  );
   const save = loadSave();
   const sfx = new Sfx();
   sfx.on = save.sound;
@@ -1983,8 +1986,8 @@ function rollJobs(fromStop: number) {
       target *= curveFactor;
       if (n.kind === "micro") {
         n.stopTimer = Math.max(0, n.stopTimer - dt);
-        for (let i = 0; i < track.stops.length; i++) {
-          const d = wrapDelta(track.stops[i].s, n.s, track.total);
+        for (let i = 0; i < signalStops.length; i++) {
+          const d = wrapDelta(signalStops[i].s, n.s, track.total);
           // Microbuses in the curb-side lanes slow down and briefly wait at stops.
           if (n.lane > 1.5 && d > -NPC_STOPPING_TUNING.microStopApproachStart && d < NPC_STOPPING_TUNING.microStopApproachEnd) {
             const stopApproachSpeed = Math.min(3, Math.max(0, (d - NPC_DRIVING_TUNING.curbApproachBuffer) * NPC_STOPPING_TUNING.microStopSpeedScale));
@@ -2028,8 +2031,8 @@ function rollJobs(fromStop: number) {
       let nearestSignalStopS = -1;
       let nearestSignalCycle = 0;
       let redStopDistance = Infinity;
-      for (let stopIndex = 0; stopIndex < track.stops.length; stopIndex++) {
-        const stop = track.stops[stopIndex];
+      for (let stopIndex = 0; stopIndex < signalStops.length; stopIndex++) {
+        const stop = signalStops[stopIndex];
         const distanceToLine = wrapDelta(stop.s, n.s, track.total);
         if (distanceToLine <= 0 || distanceToLine > NPC_STOPPING_TUNING.signalApproachDistance) continue;
         const stopCycle = (trafficClock + stopIndex * 2.4) % TRAFFIC_SIGNAL_CYCLE;
@@ -2362,8 +2365,12 @@ function rollJobs(fromStop: number) {
     }
 
     const nearStop = (index: number) => {
-      const d = Math.abs(wrapDelta(track.stops[index].s, proj.s, track.total));
-      return d < PASSENGER_SYSTEM_TUNING.pickupStopDistance && proj.lat > PASSENGER_SYSTEM_TUNING.curbLaneMinimum && Math.abs(player.speed) < PASSENGER_SYSTEM_TUNING.pickupSpeedLimit;
+      const stop = track.stops[index];
+      const sideSign = stop.side === "right" ? 1 : -1;
+      const d = Math.abs(wrapDelta(stop.s, proj.s, track.total));
+      return d < PASSENGER_SYSTEM_TUNING.pickupStopDistance
+        && proj.lat * sideSign > PASSENGER_SYSTEM_TUNING.curbLaneMinimum
+        && Math.abs(player.speed) < PASSENGER_SYSTEM_TUNING.pickupSpeedLimit;
     };
 
     // Require a brief, steady stop at the curb before serving passengers or a delivery.
@@ -2557,7 +2564,8 @@ function rollJobs(fromStop: number) {
       const rz = -Math.sin(sm.yaw);
       for (let k = 0; k < n && i < PEOPLE; k++) {
         const bob = Math.sin(bobT * 2.2 + sIdx + k) * 0.04;
-        dummy.position.set(sm.x + rx * (7.15 + k * 0.72), 0.64 + bob, sm.z + rz * (7.15 + k * 0.72));
+        const sideSign = track.stops[sIdx].side === "right" ? 1 : -1;
+        dummy.position.set(sm.x + rx * sideSign * (7.15 + k * 0.72), 0.64 + bob, sm.z + rz * sideSign * (7.15 + k * 0.72));
         dummy.rotation.set(0, sm.yaw + k, 0);
         dummy.scale.set(1, 1, 1);
         dummy.updateMatrix();
@@ -2697,7 +2705,10 @@ function rollJobs(fromStop: number) {
     ctx.stroke();
     track.stops.forEach((stop, i) => {
       const sm = track.sample(stop.s);
-      const [x, y] = px(sm.x, sm.z);
+      const sideSign = stop.side === "right" ? 1 : -1;
+      const mapX = sm.x + Math.cos(sm.yaw) * sideSign * 7.1;
+      const mapZ = sm.z - Math.sin(sm.yaw) * sideSign * 7.1;
+      const [x, y] = px(mapX, mapZ);
       const hot = cfg.mode === "rush" && jobs[jobIndex] === i;
       const passengerDestination = pax.some((person) => person.dest === i);
       ctx.fillStyle = hot ? "#f0b429" : passengerDestination ? "#d6a7ff" : "#1aa6a6";
@@ -3268,8 +3279,11 @@ function buildCrosswalks(scene: THREE.Scene, track: Track) {
   const stops: THREE.Matrix4[] = [];
   const o = new THREE.Object3D();
 
-  // Zebra crossings at the existing stop locations, aligned to the curved road.
-  for (const stop of track.stops) {
+  // One zebra crossing per provisional cross-section; paired left/right names share it.
+  const crossingStops = track.stops.filter((stop, index, all) =>
+    all.findIndex((other) => Math.abs(other.s - stop.s) < 1) === index,
+  );
+  for (const stop of crossingStops) {
     const p = track.sample(stop.s);
     const forwardX = -Math.sin(p.yaw);
     const forwardZ = -Math.cos(p.yaw);
@@ -3331,7 +3345,10 @@ function buildTrafficSignals(scene: THREE.Scene, track: Track) {
   const housingGeo = new THREE.BoxGeometry(0.48, 1.35, 0.42);
   const bulbGeo = new THREE.SphereGeometry(0.135, 10, 8);
 
-  for (const stop of track.stops) {
+  const uniqueStops = track.stops.filter((stop, index, all) =>
+    all.findIndex((other) => Math.abs(other.s - stop.s) < 1) === index,
+  );
+  for (const stop of uniqueStops) {
     const p = track.sample(stop.s);
     const rx = Math.cos(p.yaw);
     const rz = -Math.sin(p.yaw);
