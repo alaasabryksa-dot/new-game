@@ -2870,7 +2870,14 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.font = `bold ${label.length > 10 ? 43 : label.length > 7 ? 52 : 62}px Tajawal, sans-serif`;
+      context.lineJoin = "round";
+      context.lineWidth = 5;
+      context.strokeStyle = "rgba(15, 20, 24, 0.48)";
+      context.strokeText(label, canvas.width / 2, canvas.height / 2);
+      context.shadowColor = "rgba(0, 0, 0, 0.35)";
+      context.shadowBlur = 4;
       context.fillText(label, canvas.width / 2, canvas.height / 2);
+      context.shadowBlur = 0;
     }
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -3090,7 +3097,14 @@ function buildCity(scene: THREE.Scene, track: Track, mobile = false) {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = `bold ${label.length > 10 ? 43 : label.length > 7 ? 54 : 66}px Tajawal, sans-serif`;
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "rgba(15, 20, 24, 0.48)";
+      ctx.strokeText(label, 256, 67);
+      ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+      ctx.shadowBlur = 4;
       ctx.fillText(label, 256, 67);
+      ctx.shadowBlur = 0;
     }
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
