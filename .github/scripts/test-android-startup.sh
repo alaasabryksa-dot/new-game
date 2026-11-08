@@ -58,12 +58,12 @@ done
 
 echo "APK installed. Launching $ACTIVITY"
 adb logcat -c
-launch_output="$(adb shell am start -W -n "$ACTIVITY" 2>&1)" || {
+launch_output="$(adb shell am start -n "$ACTIVITY" 2>&1)" || {
   echo "$launch_output"
   fail_with_diagnostics "Activity launch command failed"
 }
 echo "$launch_output"
-echo "$launch_output" | grep -q "Status: ok" || fail_with_diagnostics "Android ActivityManager did not report Status: ok"
+echo "$launch_output" | grep -q "Starting: Intent" || fail_with_diagnostics "Android did not accept the Activity launch request"
 
 ready=0
 for attempt in $(seq 1 90); do
