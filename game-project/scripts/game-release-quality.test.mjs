@@ -90,6 +90,13 @@ test("road-edge handling applies progressive shoulder drag before clamping", () 
   assert.ok(engine.indexOf("shoulderDrag") < engine.indexOf("if (Math.abs(proj.lat) > limit)"));
 });
 
+test("passenger boarding spreads drop-off destinations when alternatives are available", () => {
+  assert.match(engine, /const assignedDestinations = new Set\(pax\.map\(\(person\) => person\.dest\)\)/);
+  assert.match(engine, /\.filter\(\(candidate\) => !assignedDestinations\.has\(candidate\.dest\)\)/);
+  assert.match(engine, /assignedDestinations\.add\(dest\)/);
+  assert.match(engine, /const choices = candidates\.length[\s\S]*?choices\[Math\.floor\(Math\.random\(\) \* choices\.length\)\]/);
+});
+
 test("fuel consumption accounts for speed as well as passenger load", () => {
   assert.match(engine, /const speedFactor = 1 \+ Math\.min\(0\.35, Math\.abs\(player\.speed\) \/ Math\.max\(1, spec\.max\) \* 0\.35\)/);
   assert.match(engine, /loadFactor \* speedFactor \* dt/);
