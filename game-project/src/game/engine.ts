@@ -203,6 +203,23 @@ type Save = {
   upgrades: Upgrades;
 };
 
+type ShiftSettlement = { rentPaid: number; rentRemaining: number; walletAfter: number };
+
+function calculateShiftSettlement(earnings: number, wallet: number, rent: number): ShiftSettlement {
+  const safeEarnings = finiteNonNegative(earnings);
+  const safeWallet = finiteNonNegative(wallet, 10_000_000);
+  const safeRent = finiteNonNegative(rent, 10_000_000);
+  const available = safeEarnings + safeWallet;
+  const rentPaid = Math.min(safeRent, available);
+  const rentRemaining = Math.max(0, safeRent - available);
+  const walletAfter = safeEarnings >= safeRent
+    ? safeWallet + safeEarnings - safeRent
+    : safeWallet >= safeRent - safeEarnings
+      ? safeWallet - (safeRent - safeEarnings)
+      : safeWallet + safeEarnings;
+  return { rentPaid, rentRemaining, walletAfter };
+}
+
 function blankUpgrades(): Upgrades {
   return { motor: 0, fuel: 0, seats: 0, tires: 0 };
 }
@@ -1622,22 +1639,16 @@ function rollJobs(fromStop: number) {
     if (money > save.bestMoney) save.bestMoney = money;
     if (km > save.bestKm) save.bestKm = km;
     if (cfg.mode === "shift") {
-      const availableForRent = money + save.wallet;
-      settlementRentPaid = Math.min(RENT, availableForRent);
-      settlementRentRemaining = Math.max(0, RENT - availableForRent);
-      if (money >= RENT) {
-        save.wallet += money - RENT;
-        say("الإيجار اتسدد");
+      const settlement = calculateShiftSettlement(money, save.wallet, RENT);
+      settlementRentPaid = settlement.rentPaid;
+      settlementRentRemaining = settlement.rentRemaining;
+      save.wallet = settlement.walletAfter;
+      if (settlement.rentRemaining === 0) {
+        say(money >= RENT ? "الإيجار اتسدد" : "كمّلت الإيجار من المحفظة");
         sfx.cash();
-      } else if (save.wallet >= RENT - money) {
-        save.wallet -= RENT - money;
-        say("كمّلت الإيجار من المحفظة");
       } else {
-        // Never discard a partial shift's earnings: carry them into the wallet
-        // so the player can combine them with the next shift toward rent.
-        const remainingRent = Math.max(0, RENT - money - save.wallet);
-        save.wallet += money;
-        say(`جمعت ${money} ج — لسه فاضل ${remainingRent} ج على الإيجار`);
+        // Keep partial earnings available for the next shift instead of losing them.
+        say(`جمعت ${money} ج — لسه فاضل ${settlement.rentRemaining} ج على الإيجار`);
       }
     } else if (cfg.mode === "rush") {
       save.wallet += money;
