@@ -1157,15 +1157,15 @@ export function mountGame(
     dummy.updateMatrix();
     // InstancedMesh.setMatrixAt copies the matrix elements immediately.
     // The shared dummy matrix is safe here and avoids one clone per NPC.
-    pool.body.setMatrixAt(i, vehicleMatrix);
-    pool.glass.setMatrixAt(i, vehicleMatrix);
-    pool.wheels.setMatrixAt(i, vehicleMatrix);
-    pool.lights.setMatrixAt(i, vehicleMatrix);
+    pool.body.setMatrixAt(i, dummy.matrix);
+    pool.glass.setMatrixAt(i, dummy.matrix);
+    pool.wheels.setMatrixAt(i, dummy.matrix);
+    pool.lights.setMatrixAt(i, dummy.matrix);
     if (color) pool.body.setColorAt(i, color);
-    pool.brakes.setMatrixAt(i, braking ? vehicleMatrix : hiddenNpcMatrix);
+    pool.brakes.setMatrixAt(i, braking ? dummy.matrix : hiddenNpcMatrix);
     const blinkOn = Math.floor(trafficClock * 3.2) % 2 === 0;
-    pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? vehicleMatrix : hiddenNpcMatrix);
-    pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? vehicleMatrix : hiddenNpcMatrix);
+    pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? dummy.matrix : hiddenNpcMatrix);
+    pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? dummy.matrix : hiddenNpcMatrix);
   };
 
   let playerMesh = buildPlayer("tuktuk", "#f0b429");
