@@ -61,8 +61,8 @@ const TRAFFIC_RED_SECONDS = 7.5;
 const TRAFFIC_AMBER_SECONDS = 1.3;
 
 const DRIVING_FEEDBACK_TUNING = {
-  fuelIdleRate: 0.2,
-  fuelThrottleRate: 0.4,
+  fuelIdleRate: 0.16,
+  fuelThrottleRate: 0.3,
   passengerFuelLoadStep: 0.045,
   passengerFuelLoadCap: 0.24,
   speedFuelLoadCap: 0.35,
