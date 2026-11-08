@@ -7,29 +7,22 @@ import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
+import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
-import com.google.android.libraries.ads.mobile.sdk.MobileAds
-import com.google.android.libraries.ads.mobile.sdk.common.AdRequest
-import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
-import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError
-import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
-import com.google.android.libraries.ads.mobile.sdk.initialization.InitializationConfig
-import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAd
-import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAdEventCallback
 
 class MainActivity : Activity() {
     private lateinit var webView: WebView
-    private var interstitialAd: InterstitialAd? = null
-    private var adsInitialized = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i(TAG, "Activity created")
         hideSystemBars()
 
         val assetLoader = WebViewAssetLoader.Builder()
@@ -37,6 +30,7 @@ class MainActivity : Activity() {
             .build()
 
         webView = WebView(this).apply {
+            setBackgroundColor(android.graphics.Color.rgb(20, 24, 30))
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.allowFileAccess = false
@@ -44,102 +38,63 @@ class MainActivity : Activity() {
             settings.javaScriptCanOpenWindowsAutomatically = false
             settings.setSupportMultipleWindows(false)
             webViewClient = object : WebViewClientCompat() {
-                override fun shouldInterceptRequest(
-                    view: WebView,
-                    request: WebResourceRequest
-                ) = assetLoader.shouldInterceptRequest(request.url)
+                override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest) =
+                    assetLoader.shouldInterceptRequest(request.url)
+
+                override fun onPageFinished(view: WebView, url: String) {
+                    Log.i(TAG, "Page finished: " + url)
+                }
+
+                override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                    Log.e(TAG, "WebView error " + error.errorCode + ": " + error.description + "; url=" + request.url)
+                }
             }
-            webChromeClient = WebChromeClient()
+            webChromeClient = object : WebChromeClient() {
+                override fun onConsoleMessage(message: ConsoleMessage): Boolean {
+                    Log.d(TAG, "JS " + message.message() + " at " + message.sourceId() + ":" + message.lineNumber())
+                    return true
+                }
+            }
             addJavascriptInterface(AndroidAdsBridge(), "AndroidAds")
         }
         setContentView(webView)
-        webView.loadUrl("https://appassets.androidplatform.net/assets/public/android.html")
-        initializeAds()
+
+        try {
+            webView.loadUrl("https://appassets.androidplatform.net/assets/public/android.html")
+        } catch (error: Exception) {
+            Log.e(TAG, "Could not load local game page", error)
+            throw error
+        }
     }
 
     private fun hideSystemBars() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             window.insetsController?.let { controller ->
                 controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                controller.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility =
-                (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
+                (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
         }
     }
 
-    private fun initializeAds() {
-        Thread {
-            try {
-                MobileAds.initialize(
-                    this,
-                    InitializationConfig.Builder(BuildConfig.ADMOB_APP_ID).build()
-                ) {
-                    runOnUiThread {
-                        adsInitialized = true
-                        loadInterstitial()
-                    }
-                }
-            } catch (error: Exception) {
-                Log.w(TAG, "AdMob initialization skipped", error)
-            }
-        }.start()
-    }
-
-    private fun loadInterstitial() {
-        if (!adsInitialized || interstitialAd != null) return
-        try {
-            InterstitialAd.load(
-                AdRequest.Builder(BuildConfig.ADMOB_INTERSTITIAL_ID).build(),
-                object : AdLoadCallback<InterstitialAd> {
-                    override fun onAdLoaded(ad: InterstitialAd) {
-                        interstitialAd = ad
-                    }
-
-                    override fun onAdFailedToLoad(adError: LoadAdError) {
-                        interstitialAd = null
-                        Log.d(TAG, "Interstitial unavailable: ${adError.message}")
-                    }
-                }
-            )
-        } catch (error: Exception) {
-            Log.w(TAG, "Interstitial request skipped", error)
-        }
-    }
-
-    private fun showInterstitialIfReady() {
-        val ad = interstitialAd ?: return
-        interstitialAd = null
-        ad.adEventCallback = object : InterstitialAdEventCallback {
-            override fun onAdDismissedFullScreenContent() {
-                loadInterstitial()
-            }
-
-            override fun onAdFailedToShowFullScreenContent(error: FullScreenContentError) {
-                loadInterstitial()
-            }
-        }
-        ad.show(this)
-    }
-
+    // AdMob is paused in this diagnostic build to isolate startup crashes.
     inner class AndroidAdsBridge {
         @JavascriptInterface
         fun showInterstitial() {
-            runOnUiThread { showInterstitialIfReady() }
+            Log.d(TAG, "Interstitial request ignored in diagnostic build")
         }
     }
 
     override fun onDestroy() {
         if (::webView.isInitialized) {
             webView.removeJavascriptInterface("AndroidAds")
+            webView.stopLoading()
+            webView.loadUrl("about:blank")
             webView.destroy()
         }
         super.onDestroy()
