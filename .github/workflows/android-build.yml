@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  build-debug-apk:
+  build-apk:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -66,22 +66,43 @@ jobs:
           grep -q "package: name='com.tuktok.darelsalam'" apk-badging.txt
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
 
-      - name: Launch APK in Android emulator and verify game startup
+      - name: Save APK for isolated device test
+        uses: actions/upload-artifact@v4
+        with:
+          name: tuktuk-apk-candidate
+          path: game-project/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 3
+
+  test-on-clean-emulator:
+    needs: build-apk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download APK candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: tuktuk-apk-candidate
+          path: artifacts
+
+      - name: Launch APK on an isolated Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 35
           target: google_apis
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -camera-back none -camera-front none
-          emulator-boot-timeout: 600
-          script: bash .github/scripts/test-android-startup.sh
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -memory 3072 -cores 2 -camera-back none -camera-front none
+          emulator-boot-timeout: 900
+          script: APK_PATH=artifacts/app-debug.apk bash .github/scripts/test-android-startup.sh
 
-      - name: Upload debug APK
+      - name: Publish APK only after Android startup passes
         uses: actions/upload-artifact@v4
         with:
-          name: Tuktok-Dar-El-Salam-debug-APK
-          path: game-project/android/app/build/outputs/apk/debug/app-debug.apk
+          name: Tuktuk-Dar-El-Salam-verified-APK
+          path: artifacts/app-debug.apk
           if-no-files-found: error
           retention-days: 14
