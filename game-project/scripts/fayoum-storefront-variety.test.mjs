@@ -80,7 +80,7 @@ test("passenger system exposes and uses twenty independent gameplay tuning contr
   }
   assert.match(engine, /const hubChance = PASSENGER_SYSTEM_TUNING\.baseSpawnChance/);
   assert.match(engine, /const stopChance = i % 5 === 4/);
-  assert.match(engine, /const fare = Math\.max\(1, Math\.round\(\(PASSENGER_SYSTEM_TUNING\.baseFare/);
+  assert.match(engine, /const fare = calculatePassengerFare\(hop, spec\.fare\)/);
 });
 
 test("driving feedback exposes and uses thirty explicit fuel, collision, radar, toll and bump controls", () => {
