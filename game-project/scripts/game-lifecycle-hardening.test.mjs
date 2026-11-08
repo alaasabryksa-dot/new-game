@@ -155,3 +155,10 @@ test("global pointer release clears every matching control set before syncing to
   assert.match(handler, /releasedBrake = h\.b\.delete\(event\.pointerId\)/);
   assert.match(handler, /gameRef\.current\?\.setTouch/);
 });
+
+const confirmedStreetNames = ["شارع حسن مطر","شارع محمد رزق","كشري الدكتور","شارع قدري الصياد","شارع كمال عبد الحميد","شارع فهيم عبد الخالق","شارع تاج الدين عمرو","شارع أبو أشرف","شارع عزت مطر","شارع عبد القادر","شارع أحمد متولي","شارع إسماعيل الليثي","شارع أحمد عسلاقي","شارع محمد حسين مطر","شارع أحمد محمود","شارع أحمد المصري","شارع السيد أبو كريشة","شارع أبو طالب","شارع علي زينهم","شارع عبد الغفار عزيز","شارع أحمد زكي","شارع صالح عبدين","شارع المشير","شارع الحرية"];
+for (const streetName of confirmedStreetNames) {
+  test("confirmed street remains in the directory: " + streetName, () => {
+    assert.ok(types.includes(JSON.stringify(streetName)), "missing confirmed street: " + streetName);
+  });
+}
