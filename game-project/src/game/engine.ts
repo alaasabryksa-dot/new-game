@@ -1336,6 +1336,7 @@ export function mountGame(
       let nearestSignalDistance = Infinity;
       let nearestSignalStopS = -1;
       let nearestSignalCycle = 0;
+      let redStopDistance = Infinity;
       for (let stopIndex = 0; stopIndex < track.stops.length; stopIndex++) {
         const stop = track.stops[stopIndex];
         const distanceToLine = wrapDelta(stop.s, n.s, track.total);
@@ -1350,6 +1351,7 @@ export function mountGame(
           nearestSignalCycle = stopCycle;
         }
         if (redLight) {
+          redStopDistance = Math.min(redStopDistance, distanceToLine);
           const stoppingDistance = (n.speed * n.speed) / (2 * 3.1) + 3.2;
           const approachSpeed = distanceToLine > stoppingDistance
             ? Math.min(target, Math.sqrt(Math.max(0, 2 * 3.1 * (distanceToLine - 3.2))))
