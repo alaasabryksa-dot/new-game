@@ -157,7 +157,7 @@ test("rush delivery scheduling varies routes while keeping destinations distinct
   assert.notEqual(end, -1, "rush route tuning must be closed");
   const tuning = engine.slice(start, end);
   const keys = [...tuning.matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
-  assert.equal(keys.length, 20, "rush route tuning must expose twenty controls");
+  assert.equal(keys.length, 19, "rush route tuning must expose nineteen controls");
   for (const key of keys) {
     assert.ok(engine.includes("JOB_ROUTE_TUNING." + key), "unused rush route tuning: " + key);
   }
