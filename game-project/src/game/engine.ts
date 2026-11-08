@@ -2003,8 +2003,11 @@ export function mountGame(
     camera.updateProjectionMatrix();
   }
   resize();
-  const ro = new ResizeObserver(() => resize());
-  ro.observe(canvas);
+  // Older Android System WebView versions may not expose ResizeObserver.
+  // Keep the game canvas sized through the window resize event as a fallback.
+  const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => resize()) : null;
+  if (ro) ro.observe(canvas);
+  else window.addEventListener("resize", resize);
 
   const onDown = (e: KeyboardEvent) => {
     const target = e.target;
@@ -2159,7 +2162,8 @@ export function mountGame(
     dispose: () => {
       running = false;
       cancelAnimationFrame(raf);
-      ro.disconnect();
+      ro?.disconnect();
+      if (!ro) window.removeEventListener("resize", resize);
       window.removeEventListener("keydown", onDown);
       window.removeEventListener("keyup", onUp);
       window.removeEventListener("blur", onBlur);
