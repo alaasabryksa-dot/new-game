@@ -1,4 +1,4 @@
-import { STOP_NAMES } from "./types";
+import { STOP_NAMES, STREET_ENTRANCES } from "./types";
 import { FAYOUM_ROUTE_COORDINATES } from "./data/fayoum-route";
 
 export const LANE_W = 3.45;
@@ -20,6 +20,7 @@ export type Track = {
   pts: Sample[];
   total: number;
   stops: { name: string; s: number }[];
+  entrances: { name: string; side: "left" | "right"; sideOrder: number; s: number }[];
   tollS: number;
   radarS: number[];
   gasS: number;
@@ -98,6 +99,13 @@ export function buildTrack(): Track {
     s: ((i + 0.06) / STOP_NAMES.length) * total,
   }));
 
+  // Side-street signs use the user-confirmed order on each side independently.
+  // Their spacing is illustrative until individual entrance positions are surveyed.
+  const entrances = STREET_ENTRANCES.map((entry) => ({
+    ...entry,
+    s: (entry.sideOrder / 13) * total,
+  }));
+
   const tollS = total * 0.42;
   const radarS = [0.18, 0.57, 0.79].map((t) => t * total);
   const gasS = total * 0.67;
@@ -163,5 +171,5 @@ export function buildTrack(): Track {
     return near;
   }
 
-  return { pts, total, stops, tollS, radarS, gasS, bumps, sample, project };
+  return { pts, total, stops, entrances, tollS, radarS, gasS, bumps, sample, project };
 }
