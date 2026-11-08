@@ -311,6 +311,12 @@ test("route distance helper measures correctly across the closed-loop seam", () 
 });
 
 
+test("Android instanced vehicle pools can render the maximum weighted traffic population", () => {
+  assert.match(engine, /const POOL = androidDevice \? 20 : 64/);
+  assert.match(engine, /const n = densityCount\(\);[\s\S]*?const weights: VehicleId\[\] = \[[\s\S]*?"tuktuk"[\s\S]*?"truck"/);
+  assert.match(engine, /if \(i >= POOL\) return/);
+});
+
 test("Android backgrounding stops the render loop and safely restarts it on return", () => {
   assert.match(engine, /if \(document\.visibilityState === "hidden"\) \{\s*raf = 0;\s*return;/);
   assert.match(engine, /if \(raf\) cancelAnimationFrame\(raf\);\s*raf = 0;/);
