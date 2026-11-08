@@ -158,7 +158,19 @@ function trafficGeoms(kind: VehicleId) {
   } else if (kind === "tuktuk") {
     body.push(box(1.3, 1.15, 2.15, 0, 0.95, 0.05));
     body.push(box(1.35, 0.08, 1.5, 0, 1.58, 0.15));
+    // Open-sided canopy frame, side rails, mirrors and front bumper.
+    body.push(box(0.075, 0.9, 0.075, -0.62, 1.18, -0.55));
+    body.push(box(0.075, 0.9, 0.075, 0.62, 1.18, -0.55));
+    body.push(box(0.075, 0.82, 0.075, -0.62, 1.18, 0.78));
+    body.push(box(0.075, 0.82, 0.075, 0.62, 1.18, 0.78));
+    body.push(box(0.08, 0.08, 1.3, 0, 1.08, 0.78));
+    body.push(box(0.08, 0.08, 1.3, 0, 1.08, -0.55));
+    body.push(box(0.12, 0.12, 0.48, -0.78, 1.42, -0.58));
+    body.push(box(0.12, 0.12, 0.48, 0.78, 1.42, -0.58));
+    body.push(box(1.45, 0.12, 0.12, 0, 0.42, -1.08));
     glass.push(box(1.15, 0.55, 0.9, 0, 1.25, -0.15));
+    lights.push(box(0.2, 0.16, 0.07, -0.4, 0.82, -1.1));
+    lights.push(box(0.2, 0.16, 0.07, 0.4, 0.82, -1.1));
     lights.push(box(0.12, 0.12, 0.06, -0.45, 0.7, 1.15));
     lights.push(box(0.12, 0.12, 0.06, 0.45, 0.7, 1.15));
     addW(-0.62, 0.3, 0.55, 0.85);
@@ -250,7 +262,18 @@ function buildPlayer(kind: VehicleId, hex: string) {
     put(new THREE.BoxGeometry(1.32, 0.92, 2.1), paint, 0, 0.85, 0.05);
     put(new THREE.BoxGeometry(1.44, 0.09, 1.58), paint, 0, 1.55, 0.1);
     put(new THREE.BoxGeometry(1.48, 0.05, 1.64), dark, 0, 1.62, 0.1);
+    put(new THREE.BoxGeometry(0.075, 0.9, 0.075), dark, -0.62, 1.18, -0.55);
+    put(new THREE.BoxGeometry(0.075, 0.9, 0.075), dark, 0.62, 1.18, -0.55);
+    put(new THREE.BoxGeometry(0.075, 0.82, 0.075), dark, -0.62, 1.18, 0.78);
+    put(new THREE.BoxGeometry(0.075, 0.82, 0.075), dark, 0.62, 1.18, 0.78);
+    put(new THREE.BoxGeometry(0.08, 0.08, 1.3), dark, 0, 1.08, 0.78);
+    put(new THREE.BoxGeometry(0.08, 0.08, 1.3), dark, 0, 1.08, -0.55);
+    put(new THREE.BoxGeometry(0.12, 0.12, 0.48), dark, -0.78, 1.42, -0.58);
+    put(new THREE.BoxGeometry(0.12, 0.12, 0.48), dark, 0.78, 1.42, -0.58);
+    put(new THREE.BoxGeometry(1.45, 0.12, 0.12), dark, 0, 0.42, -1.08);
     put(new THREE.BoxGeometry(1.12, 0.48, 0.85), glass, 0, 1.15, -0.1);
+    put(new THREE.BoxGeometry(0.2, 0.16, 0.07), head, -0.4, 0.82, -1.1);
+    put(new THREE.BoxGeometry(0.2, 0.16, 0.07), head, 0.4, 0.82, -1.1);
     put(new THREE.BoxGeometry(0.12, 0.12, 0.06), tail, -0.42, 0.62, 1.12);
     put(new THREE.BoxGeometry(0.12, 0.12, 0.06), tail, 0.42, 0.62, 1.12);
     put(new THREE.BoxGeometry(0.2, 0.16, 0.06), head, 0, 0.7, -1.02);
@@ -1851,7 +1874,14 @@ export function mountGame(
     if (!running) return;
     const w = Math.max(1, canvas.clientWidth || 1);
     const h = Math.max(1, canvas.clientHeight || 1);
-    const dpr = Math.min(window.devicePixelRatio || 1, window.matchMedia('(pointer: coarse)').matches ? 1.35 : 1.6);
+    const device = navigator as Navigator & { deviceMemory?: number };
+    const constrainedDevice =
+      (device.hardwareConcurrency || 4) <= 4 || (device.deviceMemory ?? 4) <= 3;
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    const pixelRatioCap = coarsePointer
+      ? (constrainedDevice ? 1.0 : 1.2)
+      : (constrainedDevice ? 1.35 : 1.6);
+    const dpr = Math.max(0.75, Math.min(window.devicePixelRatio || 1, pixelRatioCap));
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
@@ -2513,8 +2543,9 @@ function buildCity(scene: THREE.Scene, track: Track) {
   );
   const awnings = awningMats.map((mat) => new THREE.InstancedMesh(awningGeo, mat, 100));
   const signGeo = new THREE.BoxGeometry(0.16, 0.72, 1);
-  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات"];
-  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c"];
+  // Fictional category labels add neighborhood texture; they are not verified shop identities.
+  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "مخبوزات", "خضار وفاكهة", "حلاقة", "ورشة"];
+  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334", "#477342", "#5a526b", "#59636b"];
   const signMeshes = signLabels.map((label, index) => {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -2619,7 +2650,7 @@ function buildCity(scene: THREE.Scene, track: Track) {
   let signCount = 0;
   let shopFrontCount = 0;
   const awningCounts = [0, 0, 0, 0];
-  const signCounts = [0, 0, 0, 0];
+  const signCounts = signLabels.map(() => 0);
 
   for (let i = 0; i < pts.length; i += 4) {
     const p = pts[i];
@@ -3117,9 +3148,13 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, play
     });
   });
 
-  // Use the imported legacy Dar El Salam pedestrian artwork as camera-facing
-  // sprites. Each walker keeps a stable variant and follows the sidewalk loop.
-  for (let i = 22; i < track.pts.length && walkers.length < 32; i += 31) {
+  // Use imported legacy Dar El Salam pedestrian artwork as camera-facing sprites.
+  // Keep a smaller crowd on low-memory / low-core phones to protect frame time.
+  const device = navigator as Navigator & { deviceMemory?: number };
+  const constrainedDevice =
+    (device.hardwareConcurrency || 4) <= 4 || (device.deviceMemory ?? 4) <= 3;
+  const walkerBudget = constrainedDevice ? 18 : 32;
+  for (let i = 22; i < track.pts.length && walkers.length < walkerBudget; i += 31) {
     const p = track.pts[i];
     const index = walkers.length;
     const sprite = new THREE.Sprite(materials[index % materials.length]);
