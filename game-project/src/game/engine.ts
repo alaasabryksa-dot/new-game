@@ -1261,6 +1261,7 @@ const POOL = androidDevice ? 20 : 64;
   let hitstop = 0;
   let jobs: number[] = [];
   let jobIndex = 0;
+  let jobOriginStop = 0;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const camPos = new THREE.Vector3(0, 8, 20);
   const look = new THREE.Vector3();
@@ -1483,7 +1484,13 @@ const POOL = androidDevice ? 20 : 64;
     return false;
   }
 
-  // Route variety controls for rush-mode delivery scheduling.
+  // Distance-based rewards make longer delivery routes worth a little more.
+const JOB_REWARD_TUNING = {
+  base: 35,
+  perStop: 4,
+} as const;
+
+// Route variety controls for rush-mode delivery scheduling.
 const JOB_ROUTE_TUNING = {
   minHop: 2,
   maxHop: 6,
@@ -1508,6 +1515,7 @@ const JOB_ROUTE_TUNING = {
 
 function rollJobs(fromStop: number) {
     jobs = [];
+    jobOriginStop = fromStop;
     let i = fromStop;
     let previousHop = -1;
     let previousSector = -1;
@@ -1614,7 +1622,11 @@ function rollJobs(fromStop: number) {
         save.wallet -= RENT - money;
         say("كمّلت الإيجار من المحفظة");
       } else {
-        say(`فاضل ${RENT - money - save.wallet} ج على الإيجار`);
+        // Never discard a partial shift's earnings: carry them into the wallet
+        // so the player can combine them with the next shift toward rent.
+        const remainingRent = Math.max(0, RENT - money - save.wallet);
+        save.wallet += money;
+        say(`جمعت ${money} ج — لسه فاضل ${remainingRent} ج على الإيجار`);
       }
     } else if (cfg.mode === "rush") {
       save.wallet += money;
@@ -2364,8 +2376,11 @@ function rollJobs(fromStop: number) {
     }
 
     if (cfg.mode === "rush" && phase === "play" && jobs[jobIndex] != null && nearStop(jobs[jobIndex]) && stopHold >= 0.85) {
+      const fromStop = jobIndex === 0 ? jobOriginStop : jobs[jobIndex - 1];
+      const hopCount = (jobs[jobIndex] - fromStop + track.stops.length) % track.stops.length;
+      const reward = JOB_REWARD_TUNING.base + hopCount * JOB_REWARD_TUNING.perStop;
       jobIndex += 1;
-      money += 45;
+      money += reward;
       flash("cash");
       sfx.cash();
       if (jobIndex >= JOBS_NEED) {
@@ -2375,7 +2390,7 @@ function rollJobs(fromStop: number) {
         publish();
         return;
       }
-      say(`وصلت — الجاية ${track.stops[jobs[jobIndex]].name}`);
+      say(`وصلت +${reward} ج — الجاية ${track.stops[jobIndex].name}`);
     }
 
     if (radarCd <= 0) {
@@ -2415,11 +2430,14 @@ function rollJobs(fromStop: number) {
     const gasD = Math.abs(wrapDelta(track.gasS, proj.s, track.total));
     if (gasD < DRIVING_FEEDBACK_TUNING.gasStationTriggerDistance && proj.lat > DRIVING_FEEDBACK_TUNING.gasStationLaneMinimum && Math.abs(player.speed) < DRIVING_FEEDBACK_TUNING.gasStationStopSpeed && fuel < 98) {
       if (!gasLatch) {
-        if (pay(GAS_COST)) {
+        // Charge only for the fuel actually added; a nearly full tank must not
+        // cost the same as an empty one.
+        const refuelCost = Math.max(1, Math.ceil(((100 - fuel) / 100) * GAS_COST));
+        if (pay(refuelCost)) {
           fuel = 100;
           fuelWarned = false;
           gasLatch = true;
-          say(`تملى التانك — ${GAS_COST} ج`);
+          say(`تملى التانك — ${refuelCost} ج`);
           flash("cash");
           sfx.cash();
         } else {
