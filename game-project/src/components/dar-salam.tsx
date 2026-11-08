@@ -440,7 +440,7 @@ function PlayHud({
         </p>
       ) : null}
 
-      <div className="absolute bottom-36 left-1/2 z-30 flex -translate-x-1/2 gap-2 md:bottom-6">
+      <div className="absolute bottom-36 left-1/2 z-30 flex -translate-x-1/2 gap-2">
         <button
           type="button"
           className="rounded-full bg-panel/90 p-3"
