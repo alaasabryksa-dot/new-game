@@ -1,4 +1,4 @@
-# Android release readiness — Fayoum Street Tuk-tuk
+# Android release readiness — توكتوك دار السلام
 
 ## Current state
 
@@ -10,7 +10,7 @@
 ## Required release inputs
 
 1. A stable public HTTPS deployment URL for the finished game.
-2. The final Android application ID (package name), chosen once and kept stable for updates.
+2. **Confirmed application ID:** `com.tuktok.darelsalam` (approved; keep stable for all future updates).
 3. Final launcher icon and splash artwork.
 4. A protected Android signing key and its recovery backup; never commit the key or passwords.
 5. A chosen wrapper path:
@@ -21,7 +21,7 @@
 ## Release gates
 
 - [ ] Confirm the deployed URL and domain ownership.
-- [ ] Choose and freeze the application ID.
+- [x] Choose and freeze the application ID: `com.tuktok.darelsalam`.
 - [ ] Configure the wrapper and Android SDK / Gradle workflow.
 - [ ] Configure signing through GitHub Actions secrets (never repository files).
 - [ ] Build both APK (install test) and AAB (store delivery).
