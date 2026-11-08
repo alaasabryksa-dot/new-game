@@ -1118,6 +1118,7 @@ export function mountGame(
   buildCrosswalks(scene, track);
   const animateTrafficSignals = buildTrafficSignals(scene, track);
   buildStreetSigns(scene, track);
+  buildSideStreetEntrances(scene, track);
   if (!androidDevice) buildElectricalPoles(scene, track);
   const buildings = buildCity(scene, track, androidDevice);
   if (!androidDevice) buildRooftopLife(scene, track);
@@ -3362,13 +3363,77 @@ function buildStreetSigns(scene: THREE.Scene, track: Track) {
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     const boardMat = new THREE.MeshStandardMaterial({
-      map: texture, roughness: 0.68, side: THREE.DoubleSide,
+      map: texture,
+      roughness: 0.68,
+      side: THREE.DoubleSide,
+      emissive: "#20384a",
+      emissiveMap: texture,
+      emissiveIntensity: 0.18,
     });
     const board = new THREE.Mesh(boardGeo, boardMat);
     board.position.set(0, 3.05, 0.055);
     group.add(post, frame, board);
     scene.add(group);
   }
+}
+
+function buildSideStreetEntrances(scene: THREE.Scene, track: Track) {
+  // The 24 confirmed street names now have visible junction mouths, not just signs.
+  // Short branches are visual game geometry; exact street lengths/positions remain un-surveyed.
+  const asphaltPositions: number[] = [];
+  const curbPositions: number[] = [];
+  const sidewalkPositions: number[] = [];
+  const addQuad = (target: number[], a: [number, number, number], b: [number, number, number],
+    c: [number, number, number], d: [number, number, number]) => {
+    target.push(...a, ...b, ...d, ...a, ...d, ...c);
+  };
+
+  for (const entrance of track.entrances) {
+    const p = track.sample(entrance.s);
+    const side = entrance.side === "right" ? 1 : -1;
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const tx = Math.sin(p.yaw);
+    const tz = Math.cos(p.yaw);
+    const start = ROAD_HALF - 0.35;
+    const end = ROAD_HALF + 31;
+    const halfRoad = 3.1;
+    const sidewalk = 1.45;
+    const point = (normal: number, tangent: number, y: number): [number, number, number] => [
+      p.x + rx * side * normal + tx * tangent,
+      y,
+      p.z + rz * side * normal + tz * tangent,
+    ];
+
+    addQuad(asphaltPositions,
+      point(start, -halfRoad, 0.035), point(start, halfRoad, 0.035),
+      point(end, -halfRoad, 0.035), point(end, halfRoad, 0.035));
+    for (const edge of [-1, 1]) {
+      const inner = edge * halfRoad;
+      const outer = edge * (halfRoad + sidewalk);
+      addQuad(sidewalkPositions,
+        point(start, inner, 0.055), point(start, outer, 0.055),
+        point(end, inner, 0.055), point(end, outer, 0.055));
+      addQuad(curbPositions,
+        point(start, inner - edge * 0.12, 0.13), point(start, inner, 0.13),
+        point(end, inner - edge * 0.12, 0.13), point(end, inner, 0.13));
+    }
+  }
+
+  const makeSurface = (positions: number[], color: string, roughness: number) => {
+    if (!positions.length) return;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+    const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+      color, roughness, side: THREE.DoubleSide,
+    }));
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  };
+  makeSurface(asphaltPositions, "#34383b", 0.98);
+  makeSurface(sidewalkPositions, "#a9a49a", 0.94);
+  makeSurface(curbPositions, "#d0c8b8", 0.86);
 }
 
 function buildElectricalPoles(scene: THREE.Scene, track: Track) {
