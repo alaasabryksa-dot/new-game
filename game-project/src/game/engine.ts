@@ -1119,7 +1119,7 @@ export function mountGame(
   const animateTrafficSignals = buildTrafficSignals(scene, track);
   buildStreetSigns(scene, track);
   buildSideStreetEntrances(scene, track);
-  if (!androidDevice) buildElectricalPoles(scene, track);
+  if (!androidDevice) buildElectricalPoles(scene, track); else buildElectricalPolesMobile(scene, track);
   const buildings = buildCity(scene, track, androidDevice);
   if (!androidDevice) buildRooftopLife(scene, track);
   const lamps = buildLamps(scene, track);
@@ -3532,6 +3532,87 @@ function buildElectricalPoles(scene: THREE.Scene, track: Track) {
   }
 }
 
+
+function buildElectricalPolesMobile(scene: THREE.Scene, track: Track) {
+  // Paired utility poles and sagging cables bring the dense overhead street silhouette
+  // to Android too, while instancing keeps the draw-call cost low.
+  const poleCapacity = Math.max(1, Math.ceil(track.pts.length / 44) * 2);
+  const poleMat = new THREE.MeshStandardMaterial({ color: "#777d80", roughness: 0.84, metalness: 0.18 });
+  const armMat = new THREE.MeshStandardMaterial({ color: "#596166", roughness: 0.76, metalness: 0.22 });
+  const insulatorMat = new THREE.MeshStandardMaterial({ color: "#d7d1c2", roughness: 0.58 });
+  const poles = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.14, 0.22, 8.1, 7), poleMat, poleCapacity);
+  const arms = new THREE.InstancedMesh(new THREE.BoxGeometry(2.15, 0.16, 0.18), armMat, poleCapacity);
+  const insulators = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.075, 0.075, 0.28, 6), insulatorMat, poleCapacity * 3);
+  const dummy = new THREE.Object3D();
+  const wirePoints: THREE.Vector3[] = [];
+  const previous: Array<{ x: number; z: number; yaw: number } | null> = [null, null];
+  let count = 0;
+
+  for (let i = 18; i < track.pts.length; i += 44) {
+    const p = track.pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    for (const side of [-1, 1]) {
+      if (count >= poleCapacity) break;
+      const x = p.x + rx * side * (ROAD_HALF + 7.1);
+      const z = p.z + rz * side * (ROAD_HALF + 7.1);
+      dummy.position.set(x, 4.05, z);
+      dummy.rotation.set(0, p.yaw, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      poles.setMatrixAt(count, dummy.matrix);
+      dummy.position.set(x, 7.55, z);
+      dummy.updateMatrix();
+      arms.setMatrixAt(count, dummy.matrix);
+
+      for (let wire = 0; wire < 3; wire++) {
+        dummy.position.set(x + rx * ((wire - 1) * 0.72), 7.72, z + rz * ((wire - 1) * 0.72));
+        dummy.rotation.set(Math.PI / 2, 0, p.yaw);
+        dummy.updateMatrix();
+        insulators.setMatrixAt(count * 3 + wire, dummy.matrix);
+      }
+
+      const sideIndex = side < 0 ? 0 : 1;
+      const prior = previous[sideIndex];
+      if (prior) {
+        for (let wire = 0; wire < 3; wire++) {
+          const offset = (wire - 1) * 0.72;
+          const a = new THREE.Vector3(prior.x + Math.cos(prior.yaw) * offset, 7.88,
+            prior.z - Math.sin(prior.yaw) * offset);
+          const b = new THREE.Vector3(x + rx * offset, 7.88, z + rz * offset);
+          for (let step = 0; step < 5; step++) {
+            const t0 = step / 5;
+            const t1 = (step + 1) / 5;
+            const sag = 0.38;
+            wirePoints.push(
+              new THREE.Vector3(THREE.MathUtils.lerp(a.x, b.x, t0),
+                THREE.MathUtils.lerp(a.y, b.y, t0) - Math.sin(Math.PI * t0) * sag,
+                THREE.MathUtils.lerp(a.z, b.z, t0)),
+              new THREE.Vector3(THREE.MathUtils.lerp(a.x, b.x, t1),
+                THREE.MathUtils.lerp(a.y, b.y, t1) - Math.sin(Math.PI * t1) * sag,
+                THREE.MathUtils.lerp(a.z, b.z, t1)),
+            );
+          }
+        }
+      }
+      previous[sideIndex] = { x, z, yaw: p.yaw };
+      count++;
+    }
+  }
+  poles.count = count;
+  arms.count = count;
+  insulators.count = count * 3;
+  poles.instanceMatrix.needsUpdate = true;
+  arms.instanceMatrix.needsUpdate = true;
+  insulators.instanceMatrix.needsUpdate = true;
+  scene.add(poles, arms, insulators);
+  if (wirePoints.length) {
+    const geometry = new THREE.BufferGeometry().setFromPoints(wirePoints);
+    scene.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
+      color: "#343a3d", transparent: true, opacity: 0.78,
+    })));
+  }
+}
 
 function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
   // Compact Android-only street life: six instanced draw calls instead of the
