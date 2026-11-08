@@ -44,10 +44,6 @@ class MainActivity : Activity() {
                 override fun onPageFinished(view: WebView, url: String) {
                     Log.i(TAG, "Page finished: " + url)
                 }
-
-                override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                    Log.e(TAG, "WebView error " + error.errorCode + ": " + error.description + "; url=" + request.url)
-                }
             }
             webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(message: ConsoleMessage): Boolean {
