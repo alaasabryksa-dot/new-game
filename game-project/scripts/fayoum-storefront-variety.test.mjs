@@ -112,12 +112,16 @@ test("NPC microbus, tuk-tuk and signal stopping exposes thirty used traffic cont
 });
 
 test("pedestrian crowd exposes thirty active mobile-safe movement and sidewalk-safety controls", () => {
-  const tuning = engine.match(/const PEDESTRIAN_TUNING = \{([\s\S]*?)\} as const;/);
-  assert.ok(tuning, "pedestrian tuning must remain explicit");
-  const keys = [...tuning[1].matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
+  const marker = "const PEDESTRIAN_TUNING = {";
+  const start = engine.indexOf(marker);
+  assert.notEqual(start, -1, "pedestrian tuning must remain explicit");
+  const end = engine.indexOf("} as const;", start);
+  assert.notEqual(end, -1, "pedestrian tuning must be closed");
+  const tuning = engine.slice(start, end);
+  const keys = [...tuning.matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
   assert.equal(keys.length, 30, "pedestrian tuning must expose thirty independent controls");
   for (const key of keys) {
-    assert.ok(engine.includes(`PEDESTRIAN_TUNING.${key}`), `unused pedestrian tuning: ${key}`);
+    assert.ok(engine.includes("PEDESTRIAN_TUNING." + key), "unused pedestrian tuning: " + key);
   }
   assert.ok(engine.includes("walker.avoidanceOffset +="));
   assert.ok(engine.includes("PEDESTRIAN_TUNING.pauseCycleSeconds"));
