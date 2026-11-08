@@ -1364,7 +1364,85 @@ export function mountGame(
     return false;
   }
 
-  function rollJobs(fromStop: number) {
+  // Route variety controls for rush-mode delivery scheduling.
+const JOB_ROUTE_TUNING = {
+  minHop: 2,
+  maxHop: 6,
+  hop2Weight: 1.18,
+  hop3Weight: 1.42,
+  hop4Weight: 1.24,
+  hop5Weight: 0.78,
+  hop6Weight: 0.56,
+  defaultWeight: 0.7,
+  repeatHopPenalty: 0.42,
+  adjacentHopPenalty: 0.78,
+  longHopPenalty: 0.86,
+  shortHopPenalty: 0.9,
+  routeSpreadBonus: 1.16,
+  sectorCount: 5,
+  sameSectorPenalty: 0.72,
+  earlyRouteBonus: 1.08,
+  lateRouteBonus: 1.12,
+  randomJitter: 0.22,
+  minimumWeight: 0.08,
+} as const;
+
+function rollJobs(fromStop: number) {
+    jobs = [];
+    let i = fromStop;
+    let previousHop = -1;
+    let previousSector = -1;
+    for (let k = 0; k < JOBS_NEED; k++) {
+      const available = Array.from(
+        { length: Math.max(0, track.stops.length - 1) },
+        (_, index) => index + 1,
+      )
+        .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
+        .filter((candidate) => !jobs.includes(candidate.dest));
+      if (!available.length) break;
+
+      const weighted = available.map((candidate) => {
+        const { hop, dest } = candidate;
+        const hopWeight = hop === 2 ? JOB_ROUTE_TUNING.hop2Weight
+          : hop === 3 ? JOB_ROUTE_TUNING.hop3Weight
+            : hop === 4 ? JOB_ROUTE_TUNING.hop4Weight
+              : hop === 5 ? JOB_ROUTE_TUNING.hop5Weight
+                : hop === 6 ? JOB_ROUTE_TUNING.hop6Weight
+                  : JOB_ROUTE_TUNING.defaultWeight;
+        let weight = hopWeight;
+        if (hop === previousHop) weight *= JOB_ROUTE_TUNING.repeatHopPenalty;
+        if (previousHop > 0 && Math.abs(hop - previousHop) === 1) {
+          weight *= JOB_ROUTE_TUNING.adjacentHopPenalty;
+        }
+        if (hop > 4) weight *= JOB_ROUTE_TUNING.longHopPenalty;
+        if (hop === JOB_ROUTE_TUNING.minHop) weight *= JOB_ROUTE_TUNING.shortHopPenalty;
+        const sector = Math.floor(dest / Math.max(1, track.stops.length) * JOB_ROUTE_TUNING.sectorCount);
+        if (sector !== previousSector) weight *= JOB_ROUTE_TUNING.routeSpreadBonus;
+        else weight *= JOB_ROUTE_TUNING.sameSectorPenalty;
+        if (k === 0) weight *= JOB_ROUTE_TUNING.earlyRouteBonus;
+        if (k === JOBS_NEED - 1) weight *= JOB_ROUTE_TUNING.lateRouteBonus;
+        weight *= 1 + Math.random() * JOB_ROUTE_TUNING.randomJitter;
+        return { ...candidate, weight: Math.max(JOB_ROUTE_TUNING.minimumWeight, weight) };
+      });
+      const totalWeight = weighted.reduce((sum, candidate) => sum + candidate.weight, 0);
+      let roll = Math.random() * totalWeight;
+      let choice = weighted[weighted.length - 1];
+      for (const candidate of weighted) {
+        roll -= candidate.weight;
+        if (roll <= 0) {
+          choice = candidate;
+          break;
+        }
+      }
+      i = choice.dest;
+      previousHop = choice.hop;
+      previousSector = Math.floor(i / Math.max(1, track.stops.length) * JOB_ROUTE_TUNING.sectorCount);
+      jobs.push(i);
+    }
+    jobIndex = 0;
+  }
+
+
     jobs = [];
     let i = fromStop;
     for (let k = 0; k < JOBS_NEED; k++) {
