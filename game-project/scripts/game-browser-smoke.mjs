@@ -12,7 +12,7 @@ try {
   for (const viewport of [
     { name: "mobile-landscape-compact", width: 740, height: 360, isMobile: true },
     { name: "mobile-landscape-standard", width: 844, height: 390, isMobile: true },
-  ])
+  ]) {
     const context = await browser.newContext({
       viewport: { width: viewport.width, height: viewport.height },
       isMobile: viewport.isMobile,
