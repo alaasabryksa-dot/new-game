@@ -203,19 +203,23 @@ export type PreviewCfg = {
   sound: boolean;
 };
 
-// Provisional named street-entrance destinations along Fayoum Street.
-// Street names are supported by public/local references; their order and evenly
-// spaced in-game positions are temporary approximations pending field validation.
+// Candidate Fayoum Street branch destinations collected from local map listings
+// and address references. This is a working name inventory, not a verified
+// along-road sequence; track positions must be assigned from junction geometry.
 export const STOP_NAMES = [
-  "شارع حسن مطر",
-  "شارع حسين الفخراني",
-  "شارع حسن منصور",
-  "شارع أحمد زكي",
-  "شارع حمدي جودة",
+  "شارع خيرى الجندي",
+  "شارع محمد حسنين مطر",
+  "شارع الشهيد حمدي جودة",
   "شارع سيد حنفي",
-  "شارع 30 مارس",
-  "شارع عارف",
-  "شارع المحجر",
+  "شارع التل",
+  "شارع إسماعيل الليثي",
+  "شارع حسن منصور",
+  "شارع عبد الغفار عزيز",
+  "شارع السيدة زينب",
+  "شارع محمد عبد الكريم",
+  "شارع لاشين",
+  "شارع المهدي",
+  "امتداد شارع رشاد عبد الهادي",
 ];
 
 export function vehicleById(id: VehicleId) {
