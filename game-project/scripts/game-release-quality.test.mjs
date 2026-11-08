@@ -69,6 +69,11 @@ test("traffic lane changes increase front and rear clearance for closing speed",
   assert.match(engine, /rearBuffer = 9 \+ otherSpec\.length \* 0\.3[\s\S]*?Math\.max\(0, o\.speed - n\.speed\) \* 1\.1/);
 });
 
+test("traffic respawn excludes the player lane only when actually nearby", () => {
+  assert.match(engine, /Math\.abs\(lane - playerLane\) < 0\.72 && Math\.abs\(wrapDelta\(proj\.s, n\.s, track\.total\)\) < 45/);
+  assert.doesNotMatch(engine, /Math\.abs\(lane - playerLane\) < 0\.72 && wrapDelta\(proj\.s, n\.s, track\.total\) < 45/);
+});
+
 test("traffic respawn uses maximum-clearance lane when no lane is fully free", () => {
   assert.match(engine, /const fallbackLane = \[0, 1, 2, 3\]\.map\(\(lane\) =>/);
   assert.match(engine, /clearance = Math\.min\(clearance, Math\.abs\(wrapDelta\(other\.s, n\.s, track\.total\)\)\)/);
