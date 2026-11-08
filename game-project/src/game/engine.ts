@@ -1097,7 +1097,11 @@ export function mountGame(
     let hint = "";
     if (phase === "play") {
       const gasD = Math.abs(wrapDelta(track.gasS, proj.s, track.total));
-      if (fuel < 22 && gasD < 90) hint = "البنزينة على اليمين";
+      if (fuel < 98 && gasD < 28) {
+        if (proj.lat <= 2.5) hint = "ادخل يمين البنزينة";
+        else if (Math.abs(player.speed) >= 2.8) hint = "هدّي عند البنزينة للتفويل";
+        else hint = "اثبت عند البنزينة للتفويل";
+      } else if (fuel < 22 && gasD < 90) hint = "البنزينة على اليمين";
       else if (cfg.mode === "rush") {
         if (targetD < 80 && proj.lat < 3.2) hint = "اهدى يمين المحطة";
       } else {
