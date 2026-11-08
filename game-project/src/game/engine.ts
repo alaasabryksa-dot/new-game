@@ -53,6 +53,7 @@ type Npc = {
 type Wrong = { s: number; speed: number; lat: number };
 
 const SAVE_KEY = "daralsalam-save-v2";
+const SAVE_BACKUP_KEY = "daralsalam-save-v2-backup";
 const RADAR_LIMIT = 78 / 3.6;
 const TOLL_LIMIT = 36 / 3.6;
 const TRAFFIC_SIGNAL_CYCLE = 15;
@@ -216,8 +217,8 @@ function clampLvl(n: unknown) {
   return Math.floor(Math.min(3, finiteNonNegative(n, 3)));
 }
 
-function loadSave(): Save {
-  const blank: Save = {
+function blankSave(): Save {
+  return {
     v: 2,
     bestMoney: 0,
     bestKm: 0,
@@ -226,12 +227,14 @@ function loadSave(): Save {
     wallet: 0,
     upgrades: blankUpgrades(),
   };
+}
+
+function parseSave(raw: string | null): Save | null {
+  if (!raw) return null;
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return blank;
     const p = JSON.parse(raw) as Partial<Save>;
-    if (p.v !== 2) return blank;
-    const u = (p.upgrades ?? {}) as Partial<Upgrades>;
+    if (p.v !== 2 || !p.upgrades || typeof p.upgrades !== "object") return null;
+    const u = p.upgrades as Partial<Upgrades>;
     return {
       v: 2,
       bestMoney: finiteNonNegative(p.bestMoney),
@@ -247,15 +250,35 @@ function loadSave(): Save {
       },
     };
   } catch {
-    return blank;
+    return null;
   }
 }
 
-function writeSave(s: Save) {
+function readSaveSlot(key: string): Save | null {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(s));
+    return parseSave(localStorage.getItem(key));
   } catch {
-    /* ignore quota */
+    return null;
+  }
+}
+
+function loadSave(): Save {
+  return readSaveSlot(SAVE_KEY) ?? readSaveSlot(SAVE_BACKUP_KEY) ?? blankSave();
+}
+
+function writeSave(s: Save) {
+  const serialized = JSON.stringify(s);
+  // Keep both slots current. If one write is blocked by storage quota or a
+  // transient WebView storage error, the other slot can still preserve progress.
+  try {
+    localStorage.setItem(SAVE_KEY, serialized);
+  } catch {
+    /* try the independent backup slot */
+  }
+  try {
+    localStorage.setItem(SAVE_BACKUP_KEY, serialized);
+  } catch {
+    /* the primary slot remains usable */
   }
 }
 
