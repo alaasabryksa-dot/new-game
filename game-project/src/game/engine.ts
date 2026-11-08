@@ -1105,6 +1105,17 @@ export function mountGame(
   }
 
   const dummy = new THREE.Object3D();
+  // Reuse render scratch state across frames; allocating these in render()
+  // creates avoidable garbage collection pressure on mobile WebViews.
+  const hiddenNpcMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+  hiddenNpcMatrix.setPosition(0, -30, 0);
+  const cursors: Record<VehicleId, number> = {
+    malaky: 0,
+    taxi: 0,
+    micro: 0,
+    tuktuk: 0,
+    truck: 0,
+  };
   const tukColor = new THREE.Color("#d4654a");
   const PEOPLE = androidDevice ? 8 : 80;
   const people = new THREE.InstancedMesh(
@@ -2452,17 +2463,7 @@ function rollJobs(fromStop: number) {
     for (const w of playerMesh.wheels) w.rotation.x = wheelSpin;
     playerMesh.rider.visible = pax.length > 0 && phase !== "menu";
 
-    const cursors: Record<VehicleId, number> = {
-      malaky: 0,
-      taxi: 0,
-      micro: 0,
-      tuktuk: 0,
-      truck: 0,
-    };
-    // Reuse one invisible instance transform instead of allocating a closure
-    // and rewriting the shared dummy matrix for every hidden NPC lamp each frame.
-    const hiddenNpcMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
-    hiddenNpcMatrix.setPosition(0, -30, 0);
+    for (const kind of KINDS) cursors[kind] = 0;
     const paintNpc = (kind: VehicleId, s: number, yaw: number, lat: number, color?: THREE.Color, braking = false, turnDirection = 0) => {
       const pool = pools.get(kind)!;
       const i = cursors[kind]++;
@@ -2474,7 +2475,8 @@ function rollJobs(fromStop: number) {
       dummy.rotation.set(0, yaw, 0);
       dummy.scale.set(1, 1, 1);
       dummy.updateMatrix();
-      const vehicleMatrix = dummy.matrix.clone();
+      // InstancedMesh.setMatrixAt copies the matrix elements immediately.
+      // The shared dummy matrix is safe here and avoids one clone per NPC.
       pool.body.setMatrixAt(i, vehicleMatrix);
       pool.glass.setMatrixAt(i, vehicleMatrix);
       pool.wheels.setMatrixAt(i, vehicleMatrix);
