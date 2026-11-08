@@ -19,7 +19,8 @@
 - The game UI now handles WebGL context loss as recoverable: it allows Three.js to restore its context and clears the blocking error state after a valid context returns.
 - Continuous engine audio is suspended on manual pause, quit, manual finish, and automatic shift/rush completion, then explicitly unlocked on resume/start. This avoids a running engine tone after gameplay stops.
 - Stop-crowd instancing now respects the device-wide mesh capacity (8 on Android) across all stops, avoiding attempts to write beyond the mobile crowd buffer.
-- NPC brake/indicator visibility reuses one hidden transform matrix rather than creating per-NPC helper closures each rendered frame.
+- NPC instance rendering now reuses its hidden transform matrix, per-vehicle cursors, and painter function across frames; it also passes the shared transform directly to `InstancedMesh.setMatrixAt` instead of cloning a matrix for every traffic vehicle.
+- The minimap now distinguishes passenger drop-off destinations from ordinary pickup points, while retaining the active rush-delivery marker.
 - The renderer requires WebGL 2 / OpenGL ES 3.0. The manifest declares this hardware feature as required; devices without it are not compatible.
 - Android scene generation has a reduced-detail path and lower render resolution. The mobile path now uses instanced procedural building facades with textured upper-floor windows, generic Arabic shop signs, shutters/glazing, and awnings. These are original generic game assets, not verified reconstructions of individual storefronts.
 - APK build and browser-based offline bundle checks are automated. They do not prove successful operation on every physical Android phone.
