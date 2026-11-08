@@ -35,6 +35,9 @@
 - APK build and browser-based offline bundle checks are automated. They do not prove successful operation on every physical Android phone.
 - Latest verified CI run passed TypeScript checking, the full automated test suite, landscape mobile gameplay smoke tests, the self-contained offline Android web-bundle smoke test, and the production web build.
 - A signed production AAB, signing lineage, ads, and physical-device verification are not yet release-approved.
+- A separate native Android CI gate now compiles the Kotlin Activity and processes the Android manifest on every relevant source change. It deliberately does not assemble APK/AAB files or start an emulator, so native compile errors are caught before the user approves packaging.
+- Native source regression checks now cover renderer-process death cleanup, visible startup diagnostics, and the WebGL 2 readiness handshake. The handshake is emitted only after animation frames and a valid non-lost WebGL 2 drawing surface are confirmed; this remains a browser-level/native-source check until a real device is tested.
+
 
 ## Gameplay economy and progression hardening (8 Nov 2026)
 
