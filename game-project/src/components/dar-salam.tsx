@@ -591,7 +591,7 @@ function PlayHud({
               <div className="flex flex-wrap gap-1" role="group" aria-label="الركاب الموجودون في التوكتوك">
                 {snap.passengers.map((passenger, index) => (
                   <span key={`${passenger.dest}-${index}`} className="rounded-md bg-panel-2 px-1.5 py-1 text-[10px] font-bold">
-                    {passenger.dest} · {passenger.fare}ج
+                    {passenger.dest} · {passenger.side === "right" ? "يمين" : "شمال"} · {passenger.fare}ج
                   </span>
                 ))}
               </div>
