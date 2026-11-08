@@ -409,12 +409,12 @@ function PlayHud({
   return (
     <>
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-3">
-        <div className="pointer-events-auto w-32 rounded-2xl border border-line bg-panel/90 px-3 py-2 sm:w-40">
+        <div className="pointer-events-auto w-32 rounded-2xl border border-line bg-panel/90 px-3 py-2 sm:w-40" role="group" aria-label="عدادات القيادة">
           <div className="flex items-center gap-1 text-xs text-muted">
             <Gauge className="size-3.5 text-amber" />
             كم/س
           </div>
-          <p dir="ltr" className="text-3xl font-extrabold leading-none tabular-nums">
+          <p dir="ltr" aria-label={`السرعة ${snap.speed} كيلومتر في الساعة`} className="text-3xl font-extrabold leading-none tabular-nums">
             {snap.speed}
           </p>
           <div className="mt-2 flex items-center gap-1 text-xs text-muted">
@@ -482,13 +482,13 @@ function PlayHud({
                 <span>ركاب {snap.passengers.length}/{snap.seats}</span>
                 <span>منتظرين {snap.waitingPassengers}/8</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-line">
+              <div className="h-1.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-label="الركاب المنتظرون في المحطة" aria-valuemin={0} aria-valuemax={8} aria-valuenow={Math.max(0, Math.min(8, snap.waitingPassengers))}>
                 <div
                   className="h-full rounded-full bg-nile transition-[width] duration-300"
                   style={{ width: `${Math.max(0, Math.min(100, (snap.waitingPassengers / 8) * 100))}%` }}
                 />
               </div>
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1" role="group" aria-label="الركاب الموجودون في التوكتوك">
                 {snap.passengers.map((passenger, index) => (
                   <span key={`${passenger.dest}-${index}`} className="rounded-md bg-panel-2 px-1.5 py-1 text-[10px] font-bold">
                     {passenger.dest} · {passenger.fare}ج
@@ -502,13 +502,13 @@ function PlayHud({
           ) : null}
         </div>
 
-        <div className="pointer-events-auto w-32 rounded-2xl border border-line bg-panel/90 px-3 py-2 sm:w-40">
+        <div className="pointer-events-auto w-32 rounded-2xl border border-line bg-panel/90 px-3 py-2 sm:w-40" role="group" aria-label="معلومات المحطة والوجهة">
           <div className="flex items-center gap-1 text-xs text-muted">
             <MapPin className="size-3.5 text-nile" />
             {rush ? "التوصيلة" : "النزلة"}
           </div>
           <p className="truncate text-base font-extrabold leading-snug">{rush ? snap.jobName : snap.stopName}</p>
-          <p dir="ltr" className="text-sm font-bold text-amber tabular-nums">
+          <p dir="ltr" aria-label={`المسافة إلى المحطة ${snap.stopDist} متر`} className="text-sm font-bold text-amber tabular-nums">
             {snap.stopDist} m
           </p>
           {snap.hint ? <p className="mt-1 text-xs font-bold text-amber">{snap.hint}</p> : null}
@@ -516,7 +516,7 @@ function PlayHud({
       </div>
 
       {snap.message ? (
-        <p className="pointer-events-none absolute bottom-52 left-1/2 z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-asphalt/80 px-4 py-2 text-center text-sm font-bold md:bottom-24">
+        <p role="status" aria-live="polite" aria-atomic="true" className="pointer-events-none absolute bottom-52 left-1/2 z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-asphalt/80 px-4 py-2 text-center text-sm font-bold md:bottom-24">
           {snap.message}
         </p>
       ) : null}
@@ -540,6 +540,7 @@ function PlayHud({
         </button>
         <button
           type="button"
+          aria-label="تغيير زاوية الكاميرا"
           className="rounded-full bg-panel/90 px-3 py-2 text-xs font-bold"
           onClick={() => game.current?.cycleCam()}
         >
@@ -549,6 +550,7 @@ function PlayHud({
           type="button"
           className="rounded-full bg-panel/90 p-3"
           aria-label={snap.sound ? "كتم الصوت" : "تشغيل الصوت"}
+          aria-pressed={!snap.sound}
           title={snap.sound ? "كتم الصوت" : "تشغيل الصوت"}
           onClick={() => game.current?.toggleSound()}
         >
@@ -582,7 +584,7 @@ function PlayHud({
 
       {snap.phase === "pause" || snap.phase === "summary" ? (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-asphalt/75 p-4">
-          <section className="w-full max-w-sm rounded-2xl border border-line bg-panel p-5 text-center">
+          <section role="dialog" aria-modal="true" aria-label={snap.phase === "pause" ? "قائمة الإيقاف المؤقت" : "ملخص المشوار"} className="w-full max-w-sm rounded-2xl border border-line bg-panel p-5 text-center">
             <h2 className="text-2xl font-extrabold text-amber">
               {snap.phase === "pause" ? "وقفة" : rush ? "التوصيلات" : shift ? "خلصت الوردية" : "خلصت اللفة"}
             </h2>
