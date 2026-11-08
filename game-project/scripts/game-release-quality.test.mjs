@@ -359,6 +359,28 @@ test("shift settlement preserves earnings when rent cannot yet be fully paid", (
   assert.match(engine, /if \(save\.wallet >= RENT - money\)[\s\S]*?save\.wallet -= RENT - money/);
 });
 
+test("passenger fares scale predictably with trip distance and seat upgrades", () => {
+  const match = engine.match(/function calculatePassengerFare\(hopCount: number, fareMultiplier: number\) \{([\s\S]*?)\n\}/);
+  assert.ok(match, "passenger fare calculation must remain independently testable");
+  const calculate = new Function("finiteNonNegative", "PASSENGER_SYSTEM_TUNING", "hopCount", "fareMultiplier", match[1] + "\nreturn calculatePassengerFare(hopCount, fareMultiplier);");
+  const finite = (value, max = 1_000_000_000) => {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(parsed)) return 0;
+    return Math.min(max, Math.max(0, parsed));
+  };
+  const tuning = { baseFare: 24, farePerStop: 12 };
+  const fare = (hops, multiplier) => calculate(finite, tuning, hops, multiplier);
+  assert.equal(fare(2, 1), 48);
+  assert.equal(fare(4, 1), 72);
+  assert.equal(fare(6, 1), 96);
+  assert.equal(fare(4, 1.22), 88);
+  assert.equal(fare(4, 1.66), 120);
+  assert.equal(fare(-4, 1), 24);
+  assert.equal(fare(Number.NaN, 1), 24);
+  assert.equal(fare(4, Number.NaN), 72);
+  assert.match(engine, /const fare = calculatePassengerFare\(hop, spec\.fare\)/);
+});
+
 test("shift settlement math preserves money across paid, partial and overpaid rent cases", () => {
   const match = engine.match(/function calculateShiftSettlement\(earnings: number, wallet: number, rent: number\): ShiftSettlement \{([\s\S]*?)\n\}/);
   assert.ok(match, "pure settlement calculation must remain independently testable");
