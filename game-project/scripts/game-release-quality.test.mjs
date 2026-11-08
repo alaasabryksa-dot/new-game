@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
-const [engine, ui, routeSource, routeData, photoRefs, packageJson, rootRoute] = await Promise.all([
+const [engine, ui, routeSource, routeData, photoRefs, packageJson, rootRoute, trackSource] = await Promise.all([
   read("../src/game/engine.ts"),
   read("../src/components/dar-salam.tsx"),
   read("../src/game/data/fayoum-route.ts"),
@@ -285,4 +285,14 @@ test("new-run starting stop selection respects the closed route wrap", () => {
   assert.match(engine, /const here = track\.stops\.reduce\(\(best, stop, i\) => \{/);
   assert.match(engine, /Math\.abs\(wrapDelta\(stop\.s, startS, track\.total\)\)/);
   assert.doesNotMatch(engine, /const d = Math\.abs\(stop\.s - startS\)/);
+});
+
+test("route distance helper measures correctly across the closed-loop seam", () => {
+  const match = trackSource.match(/export function wrapDelta\(a: number, b: number, total: number\) \{([\s\S]*?)\n\}/);
+  assert.ok(match, "wrapDelta implementation must remain available");
+  const wrapDelta = new Function("a", "b", "total", match[1]);
+  assert.equal(wrapDelta(2, 98, 100), 4);
+  assert.equal(wrapDelta(98, 2, 100), -4);
+  assert.equal(wrapDelta(25, 10, 100), 15);
+  assert.equal(wrapDelta(10, 25, 100), -15);
 });
