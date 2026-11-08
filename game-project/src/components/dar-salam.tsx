@@ -164,7 +164,7 @@ export function DarSalam() {
   };
 
   return (
-    <main className="relative h-dvh w-full overflow-hidden bg-asphalt font-sans text-ink touch-none select-none">
+    <main className="relative h-screen h-dvh w-full overflow-hidden bg-asphalt font-sans text-ink touch-none select-none">
       <canvas ref={viewRef} className="absolute inset-0 h-full w-full" />
       <canvas
         ref={mapRef}
