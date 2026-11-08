@@ -1671,9 +1671,10 @@ function rollJobs(fromStop: number) {
         nextDropoffName = track.stops[person.dest].name;
       }
     }
+    const gasStationDist = Math.round(Math.abs(wrapDelta(track.gasS, proj.s, track.total)));
     let hint = "";
     if (phase === "play") {
-      const gasD = Math.abs(wrapDelta(track.gasS, proj.s, track.total));
+      const gasD = gasStationDist;
       if (fuel < 98 && gasD < 28) {
         if (proj.lat <= 2.5) hint = "ادخل يمين البنزينة";
         else if (Math.abs(player.speed) >= 2.8) hint = "هدّي عند البنزينة للتفويل";
@@ -1715,6 +1716,7 @@ function rollJobs(fromStop: number) {
       message: messageT > 0 ? message : "",
       alert: alertT > 0 ? alert : null,
       fuel: Math.max(0, Math.min(100, fuel)),
+      gasStationDist,
       rent: RENT,
       shiftLeft: Math.max(0, SHIFT_SECONDS - time),
       wallet: save.wallet,
