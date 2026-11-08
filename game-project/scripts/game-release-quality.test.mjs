@@ -311,6 +311,15 @@ test("route distance helper measures correctly across the closed-loop seam", () 
 });
 
 
+test("constrained devices adapt render resolution only after sustained slow frames", () => {
+  assert.match(engine, /let adaptivePixelScale = 1;[\s\S]*?let slowFrameSeconds = 0;[\s\S]*?let smoothFrameSeconds = 0;/);
+  assert.match(engine, /rawFrameSeconds > 0\.034[\s\S]*?slowFrameSeconds \+= Math\.min\(rawFrameSeconds, 0\.1\)/);
+  assert.match(engine, /slowFrameSeconds >= 2[\s\S]*?adaptivePixelScale - 0\.08[\s\S]*?resize\(\)/);
+  assert.match(engine, /smoothFrameSeconds >= 14[\s\S]*?adaptivePixelScale \+ 0\.04[\s\S]*?resize\(\)/);
+  assert.match(engine, /const dprFloor = androidDevice \? 0\.5 : 0\.65;[\s\S]*?baseDpr \* adaptivePixelScale/);
+  assert.match(engine, /simulation and physics remain fixed at 60 Hz/);
+});
+
 test("Android instanced vehicle pools can render the maximum weighted traffic population", () => {
   assert.match(engine, /const POOL = androidDevice \? 20 : 64/);
   const weights = ["tuktuk", "tuktuk", "tuktuk", "micro", "micro", "taxi", "malaky", "tuktuk", "truck"];
