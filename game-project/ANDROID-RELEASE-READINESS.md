@@ -50,6 +50,13 @@
 
 - Passenger fare calculation is now a bounded pure helper with regression coverage for short/long trips, each seat-upgrade multiplier, and invalid input. The established base-plus-distance economy is preserved; this change makes future balance tuning safer.
 
+## Economy balance pass (8 Nov 2026)
+
+- The fuel model is now one shared pure calculation used by both live consumption and the HUD range estimate. The reference three-minute shift load (65% throttle, half-speed ratio, two passengers) burns about 82% of a full tank; passenger load and higher speed still increase consumption, while idling uses substantially less. The maximum fuel upgrade reduces the same model by 57% (with the existing 42% efficiency floor).
+- Fuel tuning was adjusted from 0.30 idle / 0.62 throttle to 0.16 / 0.30 after reviewing the 180-second shift duration and the gas station's mapped 67%-route position. This avoids making an ordinary shift depend on reaching a station beyond the expected shift travel distance.
+- Shift-mode driving penalties are now 25 EGP for a serious collision, 45 EGP for a radar/roadblock violation, and 10 EGP for the bridge toll/speed event. Rush-mode time penalties remain unchanged. These are game-balance values, not claims about real-world fines.
+- Automated tests exercise the shared fuel formula at baseline and maximum upgrade, verify passenger and speed load effects, and guard the penalty values. This is deterministic model validation; physical-device playtesting is still required before calling the economy field-balanced.
+
 ## Remaining Android release work
 
 1. Preserve the packaged-local-assets-only WebView policy. If optional online services (such as ads) are later approved, isolate them behind a separately reviewed allowlist and ensure they cannot block gameplay; do not introduce remote game dependencies or server/auth requirements into the Android entry.
