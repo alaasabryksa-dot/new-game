@@ -466,7 +466,7 @@ function PlayHud({
         </button>
       </div>
 
-      <div dir="ltr" className="absolute inset-x-0 bottom-4 z-30 flex items-end justify-between px-3 md:hidden">
+      <div dir="ltr" className="absolute inset-x-0 bottom-4 z-30 flex items-end justify-between px-3">
         <div className="flex gap-2">
           <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/90 text-ink" aria-label="يسار" {...hold("l")}>
             <ChevronLeft className="mx-auto size-8" />
