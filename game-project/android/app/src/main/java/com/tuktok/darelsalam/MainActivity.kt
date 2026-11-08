@@ -86,6 +86,12 @@ class MainActivity : Activity() {
                 override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
                     val message = "WebView renderer process gone; didCrash=${detail.didCrash()}"
                     Log.e(TAG, message)
+                    // Android requires a WebView whose renderer has exited to be removed
+                    // and destroyed before the Activity continues with another view.
+                    (view.parent as? ViewGroup)?.removeView(view)
+                    view.stopLoading()
+                    view.destroy()
+                    if (webView === view) webView = null
                     showFailure("محرك عرض اللعبة توقف", message)
                     return true
                 }
