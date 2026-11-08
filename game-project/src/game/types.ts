@@ -166,6 +166,7 @@ export type Hud = {
   waitingPassengers: number;
   seats: number;
   stopName: string;
+  stopSide: "left" | "right";
   stopDist: number;
   hint: string;
   mode: Mode;
