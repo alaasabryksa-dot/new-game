@@ -24,6 +24,7 @@
 - The passenger HUD now identifies the nearest upcoming onboard drop-off and its forward route distance, so the driver can prepare for the next stop without guessing from the passenger list.
 - When fuel falls to 35% or below, the driving HUD displays the forward route distance to the next gas-station pass, rather than the shortest geometric distance that could point backward after passing it.
 - Stop approach prompts now distinguish drop-off-only stops, pickup-only stops, and stops that serve both actions; the prompt no longer incorrectly describes every passenger stop as a pickup.
+- Pedestrian avoidance now uses elapsed-time exponential smoothing with a clamped frame delta, so sidewalk retreat remains consistent across different frame rates and cannot jump after a long suspended frame.
 - The renderer requires WebGL 2 / OpenGL ES 3.0. The manifest declares this hardware feature as required; devices without it are not compatible.
 - Android scene generation has a reduced-detail path and lower render resolution. The mobile path now uses instanced procedural building facades with textured upper-floor windows, generic Arabic shop signs, shutters/glazing, and awnings. These are original generic game assets, not verified reconstructions of individual storefronts.
 - APK build and browser-based offline bundle checks are automated. They do not prove successful operation on every physical Android phone.
