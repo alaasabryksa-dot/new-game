@@ -3,17 +3,18 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
-const [engine, ui, routeSource, routeData, photoRefs, packageJson] = await Promise.all([
+const [engine, ui, routeSource, routeData, photoRefs, packageJson, rootRoute] = await Promise.all([
   read("../src/game/engine.ts"),
   read("../src/components/dar-salam.tsx"),
   read("../src/game/data/fayoum-route.ts"),
   read("../src/game/data/fayoum-route-candidate.json").then(JSON.parse),
   read("../src/game/data/fayoum-photo-references.json").then(JSON.parse),
   read("../package.json").then(JSON.parse),
+  read("../src/routes/__root.tsx"),
 ]);
 
 test("the game identifies the requested street without overstating map verification", () => {
-  assert.match(ui, /توكتوك دار السلام/);
+  assert.match(rootRoute, /const APP_NAME = "توكتوك دار السلام"/);
   assert.match(routeSource, /still needs on-site validation/);
   assert.equal(routeData.validation.fieldVerified, false);
   assert.equal(routeData.validation.connected, true);
