@@ -70,9 +70,14 @@ function blankUpgrades(): Upgrades {
   return { motor: 0, fuel: 0, seats: 0, tires: 0 };
 }
 
+function finiteNonNegative(value: unknown, max = 1_000_000_000) {
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.min(max, Math.max(0, parsed));
+}
+
 function clampLvl(n: unknown) {
-  const v = Math.floor(Number.isFinite(Number(n)) ? Number(n) : 0);
-  return Math.max(0, Math.min(3, v));
+  return Math.floor(Math.min(3, finiteNonNegative(n, 3)));
 }
 
 function loadSave(): Save {
@@ -93,11 +98,11 @@ function loadSave(): Save {
     const u = (p.upgrades ?? {}) as Partial<Upgrades>;
     return {
       v: 2,
-      bestMoney: Math.max(0, Number(p.bestMoney) || 0),
-      bestKm: Math.max(0, Number(p.bestKm) || 0),
+      bestMoney: finiteNonNegative(p.bestMoney),
+      bestKm: finiteNonNegative(p.bestKm, 1_000_000),
       bestTrial: typeof p.bestTrial === "number" && Number.isFinite(p.bestTrial) && p.bestTrial >= 0 ? p.bestTrial : null,
       sound: p.sound !== false,
-      wallet: Math.max(0, Math.floor(Number(p.wallet) || 0)),
+      wallet: Math.floor(finiteNonNegative(p.wallet, 10_000_000)),
       upgrades: {
         motor: clampLvl(u.motor),
         fuel: clampLvl(u.fuel),
@@ -494,26 +499,33 @@ class Sfx {
   on = true;
 
   unlock() {
-    if (!this.ctx) {
-      const ctx = new AudioContext();
-      const gain = ctx.createGain();
-      gain.gain.value = 0.0001;
-      const filter = ctx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.value = 260;
-      const osc = ctx.createOscillator();
-      osc.type = "sawtooth";
-      osc.frequency.value = 44;
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      this.ctx = ctx;
-      this.gain = gain;
-      this.osc = osc;
-      this.filter = filter;
+    try {
+      if (!this.ctx) {
+        const AudioContextCtor = window.AudioContext;
+        if (!AudioContextCtor) return;
+        const ctx = new AudioContextCtor();
+        const gain = ctx.createGain();
+        gain.gain.value = 0.0001;
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 260;
+        const osc = ctx.createOscillator();
+        osc.type = "sawtooth";
+        osc.frequency.value = 44;
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        this.ctx = ctx;
+        this.gain = gain;
+        this.osc = osc;
+        this.filter = filter;
+      }
+      if (this.ctx.state === "suspended") void this.ctx.resume().catch(() => undefined);
+    } catch {
+      // Audio is optional: unsupported or blocked audio must never stop gameplay.
+      this.stop();
     }
-    if (this.ctx.state === "suspended") void this.ctx.resume();
   }
 
   engine(speed: number, throttle: number) {
