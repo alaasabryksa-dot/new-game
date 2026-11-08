@@ -36,6 +36,14 @@
 - Latest verified CI run passed TypeScript checking, the full automated test suite, landscape mobile gameplay smoke tests, the self-contained offline Android web-bundle smoke test, and the production web build.
 - A signed production AAB, signing lineage, ads, and physical-device verification are not yet release-approved.
 
+## Gameplay economy and progression hardening (8 Nov 2026)
+
+- Shift earnings are no longer lost when a run ends below the rent target. The earned amount is carried into the persistent wallet, and the remaining rent is reported accurately so progress can accumulate across shifts.
+- Fuel-station purchases are proportional to the missing tank percentage (rounded up to whole pounds, with a one-pound minimum). A nearly full tank no longer costs the same as a nearly empty tank; the displayed 22 EGP remains the full-tank reference price.
+- Rush-delivery rewards now scale with the number of route stops covered: 35 EGP base plus 4 EGP per stop. The earned amount is shown in the arrival message. The route scheduler still avoids repeating destinations within a run.
+- Automated release-quality checks cover the shift carryover, proportional refueling, and distance-based rush reward rules.
+- These are code-level economy changes; the resulting economy still needs hands-on play balancing on a physical Android device during the later device-validation stage.
+
 ## Remaining Android release work
 
 1. Preserve the packaged-local-assets-only WebView policy. If optional online services (such as ads) are later approved, isolate them behind a separately reviewed allowlist and ensure they cannot block gameplay; do not introduce remote game dependencies or server/auth requirements into the Android entry.
