@@ -53,7 +53,7 @@ jobs:
 
       - name: Confirm this check did not package an APK
         run: |
-          if find app/build/outputs -type f \\( -name "*.apk" -o -name "*.aab" \\) -print -quit | grep -q .; then
+          if find app/build/outputs -type f \( -name "*.apk" -o -name "*.aab" \) -print -quit | grep -q .; then
             echo "Unexpected Android package output in compile-only verification"
             exit 1
           fi
