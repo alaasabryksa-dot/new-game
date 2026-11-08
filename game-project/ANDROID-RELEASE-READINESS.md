@@ -1,39 +1,51 @@
 # Android release readiness — توكتوك دار السلام
 
-## Current state
+## Confirmed product requirements
 
-- The game is a React + Three.js web application.
-- The project has a web-app manifest/install flow supplied by the workspace PWA plugin.
-- The repository does **not** currently contain a native Android Gradle project, Capacitor Android project, APK, or AAB.
-- A successful web production build is not an Android package and is not proof of device installation.
+- Android phone game; gameplay is landscape-only.
+- The player drives a tuk-tuk only. Cars, taxis, microbuses and trucks are traffic NPCs, not selectable player vehicles.
+- Official player-facing title: **توكتوك دار السلام**.
+- Confirmed Android application ID: `com.tuktok.darelsalam`. Keep it unchanged.
+- The complete game must launch and remain playable without an internet connection.
+- AdMob ads may load only when connectivity is available. Gameplay must not depend on an ad response or network access.
 
-## Required release inputs
+## Current repository state
 
-1. A stable public HTTPS deployment URL for the finished game.
-2. **Confirmed application ID:** `com.tuktok.darelsalam` (approved; keep stable for all future updates).
-3. Final launcher icon and splash artwork.
-4. A protected Android signing key and its recovery backup; never commit the key or passwords.
-5. A chosen wrapper path:
-   - Trusted Web Activity (TWA) after the public domain is stable and Digital Asset Links are configured, or
-   - Capacitor/native WebView if offline assets and native integrations are required.
-6. A real-device test on at least one lower-memory Android phone and one newer phone.
+- The game is currently a React + Three.js application using TanStack Start/Nitro.
+- The repository does **not** contain a native Android Gradle project, Capacitor Android project, APK, or AAB.
+- The current production web build is server-oriented; it is not yet a verified self-contained offline Android web bundle.
+- A successful web CI run is not an Android build and does not prove offline gameplay.
+
+## Android implementation plan
+
+1. Separate the game client and its required assets from server-only application infrastructure. Preserve the existing Three.js gameplay and local save data.
+2. Produce and test a fully local web bundle that runs without a remote URL, API, authentication service, or server runtime.
+3. Add a native Android wrapper (Capacitor or an equivalent maintained Android WebView shell) that loads only the bundled local game assets.
+4. Add the official Google Mobile Ads SDK through a maintained Capacitor/native integration. Use Google's test ad unit IDs during development; never serve test IDs as production monetization.
+5. Request ads only while online, handle no-fill/offline states silently, and never block gameplay or require watching an ad to launch.
+6. Build a debug APK for installation tests and a signed Android App Bundle (AAB) for Google Play.
+7. Test on real Android phones: airplane-mode launch and gameplay, landscape orientation, touch controls, audio, pause/resume, save persistence, ad-offline behavior, and ad consent/privacy flows.
+8. Configure signing with protected GitHub Actions secrets. Never commit keystores, passwords, or production ad credentials.
+
+## Inputs still required before production release
+
+- The user's AdMob **App ID** and production ad-unit IDs (banner/interstitial/rewarded, only the formats actually approved for the game). Until supplied, use Google's official test IDs only.
+- A protected signing key and a secure backup. These must not be committed to the repository.
+- Google Play Console account and store listing/privacy declarations, completed by the account owner.
 
 ## Release gates
 
-- [ ] Confirm the deployed URL and domain ownership.
-- [x] Choose and freeze the application ID: `com.tuktok.darelsalam`.
-- [ ] Configure the wrapper and Android SDK / Gradle workflow.
-- [ ] Configure signing through GitHub Actions secrets (never repository files).
-- [ ] Build both APK (install test) and AAB (store delivery).
-- [ ] Install the signed APK on a physical Android device.
-- [ ] Verify the game opens and stays in landscape orientation (never portrait during gameplay).
-- [ ] Verify landscape HUD layout, touch controls, audio, pause/resume, save persistence, and background/foreground behavior on real Android phones.
-- [ ] Verify the AAB with bundle validation and retain the signing lineage for future updates.
+- [ ] Self-contained offline client bundle is implemented and verified.
+- [ ] Native Android project and Gradle build are implemented.
+- [ ] AdMob test integration is implemented; production IDs are configured securely.
+- [ ] APK and AAB build successfully in CI.
+- [ ] Signed APK installs and launches on physical Android devices.
+- [ ] Gameplay works with airplane mode enabled.
+- [ ] Ad loading failures do not interrupt gameplay.
+- [ ] Landscape, touch controls, audio, lifecycle and save behavior pass device tests.
+- [ ] Google Play policy, privacy disclosures, consent and data-safety declarations are reviewed.
+- [ ] Signed AAB is validated and signing lineage is safely backed up.
 
-## Mobile gameplay orientation
+## Accuracy rule
 
-The game is designed for Android phones in landscape orientation only. The web app manifest requests `orientation: landscape`, and the start gesture requests the Screen Orientation API lock where the installed browser supports it. Browser smoke coverage uses landscape mobile viewports; final confirmation still requires a real Android device because orientation locking is subject to browser and installation rules.
-
-## Important accuracy note
-
-Do not label this project Android-ready or announce an APK/AAB as available until the native wrapper, signing, artifact build, and physical-device installation checks have all passed.
+Do not call the project Android-ready or announce an APK/AAB as available until the native wrapper, offline bundle, signing, artifact build, and physical-device tests have all passed.
