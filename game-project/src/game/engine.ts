@@ -3770,8 +3770,8 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
       const bike = { ...item, x: x + rx * side * 1.45, z: z + rz * side * 1.45 };
       const forward = { ...bike, x: bike.x + tx * 0.72, z: bike.z + tz * 0.72 };
       const rear = { ...bike, x: bike.x - tx * 0.72, z: bike.z - tz * 0.72 };
-      put(parkedBikeWheels, forward, 0.28, 0.13, 0.55, 0.13);
-      put(parkedBikeWheels, rear, 0.28, 0.13, 0.55, 0.13);
+      put(parkedBikeWheels, forward, 0.28, 1, 1, 1);
+      put(parkedBikeWheels, rear, 0.28, 1, 1, 1);
       put(parkedBikeFrames, bike, 0.72, 0.28, 0.32, 1.25);
       put(parkedBikeSeats, bike, 1.0, 0.3, 0.12, 0.62);
       put(parkedBikeBars, forward, 1.05, 0.78, 0.08, 0.1);
@@ -3803,7 +3803,9 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
   add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#9b8060", roughness: 0.9 }), benches);
   add(new THREE.CylinderGeometry(0.075, 0.09, 1, 7),
     new THREE.MeshStandardMaterial({ color: "#d1c8b7", roughness: 0.84 }), bollards);
-  add(new THREE.CylinderGeometry(0.28, 0.28, 0.13, 9),
+  const parkedWheelGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.13, 9);
+  parkedWheelGeo.rotateZ(Math.PI / 2);
+  add(parkedWheelGeo,
     new THREE.MeshStandardMaterial({ color: "#191d20", roughness: 0.94 }), parkedBikeWheels);
   add(new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshStandardMaterial({ color: "#bd4935", roughness: 0.58, metalness: 0.12 }), parkedBikeFrames);
