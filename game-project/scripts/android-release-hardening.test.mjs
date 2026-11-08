@@ -26,7 +26,7 @@ test("Android WebView keeps local storage and disables unsafe file access", () =
   assert.match(activity, /allowFileAccess = false/);
   assert.match(activity, /allowContentAccess = false/);
   assert.match(activity, /setSupportMultipleWindows\(false\)/);
-  assert.match(activity, /setJavaScriptEnabled/);
+  assert.match(activity, /javaScriptEnabled = true/);
 });
 
 test("Android package identity and landscape WebGL requirements stay fixed", () => {
