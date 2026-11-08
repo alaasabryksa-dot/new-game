@@ -1716,9 +1716,16 @@ export function mountGame(
             const candidates = [2, 3, 4]
               .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
               .filter((candidate) => !assignedDestinations.has(candidate.dest));
+            // If the usual 2–4-stop destinations are already occupied, widen
+            // the search before allowing two passengers to share a drop-off.
+            const extendedCandidates = [2, 3, 4, 5, 6]
+              .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
+              .filter((candidate) => !assignedDestinations.has(candidate.dest));
             const choices = candidates.length
               ? candidates
-              : [2, 3, 4].map((hop) => ({ hop, dest: (i + hop) % track.stops.length }));
+              : extendedCandidates.length
+                ? extendedCandidates
+                : [2, 3, 4, 5, 6].map((hop) => ({ hop, dest: (i + hop) % track.stops.length }));
             const choice = choices[Math.floor(Math.random() * choices.length)];
             const { hop, dest } = choice;
             assignedDestinations.add(dest);
