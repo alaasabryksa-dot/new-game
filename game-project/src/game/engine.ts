@@ -2690,7 +2690,11 @@ function rollJobs(fromStop: number) {
 
   const onDown = (e: KeyboardEvent) => {
     const target = e.target;
+    const isEscape = e.code === "Escape";
+    // Escape remains a global pause/resume command even when a menu button
+    // retains focus; only driving shortcuts are ignored by interactive controls.
     if (
+      !isEscape &&
       target instanceof HTMLElement &&
       (target.isContentEditable || target.closest("input, textarea, select, button, [contenteditable='true']"))
     ) return;
