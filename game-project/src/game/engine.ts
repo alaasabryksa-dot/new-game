@@ -1540,12 +1540,22 @@ export function mountGame(
       if (rel < -45) w.s = proj.s + 180 + Math.random() * 80;
       if (phase !== "play" || hitCd > 0) continue;
       const sm = track.sample(w.s);
+      const wrongLongitudinalGap = Math.abs(wrapDelta(w.s, proj.s, track.total));
+      const wrongLateralGap = Math.abs(w.lat - proj.lat);
+      const wrongLength = 4.4;
+      const wrongWidth = 1.8;
+      // Opposing traffic uses the same road-aligned overlap test as normal traffic.
+      // A nearby vehicle in the next lane must not trigger a false collision.
+      if (
+        wrongLongitudinalGap >= (specNow().length + wrongLength) * 0.5
+        || wrongLateralGap >= (specNow().width + wrongWidth) * 0.5 + 0.18
+      ) continue;
       const rx = Math.cos(sm.yaw);
       const rz = -Math.sin(sm.yaw);
       const x = sm.x + rx * w.lat;
       const z = sm.z + rz * w.lat;
       const d = Math.hypot(player.x - x, player.z - z);
-      if (d < specNow().length * 0.42 + 1.3) collide(d, player.x - x, player.z - z, 10);
+      collide(d, player.x - x, player.z - z, 10);
     }
   }
 
