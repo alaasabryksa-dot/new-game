@@ -51,8 +51,15 @@ try {
     await page.getByRole("button", { name: /كمّل/ }).click();
     await page.getByRole("button", { name: "إيقاف" }).waitFor({ state: "visible" });
 
+    // Exercise the keyboard resume path separately from the touch-button path.
+    await page.getByRole("button", { name: "إيقاف" }).click();
+    await page.getByText("وقفة", { exact: true }).waitFor({ state: "visible" });
+    await page.keyboard.press("Escape");
+    await page.getByText("وقفة", { exact: true }).waitFor({ state: "hidden" });
+    await page.getByRole("button", { name: "إيقاف" }).waitFor({ state: "visible" });
+
     assert.deepEqual(pageErrors, [], `${viewport.name}: no uncaught browser errors`);
-    console.log(`PASS ${viewport.name}: landscape load, canvas, start, touch controls, pause and resume`);
+    console.log(`PASS ${viewport.name}: landscape load, canvas, start, touch controls, pause, touch resume and Escape resume`);
     await context.close();
   }
 } finally {
