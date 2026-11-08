@@ -89,3 +89,10 @@ test("minimap distinguishes passenger drop-off destinations from pickup points",
   assert.ok(map.includes("if (passengerDestination && !hot)"));
   assert.ok(map.includes("ctx.arc(x, y, 4.2, 0, Math.PI * 2)"));
 });
+
+test("pedestrian player-avoidance smoothing is frame-rate independent and delta-clamped", () => {
+  assert.match(engine, /let previousUpdateTime: number \| null = null/);
+  assert.match(engine, /THREE\.MathUtils\.clamp\(time - previousUpdateTime, 0, 0\.1\)/);
+  assert.match(engine, /1 - Math\.exp\(-PEDESTRIAN_TUNING\.avoidanceResponse \* 60 \* elapsed\)/);
+  assert.match(engine, /walker\.avoidanceOffset \+= \(targetAvoidance - walker\.avoidanceOffset\) \* avoidanceBlend/);
+});
