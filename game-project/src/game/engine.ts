@@ -220,6 +220,12 @@ function calculateShiftSettlement(earnings: number, wallet: number, rent: number
   return { rentPaid, rentRemaining, walletAfter };
 }
 
+function calculatePassengerFare(hopCount: number, fareMultiplier: number) {
+  const safeHops = Math.floor(finiteNonNegative(hopCount, 100));
+  const safeMultiplier = Math.min(10, Math.max(0.1, Number.isFinite(fareMultiplier) ? fareMultiplier : 1));
+  return Math.max(1, Math.round((PASSENGER_SYSTEM_TUNING.baseFare + safeHops * PASSENGER_SYSTEM_TUNING.farePerStop) * safeMultiplier));
+}
+
 function blankUpgrades(): Upgrades {
   return { motor: 0, fuel: 0, seats: 0, tires: 0 };
 }
@@ -2387,7 +2393,7 @@ function rollJobs(fromStop: number) {
             const { hop, dest } = choice;
             assignedDestinations.add(dest);
             // Fare is fixed at pickup and scales with trip length and seat upgrades.
-            const fare = Math.max(1, Math.round((PASSENGER_SYSTEM_TUNING.baseFare + hop * PASSENGER_SYSTEM_TUNING.farePerStop) * spec.fare));
+            const fare = calculatePassengerFare(hop, spec.fare);
             const passenger = { dest, fare };
             pax.push(passenger);
             boarded.push(passenger);
