@@ -232,6 +232,7 @@ export function DarSalam() {
                   <button
                     key={m.id}
                     type="button"
+                    aria-pressed={cfg.mode === m.id}
                     onClick={() => patch({ mode: m.id })}
                     className={
                       cfg.mode === m.id
@@ -252,6 +253,7 @@ export function DarSalam() {
                     key={p.id}
                     type="button"
                     aria-label={p.name}
+                    aria-pressed={cfg.paint === p.hex}
                     onClick={() => patch({ paint: p.hex })}
                     className={
                       cfg.paint === p.hex
@@ -267,6 +269,7 @@ export function DarSalam() {
                   <button
                     key={d.id}
                     type="button"
+                    aria-pressed={cfg.density === d.id}
                     onClick={() => patch({ density: d.id })}
                     className={
                       cfg.density === d.id
@@ -279,6 +282,7 @@ export function DarSalam() {
                 ))}
                 <button
                   type="button"
+                  aria-pressed={cfg.night}
                   onClick={() => patch({ night: !cfg.night })}
                   className="rounded-full bg-panel-2 px-3 py-2 text-xs font-bold"
                 >
@@ -286,6 +290,7 @@ export function DarSalam() {
                 </button>
                 <button
                   type="button"
+                  aria-pressed={!cfg.sound}
                   onClick={() => patch({ sound: !cfg.sound })}
                   className="rounded-full bg-panel-2 p-2"
                   aria-label={cfg.sound ? "كتم الصوت" : "تشغيل الصوت"}
@@ -521,19 +526,21 @@ function PlayHud({
         </p>
       ) : null}
 
-      <div className="absolute bottom-36 left-1/2 z-30 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-36 left-1/2 z-30 flex -translate-x-1/2 gap-2" role="group" aria-label="أزرار التحكم الإضافية">
         <button
           type="button"
           className="rounded-full bg-panel/90 p-3"
-          aria-label="إيقاف"
-          onClick={() => (snap.phase === "pause" ? game.current?.resume() : game.current?.pause())}
+          aria-label={snap.phase === "pause" ? "استئناف القيادة" : "إيقاف مؤقت"}
+          title={snap.phase === "pause" ? "استئناف القيادة" : "إيقاف مؤقت"}
+          onClick={() => (snap.phase === "pause" ? game.current?.resume() : game.current?.pause())
         >
           {snap.phase === "pause" ? <Play className="size-5" /> : <Pause className="size-5" />}
         </button>
         <button
           type="button"
           className="rounded-full bg-panel/90 p-3"
-          aria-label="كلاكس"
+          aria-label="إطلاق الكلاكس"
+          title="كلاكس"
           onClick={() => game.current?.horn()}
         >
           <Megaphone className="size-5" />
@@ -542,6 +549,7 @@ function PlayHud({
           type="button"
           aria-label="تغيير زاوية الكاميرا"
           className="rounded-full bg-panel/90 px-3 py-2 text-xs font-bold"
+          title="تغيير زاوية الكاميرا"
           onClick={() => game.current?.cycleCam()}
         >
           كاميرا
@@ -558,7 +566,7 @@ function PlayHud({
         </button>
       </div>
 
-      <div dir="ltr" className="absolute inset-x-0 bottom-4 z-30 flex items-end justify-between px-3">
+      <div dir="ltr" className="absolute inset-x-0 bottom-4 z-30 flex items-end justify-between px-3" role="group" aria-label="أزرار قيادة التوكتوك">
         <div className="flex gap-2">
           <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/90 text-ink" aria-label="يسار" {...hold("l")}>
             <ChevronLeft className="mx-auto size-8" />
