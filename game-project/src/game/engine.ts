@@ -2626,11 +2626,15 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
   const colors = ["#e7d3b5", "#e2b39a", "#efe6d6", "#cfc8ba", "#c46a52"];
   const capacity = Math.max(1, Math.ceil(track.pts.length / 3) * 2);
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-  const materials = colors.map((color) => new THREE.MeshStandardMaterial({
-    color,
-    roughness: 0.92,
-    metalness: 0,
-  }));
+  const materials = colors.map((color) => {
+    const map = facadeTexture(color);
+    return new THREE.MeshStandardMaterial({
+      color: "#ffffff",
+      map: map ?? undefined,
+      roughness: 0.92,
+      metalness: 0,
+    });
+  });
   const buildings = materials.map((material) => {
     const mesh = new THREE.InstancedMesh(boxGeo, material, capacity);
     mesh.count = 0;
@@ -2644,9 +2648,29 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     emissive: "#142c32", emissiveIntensity: 0.18,
   });
   const shutterMat = new THREE.MeshStandardMaterial({ color: "#737b7c", roughness: 0.72, metalness: 0.42 });
-  const signMats = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334"].map(
-    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.76 }),
-  );
+  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "خضار وفاكهة"];
+  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334"];
+  const signMats = signLabels.map((label, index) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 128;
+    const context = canvas.getContext("2d");
+    if (context) {
+      context.fillStyle = signColors[index];
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = "#f5e9c9";
+      context.fillRect(0, 0, canvas.width, 6);
+      context.fillRect(0, canvas.height - 6, canvas.width, 6);
+      context.direction = "rtl";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.font = "bold 62px Tajawal, sans-serif";
+      context.fillText(label, canvas.width / 2, canvas.height / 2);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.MeshStandardMaterial({ color: "#ffffff", map: texture, roughness: 0.76 });
+  });
   const awningMats = ["#b84f3d", "#d6a23b", "#397f7a", "#e7e0d2"].map(
     (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.84, side: THREE.DoubleSide }),
   );
