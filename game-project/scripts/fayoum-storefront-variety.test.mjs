@@ -38,6 +38,9 @@ test("Android street facades vary independently by side and include lightweight 
   assert.match(engine, /Small split A\/C units, drain pipes and satellite dishes/);
   assert.match(engine, /g\.ellipse\(dishX \+ 2, dishY - 6/);
   assert.match(engine, /g\.fillRect\(unitX, unitY, 26, 15\)/);
+  assert.match(engine, /exterior drain pipes and utility meter boxes/);
+  assert.match(engine, /g\.fillRect\(px, 0, 3, 512\)/);
+  assert.match(engine, /g\.arc\(321, 466, 5/);
   assert.match(engine, /const sideSeed = seed \+ \(side === 1 \? 7919 : 0\);/);
   assert.match(engine, /const sideVariation = \(sideSeed % 1000\) \/ 1000;/);
   assert.match(engine, /new THREE\.CylinderGeometry\(0\.52, 0\.56, 1\.12, 9\)/);
