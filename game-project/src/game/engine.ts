@@ -1701,9 +1701,19 @@ export function mountGame(
         if (free > 0 && waiting[i] > 0) {
           const n = Math.max(0, Math.min(free, waiting[i], 3));
           const boarded: Pax[] = [];
+          // Spread passengers across different destinations when possible, so a
+          // single stop does not create an unrealistic pile of identical drop-offs.
+          const assignedDestinations = new Set(pax.map((person) => person.dest));
           for (let k = 0; k < n; k++) {
-            const hop = 2 + Math.floor(Math.random() * 3);
-            const dest = (i + hop) % track.stops.length;
+            const candidates = [2, 3, 4]
+              .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
+              .filter((candidate) => !assignedDestinations.has(candidate.dest));
+            const choices = candidates.length
+              ? candidates
+              : [2, 3, 4].map((hop) => ({ hop, dest: (i + hop) % track.stops.length }));
+            const choice = choices[Math.floor(Math.random() * choices.length)];
+            const { hop, dest } = choice;
+            assignedDestinations.add(dest);
             // Fare is fixed at pickup and scales with trip length and seat upgrades.
             const fare = Math.max(1, Math.round((24 + hop * 12) * spec.fare));
             const passenger = { dest, fare };
