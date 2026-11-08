@@ -105,3 +105,17 @@ test("gameplay interruption and manual pause persist the current run immediately
   assert.match(engine, /const pauseForInterruption = \(\) => \{[\s\S]*?persist\(\);[\s\S]*?phase = "pause";/);
   assert.match(engine, /pause: \(\) => \{[\s\S]*?persist\(\);[\s\S]*?phase = "pause";/);
 });
+
+
+test("mobile HUD exposes an in-game sound toggle", () => {
+  assert.match(ui, /aria-label=\{snap\.sound \? "كتم الصوت" : "تشغيل الصوت"\}/);
+  assert.match(ui, /onClick=\{\(\) => game\.current\?\.toggleSound\(\)\}/);
+  assert.match(ui, /snap\.sound \? <Volume2/);
+  assert.match(ui, /: <VolumeX/);
+});
+
+test("cancelled touch gestures release every driving input", () => {
+  assert.match(ui, /window\.addEventListener\("pointercancel", releaseInputs\)/);
+  assert.match(ui, /window\.removeEventListener\("pointercancel", releaseInputs\)/);
+  assert.match(ui, /const releaseInputs = \(\) => \{[\s\S]*?holds\.current = \{ l: false, r: false, g: false, b: false \}/);
+});
