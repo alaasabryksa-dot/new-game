@@ -5,6 +5,13 @@ import test from "node:test";
 const engine = await readFile(new URL("../src/game/engine.ts", import.meta.url), "utf8");
 const ui = await readFile(new URL("../src/components/dar-salam.tsx", import.meta.url), "utf8");
 
+test("scene teardown persists progress before stopping the game loop", () => {
+  const dispose = engine.slice(engine.lastIndexOf("    dispose: () => {"));
+  assert.ok(dispose.indexOf("persist();") >= 0);
+  assert.ok(dispose.indexOf("persist();") < dispose.indexOf("running = false;"));
+  assert.ok(dispose.indexOf("running = false;") < dispose.indexOf("sfx.stop();"));
+});
+
 test("Escape-key resume resets the frame clock and unlocks audio", () => {
   const escapeResume = engine.slice(engine.indexOf('if (e.code === "Escape")'), engine.indexOf('const onUp ='));
   assert.match(escapeResume, /phase === "pause"[\s\S]*?last = performance\.now\(\);[\s\S]*?acc = 0;[\s\S]*?phase = "play";[\s\S]*?sfx\.unlock\(\);[\s\S]*?publish\(\)/);
