@@ -5,6 +5,11 @@ import test from "node:test";
 const engine = await readFile(new URL("../src/game/engine.ts", import.meta.url), "utf8");
 const ui = await readFile(new URL("../src/components/dar-salam.tsx", import.meta.url), "utf8");
 
+test("Escape-key resume resets the frame clock and unlocks audio", () => {
+  const escapeResume = engine.slice(engine.indexOf('if (e.code === "Escape")'), engine.indexOf('const onUp ='));
+  assert.match(escapeResume, /phase === "pause"[\s\S]*?last = performance\.now\(\);[\s\S]*?acc = 0;[\s\S]*?phase = "play";[\s\S]*?sfx\.unlock\(\);[\s\S]*?publish\(\)/);
+});
+
 test("manual pause suspends continuous engine audio after saving the run", () => {
   const section = engine.slice(engine.lastIndexOf("    pause: () => {"), engine.lastIndexOf("    resume: () => {"));
   assert.ok(section.indexOf("persist();") >= 0);
