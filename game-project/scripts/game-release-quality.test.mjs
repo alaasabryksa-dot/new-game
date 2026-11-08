@@ -78,6 +78,12 @@ test("touch controls and game lifecycle retain focus-loss safeguards", () => {
   assert.match(engine, /window\.addEventListener\("keydown", onDown\)/);
 });
 
+test("collision fine message matches the amount deducted", () => {
+  assert.ok(engine.includes("money = Math.max(0, money - 35)"));
+  assert.ok(engine.includes('say("خبطة! غرامة ٣٥ ج")'));
+  assert.ok(!engine.includes('say("خبطة! غرامة ٤٠ ج")'));
+});
+
 test("visible traffic lights and NPC stopping share one signal cycle", () => {
   assert.ok(engine.includes("const TRAFFIC_SIGNAL_CYCLE = 15"));
   assert.ok(engine.includes("const TRAFFIC_RED_SECONDS = 7.5"));
