@@ -26,9 +26,14 @@
 - [ ] Configure signing through GitHub Actions secrets (never repository files).
 - [ ] Build both APK (install test) and AAB (store delivery).
 - [ ] Install the signed APK on a physical Android device.
-- [ ] Verify the game opens and stays in landscape orientation (never portrait during gameplay).\n- [ ] Verify landscape HUD layout, touch controls, audio, pause/resume, save persistence, and background/foreground behavior on real Android phones.
+- [ ] Verify the game opens and stays in landscape orientation (never portrait during gameplay).
+- [ ] Verify landscape HUD layout, touch controls, audio, pause/resume, save persistence, and background/foreground behavior on real Android phones.
 - [ ] Verify the AAB with bundle validation and retain the signing lineage for future updates.
 
-## Mobile gameplay orientation\n\nThe game is designed for Android phones in landscape orientation only. The web app manifest requests `orientation: landscape`, and the start gesture requests the Screen Orientation API lock where the installed browser supports it. Browser smoke coverage uses landscape mobile viewports; final confirmation still requires a real Android device because orientation locking is subject to browser and installation rules.\n\n## Important accuracy note
+## Mobile gameplay orientation
+
+The game is designed for Android phones in landscape orientation only. The web app manifest requests `orientation: landscape`, and the start gesture requests the Screen Orientation API lock where the installed browser supports it. Browser smoke coverage uses landscape mobile viewports; final confirmation still requires a real Android device because orientation locking is subject to browser and installation rules.
+
+## Important accuracy note
 
 Do not label this project Android-ready or announce an APK/AAB as available until the native wrapper, signing, artifact build, and physical-device installation checks have all passed.
