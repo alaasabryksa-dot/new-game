@@ -2706,9 +2706,12 @@ function rollJobs(fromStop: number) {
       } else if (phase === "pause") {
         keys.clear();
         touch.steer = touch.throttle = touch.brake = 0;
+        // Match the touch-button resume path: reset the frame clock and unlock
+        // audio from this deliberate keyboard gesture to avoid a silent resume.
         last = performance.now();
         acc = 0;
         phase = "play";
+        sfx.unlock();
         publish();
       }
     }
