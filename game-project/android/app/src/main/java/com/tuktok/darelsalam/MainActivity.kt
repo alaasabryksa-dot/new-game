@@ -14,12 +14,13 @@ import android.webkit.WebView
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 import com.google.android.libraries.ads.mobile.sdk.MobileAds
-import com.google.android.libraries.ads.mobile.sdk.AdRequest
+import com.google.android.libraries.ads.mobile.sdk.common.AdRequest
+import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
+import com.google.android.libraries.ads.mobile.sdk.common.FullScreenContentError
+import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
 import com.google.android.libraries.ads.mobile.sdk.initialization.InitializationConfig
 import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAd
 import com.google.android.libraries.ads.mobile.sdk.interstitial.InterstitialAdEventCallback
-import com.google.android.libraries.ads.mobile.sdk.loading.AdLoadCallback
-import com.google.android.libraries.ads.mobile.sdk.loading.LoadAdError
 
 class MainActivity : Activity() {
     private lateinit var webView: WebView
@@ -122,7 +123,7 @@ class MainActivity : Activity() {
                 loadInterstitial()
             }
 
-            override fun onAdFailedToShowFullScreenContent(error: com.google.android.libraries.ads.mobile.sdk.FullScreenContentError) {
+            override fun onAdFailedToShowFullScreenContent(error: FullScreenContentError) {
                 loadInterstitial()
             }
         }
