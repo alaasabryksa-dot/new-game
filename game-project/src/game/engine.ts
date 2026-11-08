@@ -993,8 +993,13 @@ export function mountGame(
     jobs = [];
     let i = fromStop;
     for (let k = 0; k < JOBS_NEED; k++) {
-      const hop = 2 + Math.floor(Math.random() * 3);
-      i = (i + hop) % track.stops.length;
+      const available = Array.from({ length: track.stops.length - 1 }, (_, index) => index + 1)
+        .map((hop) => ({ hop, dest: (i + hop) % track.stops.length }))
+        .filter((candidate) => !jobs.includes(candidate.dest));
+      const preferred = available.filter((candidate) => candidate.hop >= 2 && candidate.hop <= 4);
+      const choices = preferred.length ? preferred : available;
+      const choice = choices[Math.floor(Math.random() * choices.length)];
+      i = choice.dest;
       jobs.push(i);
     }
     jobIndex = 0;
