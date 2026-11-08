@@ -157,3 +157,17 @@ test("mobile driving HUD exposes ten clear assistive and feedback cues", () => {
   assert.ok(ui.includes('aria-label={`المسافة إلى المحطة ${snap.stopDist} متر`}'));
   assert.ok(ui.includes('aria-label="معلومات المحطة والوجهة"'));
 });
+
+
+test("mobile menus and driving controls expose selected states and clear labels", () => {
+  assert.ok(ui.includes("aria-pressed={cfg.mode === m.id}"));
+  assert.ok(ui.includes("aria-pressed={cfg.paint === p.hex}"));
+  assert.ok(ui.includes("aria-pressed={cfg.density === d.id}"));
+  assert.ok(ui.includes("aria-pressed={cfg.night}"));
+  assert.ok(ui.includes("aria-pressed={!cfg.sound}"));
+  assert.ok(ui.includes('aria-label={snap.phase === "pause" ? "استئناف القيادة" : "إيقاف مؤقت"}'));
+  assert.ok(ui.includes('aria-label="إطلاق الكلاكس"'));
+  assert.ok(ui.includes('title="تغيير زاوية الكاميرا"'));
+  assert.ok(ui.includes('aria-label="أزرار التحكم الإضافية"'));
+  assert.ok(ui.includes('aria-label="أزرار قيادة التوكتوك"'));
+});
