@@ -116,9 +116,31 @@ test("passenger boarding widens destination choices before reusing a drop-off", 
   assert.match(engine, /: \[PASSENGER_SYSTEM_TUNING\.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING\.destinationHopMax\]\.map/);
 });
 
-test("fuel consumption accounts for speed as well as passenger load", () => {
-  assert.match(engine, /const speedFactor = 1 \+ Math\.min\(DRIVING_FEEDBACK_TUNING\.speedFuelLoadCap, Math\.abs\(player\.speed\) \/ Math\.max\(1, spec\.max\) \* DRIVING_FEEDBACK_TUNING\.speedFuelLoadCap\)/);
-  assert.match(engine, /loadFactor \* speedFactor \* dt/);
+test("live fuel use and range estimate share a balanced, independently tested model", () => {
+  const match = engine.match(/function calculateFuelBurnRate\(([\s\S]*?)\) \{([\s\S]*?)\n\}/);
+  assert.ok(match, "fuel burn helper must be independently testable");
+  const calculate = new Function("finiteNonNegative", "clampLvl", "DRIVING_FEEDBACK_TUNING", "throttle", "moving", "speedRatio", "passengerCount", "fuelUpgrade", match[2] + "\nreturn calculateFuelBurnRate(throttle, moving, speedRatio, passengerCount, fuelUpgrade);");
+  const finite = (value, max = 1_000_000_000) => Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : 0;
+  const clamp = (value) => Math.floor(Math.min(3, finite(value, 3)));
+  const tuning = { fuelIdleRate: 0.16, fuelThrottleRate: 0.3, passengerFuelLoadCap: 0.24, passengerFuelLoadStep: 0.045, speedFuelLoadCap: 0.35 };
+  const burn = (throttle, moving, speed, passengers, upgrade) => calculate(finite, clamp, tuning, throttle, moving, speed, passengers, upgrade);
+  const base = burn(0.65, true, 0.5, 2, 0);
+  const upgraded = burn(0.65, true, 0.5, 2, 3);
+  assert.ok(base > 0.45 && base < 0.47, "base setup should last through a standard three-minute shift under the reference load");
+  assert.ok(upgraded < base * 0.44, "maximum fuel upgrade must materially extend range");
+  assert.ok(burn(0, false, 0, 0, 0) < base * 0.1, "idling must consume less fuel than driving");
+  assert.ok(burn(0.65, true, 0.5, 3, 0) > base, "passenger load must increase consumption");
+  assert.ok(burn(0.65, true, 1, 2, 0) > base, "higher speed must increase consumption");
+  assert.match(engine, /const fuelBurnRate = calculateFuelBurnRate([\s\S]*?fuel -= fuelBurnRate \* dt/);
+  assert.match(engine, /const estimateFuelRate = calculateFuelBurnRate\(/);
+});
+
+test("driving fines are proportionate to typical passenger fares", () => {
+  const tuning = engine.match(/const DRIVING_FEEDBACK_TUNING = \{([\s\S]*?)\} as const;/);
+  assert.ok(tuning);
+  assert.match(tuning[1], /collisionFineAmount: 25/);
+  assert.match(tuning[1], /radarFineAmount: 45/);
+  assert.match(tuning[1], /tollFineAmount: 10/);
 });
 
 test("opposing traffic collision checks road-aligned length and lane width", () => {
