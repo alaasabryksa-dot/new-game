@@ -2819,7 +2819,7 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
   const colors = ["#e7d3b5", "#e2b39a", "#efe6d6", "#cfc8ba", "#c46a52"];
   const capacity = Math.max(1, Math.ceil(track.pts.length / 3) * 2);
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-  const materials = colors.map((color) => {
+  const materials = colors.map((color, colorIndex) => {
     const map = facadeTexture(color, colorIndex);
     return new THREE.MeshStandardMaterial({
       color: "#ffffff",
