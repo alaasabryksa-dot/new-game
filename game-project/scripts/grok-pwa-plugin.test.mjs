@@ -239,9 +239,9 @@ test("does not emit x:game:image without a public host or banner", () => {
 test("site title Grok App is a real name, not a sentinel", () => {
   const out = injectGrokPwaHead("<html><head></head></html>", {
     host: "wild-race.grok.me",
-    site: { title: "Grok App" },
+    site: { title: "توكتوك دار السلام" },
   });
-  assert.match(out, /property="og:title" content="Grok App"/);
+  assert.match(out, /property="og:title" content="توكتوك دار السلام"/);
 });
 
 test("published grok.me slug is still a title fallback", () => {
@@ -487,14 +487,14 @@ test("strips install params from the app link", () => {
 });
 
 test("names the install page from host slug", () => {
-  assert.equal(appNameFromHost("localhost:8080"), "Grok App");
-  assert.equal(appNameFromHost("172.17.154.217:8080"), "Grok App");
+  assert.equal(appNameFromHost("localhost:8080"), "توكتوك دار السلام");
+  assert.equal(appNameFromHost("172.17.154.217:8080"), "توكتوك دار السلام");
   assert.equal(appNameFromHost("wild-race.grok.me"), "Wild Race");
 });
 
 test("rejects hosts that are not plain slugs", () => {
-  assert.equal(appNameFromHost("<script>alert(1)</script>"), "Grok App");
-  assert.equal(appNameFromHost('"><img src=x onerror=1>.grok.me'), "Grok App");
+  assert.equal(appNameFromHost("<script>alert(1)</script>"), "توكتوك دار السلام");
+  assert.equal(appNameFromHost('"><img src=x onerror=1>.grok.me'), "توكتوك دار السلام");
 });
 
 test("renders install page markup", () => {
