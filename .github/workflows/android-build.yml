@@ -33,6 +33,14 @@ jobs:
         working-directory: game-project
         run: npm run build:android-web
 
+      - name: Install Chromium for Android-targeted bundle smoke test
+        working-directory: game-project
+        run: npx playwright install --with-deps chromium
+
+      - name: Test Android offline bundle and gameplay startup
+        working-directory: game-project
+        run: node scripts/android-bundle-smoke.mjs
+
       - name: Verify Android web entry and local assets
         run: |
           set -euo pipefail
