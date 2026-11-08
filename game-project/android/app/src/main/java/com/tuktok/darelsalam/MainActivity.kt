@@ -30,16 +30,17 @@ class MainActivity : Activity() {
         Log.i(TAG, "Activity created")
 
         try {
-            // Keep the visible WebView renderer attached to the foreground Activity.
-            // This helps prevent renderer eviction while the software-rendered emulator is under memory pressure.
-            WebView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_BOUND, false)
-
             val assetLoader = WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
                 .build()
 
             val gameView = WebView(this)
             webView = gameView
+            // Renderer priority is an instance API added in Android 8.0 (API 26).
+            // Keep this foreground game's renderer at normal priority without breaking API 24–25.
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                gameView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_BOUND, false)
+            }
             gameView.setBackgroundColor(Color.rgb(20, 24, 30))
             gameView.settings.apply {
                 javaScriptEnabled = true
