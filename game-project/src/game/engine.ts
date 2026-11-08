@@ -3716,6 +3716,11 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
   const produce: THREE.Matrix4[][] = [[], [], []];
   const displayCrates: THREE.Matrix4[] = [];
   const benches: THREE.Matrix4[] = [];
+  const bollards: THREE.Matrix4[] = [];
+  const parkedBikeWheels: THREE.Matrix4[] = [];
+  const parkedBikeFrames: THREE.Matrix4[] = [];
+  const parkedBikeSeats: THREE.Matrix4[] = [];
+  const parkedBikeBars: THREE.Matrix4[] = [];
   const o = new THREE.Object3D();
   const put = (list: THREE.Matrix4[], p: MobileProp, y: number, sx: number, sy: number, sz: number) => {
     o.position.set(p.x, y, p.z);
@@ -3758,6 +3763,23 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
       put(displayCrates, crate, 0.38, 0.58, 0.72, 0.58);
     }
     if (i % 88 === 10) put(benches, { ...item, x: x + rx * side * 0.35, z: z + rz * side * 0.35 }, 0.48, 1.35, 0.16, 0.52);
+
+    // Parked commuter motorcycles and short curb bollards make the sidewalks
+    // feel inhabited without placing extra obstacles in the driving lanes.
+    if (i % 132 === 10) {
+      const bike = { ...item, x: x + rx * side * 1.45, z: z + rz * side * 1.45 };
+      const forward = { ...bike, x: bike.x + tx * 0.72, z: bike.z + tz * 0.72 };
+      const rear = { ...bike, x: bike.x - tx * 0.72, z: bike.z - tz * 0.72 };
+      put(parkedBikeWheels, forward, 0.28, 0.13, 0.55, 0.13);
+      put(parkedBikeWheels, rear, 0.28, 0.13, 0.55, 0.13);
+      put(parkedBikeFrames, bike, 0.72, 0.28, 0.32, 1.25);
+      put(parkedBikeSeats, bike, 1.0, 0.3, 0.12, 0.62);
+      put(parkedBikeBars, forward, 1.05, 0.78, 0.08, 0.1);
+    }
+    if (i % 44 === 10) {
+      const bollard = { ...item, x: x + rx * side * 0.4, z: z + rz * side * 0.4 };
+      put(bollards, bollard, 0.42, 0.16, 0.84, 0.16);
+    }
   }
   const add = (geometry: THREE.BufferGeometry, material: THREE.Material, matrices: THREE.Matrix4[]) => {
     const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, matrices.length));
@@ -3779,6 +3801,16 @@ function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
   });
   add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#76533a", roughness: 0.94 }), displayCrates);
   add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#9b8060", roughness: 0.9 }), benches);
+  add(new THREE.CylinderGeometry(0.075, 0.09, 1, 7),
+    new THREE.MeshStandardMaterial({ color: "#d1c8b7", roughness: 0.84 }), bollards);
+  add(new THREE.CylinderGeometry(0.28, 0.28, 0.13, 9),
+    new THREE.MeshStandardMaterial({ color: "#191d20", roughness: 0.94 }), parkedBikeWheels);
+  add(new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({ color: "#bd4935", roughness: 0.58, metalness: 0.12 }), parkedBikeFrames);
+  add(new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({ color: "#24272a", roughness: 0.76 }), parkedBikeSeats);
+  add(new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({ color: "#777e82", roughness: 0.54, metalness: 0.62 }), parkedBikeBars);
 }
 
 function buildCityMobile(scene: THREE.Scene, track: Track) {
