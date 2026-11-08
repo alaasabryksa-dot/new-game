@@ -100,7 +100,7 @@ test("road-edge handling applies progressive shoulder drag before clamping", () 
 test("rush delivery routes avoid repeating a destination within the same run", () => {
   assert.ok(engine.includes("function rollJobs(fromStop: number)"));
   assert.ok(engine.includes("const available = Array.from("));
-  assert.match(engine, /\\.filter\\(\\(candidate\\) => !jobs\\.includes\\(candidate\\.dest\\)[\\s\\S]*?forwardDist\\(track\\.stops\\[candidate\\.dest\\]\\.s, track\\.stops\\[i\\]\\.s\\) > 35\\)/);
+  assert.match(engine, /\.filter\(\(candidate\) => !jobs\.includes\(candidate\.dest\)[\s\S]*?forwardDist\(track\.stops\[candidate\.dest\]\.s, track\.stops\[i\]\.s\) > 35\)/);
   assert.ok(engine.includes("JOB_ROUTE_TUNING.minHop"));
   assert.ok(engine.includes("JOB_ROUTE_TUNING.maxHop"));
   assert.ok(engine.includes("const routeCandidates = preferred.length ? preferred : available"));
@@ -119,7 +119,7 @@ test("passenger boarding widens destination choices before reusing a drop-off", 
   assert.match(engine, /const extendedCandidates = \[PASSENGER_SYSTEM_TUNING\.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING\.destinationHopMax\]/);
   assert.ok(engine.includes(": extendedCandidates.length"));
   assert.ok(engine.includes("? extendedCandidates"));
-  assert.match(engine, /: \[PASSENGER_SYSTEM_TUNING\.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING\.destinationHopMax\]\.map/);
+  assert.match(engine, /: \[PASSENGER_SYSTEM_TUNING\.destinationHopMin, 3, 4, 5, PASSENGER_SYSTEM_TUNING\.destinationHopMax\]\s*\.map/);
 });
 
 test("live fuel use and range estimate share a balanced, independently tested model", () => {
