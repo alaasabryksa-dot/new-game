@@ -78,6 +78,14 @@ test("touch controls and game lifecycle retain focus-loss safeguards", () => {
   assert.match(engine, /window\.addEventListener\("keydown", onDown\)/);
 });
 
+test("the minimap redraw is throttled independently from the 3D frame rate", () => {
+  assert.ok(engine.includes("let mapDrawClock = 0.1"));
+  assert.ok(engine.includes("mapDrawClock += dt"));
+  assert.ok(engine.includes("if (mapDrawClock >= 0.1)"));
+  assert.ok(engine.includes("mapDrawClock %= 0.1"));
+  assert.ok(engine.includes("drawMap();"));
+});
+
 test("collision fine message matches the amount deducted", () => {
   assert.ok(engine.includes("money = Math.max(0, money - 35)"));
   assert.ok(engine.includes('say("خبطة! غرامة ٣٥ ج")'));
