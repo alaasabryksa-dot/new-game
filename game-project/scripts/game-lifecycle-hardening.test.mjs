@@ -6,16 +6,16 @@ const engine = await readFile(new URL("../src/game/engine.ts", import.meta.url),
 const ui = await readFile(new URL("../src/components/dar-salam.tsx", import.meta.url), "utf8");
 
 test("manual pause suspends continuous engine audio after saving the run", () => {
-  assert.match(engine, /pause: () => {[\s\S]*?persist\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?phase = "pause";/);
+  assert.match(engine, /pause: \\(\\) => \\{[\s\S]*?persist\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?phase = "pause";/);
 });
 
 test("resume deliberately unlocks audio again after pause", () => {
-  assert.match(engine, /resume: () => {[\s\S]*?phase = "play";[\s\S]*?sfx\.unlock\(\);/);
+  assert.match(engine, /resume: \\(\\) => \\{[\s\S]*?phase = "play";[\s\S]*?sfx\.unlock\(\);/);
 });
 
 test("quit and manual finish stop the continuous engine sound", () => {
-  assert.match(engine, /quit: () => {[\s\S]*?persist\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?phase = "menu";/);
-  assert.match(engine, /finish: () => {[\s\S]*?settle\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?publish\(\);/);
+  assert.match(engine, /quit: \\(\\) => \\{[\s\S]*?persist\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?phase = "menu";/);
+  assert.match(engine, /finish: \\(\\) => \\{[\s\S]*?settle\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?publish\(\);/);
 });
 
 test("automatic shift and rush completion suspend audio on the summary screen", () => {
