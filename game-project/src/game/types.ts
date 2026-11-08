@@ -266,6 +266,11 @@ export const LEFT_SIDE_STOPS = [
   "شارع كمال عبد الحميد",
   "شارع فهيم عبد الخالق",
   "شارع تاج الدين عمرو",
+  "شارع أبو أشرف",
+  "شارع عزت مطر",
+  "شارع عبد القادر",
+  "شارع أحمد متولي",
+  "شارع إسماعيل الليثي",
 ] as const;
 
 // Right side, in the same bridge-to-Fayda-Kamel direction.
@@ -279,6 +284,9 @@ export const RIGHT_SIDE_STOPS = [
   "شارع علي زينهم",
   "شارع عبد الغفار عزيز",
   "شارع أحمد زكي",
+  "شارع صالح عبدين",
+  "شارع المشير",
+  "شارع الحرية",
 ] as const;
 
 // Keep one passenger destination inventory while retaining the side-specific order
