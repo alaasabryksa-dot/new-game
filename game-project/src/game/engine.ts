@@ -1793,10 +1793,11 @@ export function mountGame(
       dummy.rotation.set(0, yaw, 0);
       dummy.scale.set(1, 1, 1);
       dummy.updateMatrix();
-      pool.body.setMatrixAt(i, dummy.matrix);
-      pool.glass.setMatrixAt(i, dummy.matrix);
-      pool.wheels.setMatrixAt(i, dummy.matrix);
-      pool.lights.setMatrixAt(i, dummy.matrix);
+      const vehicleMatrix = dummy.matrix.clone();
+      pool.body.setMatrixAt(i, vehicleMatrix);
+      pool.glass.setMatrixAt(i, vehicleMatrix);
+      pool.wheels.setMatrixAt(i, vehicleMatrix);
+      pool.lights.setMatrixAt(i, vehicleMatrix);
       if (color) pool.body.setColorAt(i, color);
       const hidden = () => {
         dummy.position.set(0, -30, 0);
@@ -1804,10 +1805,10 @@ export function mountGame(
         dummy.updateMatrix();
         return dummy.matrix;
       };
-      pool.brakes.setMatrixAt(i, braking ? dummy.matrix : hidden());
+      pool.brakes.setMatrixAt(i, braking ? vehicleMatrix : hidden());
       const blinkOn = Math.floor(trafficClock * 3.2) % 2 === 0;
-      pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? dummy.matrix : hidden());
-      pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? dummy.matrix : hidden());
+      pool.signalsLeft.setMatrixAt(i, turnDirection < 0 && blinkOn ? vehicleMatrix : hidden());
+      pool.signalsRight.setMatrixAt(i, turnDirection > 0 && blinkOn ? vehicleMatrix : hidden());
     };
 
     for (const n of npcs) {
@@ -1830,6 +1831,8 @@ export function mountGame(
         pool.wheels.setMatrixAt(i, dummy.matrix);
         pool.lights.setMatrixAt(i, dummy.matrix);
         pool.brakes.setMatrixAt(i, dummy.matrix);
+        pool.signalsLeft.setMatrixAt(i, dummy.matrix);
+        pool.signalsRight.setMatrixAt(i, dummy.matrix);
       }
       pool.body.instanceMatrix.needsUpdate = true;
       pool.glass.instanceMatrix.needsUpdate = true;
