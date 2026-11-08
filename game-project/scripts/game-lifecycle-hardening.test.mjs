@@ -162,3 +162,59 @@ for (const streetName of confirmedStreetNames) {
     assert.ok(types.includes(JSON.stringify(streetName)), "missing confirmed street: " + streetName);
   });
 }
+
+
+test("validated backup save repairs a missing or corrupt primary slot", () => {
+  assert.match(engine, /const primary = readSaveSlot\(SAVE_KEY\)/);
+  assert.match(engine, /const backup = readSaveSlot\(SAVE_BACKUP_KEY\)/);
+  assert.match(engine, /if \(backup\) \{[\s\S]*?writeSave\(backup\);[\s\S]*?return backup;/);
+});
+
+test("persist sanitizes wallet, records and every upgrade before writing", () => {
+  const start = engine.indexOf("  function persist() {");
+  const end = engine.indexOf("\n  function specNow()", start);
+  const persist = engine.slice(start, end);
+  for (const expected of ["save.wallet = Math.floor(finiteNonNegative(save.wallet, 10_000_000))", "save.bestMoney = finiteNonNegative", "save.bestKm = finiteNonNegative", "save.bestTrial =", "motor: clampLvl(save.upgrades.motor)", "fuel: clampLvl(save.upgrades.fuel)", "seats: clampLvl(save.upgrades.seats)", "tires: clampLvl(save.upgrades.tires)", "writeSave(save)"]) {
+    assert.ok(persist.includes(expected), "missing save validation: " + expected);
+  }
+});
+
+test("interruption, pause, resume, quit and finish all clear steering inertia", () => {
+  assert.match(engine, /steeringInput = 0;\s*steerVis = 0;[\s\S]*?Suspend audio immediately/);
+  for (const action of ["pause", "resume", "quit", "finish"]) {
+    const start = engine.lastIndexOf("    " + action + ": () => {");
+    const end = engine.indexOf("\n    },", start);
+    assert.ok(start >= 0 && engine.slice(start, end).includes("steeringInput = 0;"), action + " must reset steering");
+  }
+});
+
+test("workshop rejects invalid upgrade prices before changing the wallet", () => {
+  assert.match(engine, /const cost = def\.costs\[lvl\];\s*if \(!Number\.isFinite\(cost\) \|\| cost < 0 \|\| save\.wallet < cost\) return;/);
+});
+
+test("menu controls expose named groups and visible keyboard focus", () => {
+  assert.match(ui, /role="group" aria-label="اختيار نمط اللعب"/);
+  assert.match(ui, /role="group" aria-label="اختيار لون التوكتوك"/);
+  assert.match(ui, /role="group" aria-label="كثافة المرور والوقت والصوت"/);
+  assert.match(ui, /focus-visible:outline/);
+  assert.match(ui, /aria-busy=\{!ready\}/);
+  assert.match(ui, /إرشادات التحكم/);
+});
+
+test("night toggle announces the direction of the lighting change", () => {
+  assert.match(ui, /aria-label=\{cfg\.night \? "تحويل الإضاءة إلى النهار" : "تحويل الإضاءة إلى الليل"\}/);
+});
+
+test("gameplay destination changes are announced accessibly", () => {
+  assert.match(ui, /aria-live="polite" aria-atomic="true" className="truncate text-base font-extrabold leading-snug"/);
+});
+
+test("touch controls remain reachable above the device safe-area inset", () => {
+  assert.match(ui, /bottom-\[max\(1\.25rem,env\(safe-area-inset-bottom\)\)\]/);
+  assert.match(ui, /aria-label="يمين"[^>]*focus-visible:outline/);
+  assert.match(ui, /aria-label="إطلاق الكلاكس"/);
+});
+
+test("pause summary retry action has a minimum touch target and focus outline", () => {
+  assert.match(ui, /className="min-h-12 flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber py-3 font-extrabold text-amber-ink focus-visible:outline/);
+});
