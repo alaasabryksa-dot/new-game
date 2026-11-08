@@ -65,8 +65,9 @@ test("HUD selects the nearest upcoming passenger drop-off and publishes its dist
   assert.match(ui, /أقرب نزلة: \{snap\.nextDropoffName\} · \{snap\.nextDropoffDist\} م/);
 });
 
-test("low-fuel HUD reports the wrapped distance to the gas station", () => {
-  assert.match(engine, /const gasStationDist = Math\.round\(Math\.abs\(wrapDelta\(track\.gasS, proj\.s, track\.total\)\)\)/);
+test("low-fuel HUD reports forward route distance to the next gas station", () => {
+  assert.match(engine, /const gasStationDist = Math\.round\(forwardDist\(track\.gasS, proj\.s\)\)/);
+  assert.doesNotMatch(engine, /const gasStationDist = Math\.round\(Math\.abs\(wrapDelta\(track\.gasS, proj\.s, track\.total\)\)\)/);
   assert.match(engine, /fuel: Math\.max\(0, Math\.min\(100, fuel\)\),\s*gasStationDist,/);
   assert.match(ui, /snap\.fuel <= 35[\s\S]*?البنزينة: \{snap\.gasStationDist\} م/);
 });
