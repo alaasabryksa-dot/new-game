@@ -666,7 +666,7 @@ function PlayHud({
         </button>
       </div>
 
-      <div dir="ltr" className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-30 flex items-end justify-between px-3" role="group" aria-label="أزرار قيادة التوكتوك">
+      <div dir="ltr" className="absolute inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 flex items-end justify-between px-3" role="group" aria-label="أزرار قيادة التوكتوك">
         <div className="flex gap-2">
           <button type="button" className="h-16 w-16 touch-none rounded-2xl bg-panel/95 text-ink shadow-lg active:scale-95 active:bg-panel-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber" aria-label="يسار" {...hold("l")}>
             <ChevronLeft className="mx-auto size-8" />
