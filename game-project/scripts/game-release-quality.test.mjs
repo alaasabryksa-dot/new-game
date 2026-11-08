@@ -125,7 +125,7 @@ test("passenger boarding widens destination choices before reusing a drop-off", 
 test("live fuel use and range estimate share a balanced, independently tested model", () => {
   const match = engine.match(/function calculateFuelBurnRate\(([\s\S]*?)\) \{([\s\S]*?)\n\}/);
   assert.ok(match, "fuel burn helper must be independently testable");
-  const calculate = new Function("finiteNonNegative", "clampLvl", "DRIVING_FEEDBACK_TUNING", "throttle", "moving", "speedRatio", "passengerCount", "fuelUpgrade", match[0] + "\nreturn calculateFuelBurnRate(throttle, moving, speedRatio, passengerCount, fuelUpgrade);");
+  const calculate = new Function("finiteNonNegative", "clampLvl", "DRIVING_FEEDBACK_TUNING", "throttle", "moving", "speedRatio", "passengerCount", "fuelUpgrade", match[0].replace(/:\\s*(?:number|boolean)/g, "") + "\nreturn calculateFuelBurnRate(throttle, moving, speedRatio, passengerCount, fuelUpgrade);");
   const finite = (value, max = 1_000_000_000) => Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : 0;
   const clamp = (value) => Math.floor(Math.min(3, finite(value, 3)));
   const tuning = { fuelIdleRate: 0.16, fuelThrottleRate: 0.3, passengerFuelLoadCap: 0.24, passengerFuelLoadStep: 0.045, speedFuelLoadCap: 0.35 };
