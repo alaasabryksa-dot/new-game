@@ -57,6 +57,13 @@
 - Shift-mode driving penalties are now 25 EGP for a serious collision, 45 EGP for a radar/roadblock violation, and 10 EGP for the bridge toll/speed event. Rush-mode time penalties remain unchanged. These are game-balance values, not claims about real-world fines.
 - Automated tests exercise the shared fuel formula at baseline and maximum upgrade, verify passenger and speed load effects, and guard the penalty values. This is deterministic model validation; physical-device playtesting is still required before calling the economy field-balanced.
 
+## Street research and verification boundary (8 Nov 2026)
+
+- The route candidate is derived from OpenStreetMap data and records 102 connected return-path edges. Its named segments include Fayoum Street, Dar El Salam Bridge, Dar El Salam Street, and Ahmed Zaki Street; the mapped route candidate is approximately 3.93 km.
+- The current route data reports connected and closed geometry and follows mapped one-way directions, but explicitly sets `fieldVerified: false`. The OSM collection also records a timeout while attempting to fetch endpoint-connected roads. The route is therefore a useful mapped candidate, not a verified survey of every access road or exact lane direction on the ground.
+- Historical press and Cairo Governorate references support general context such as dense storefronts, sidewalk activity, carts, and road encroachment. They do not establish current shop names or exact facade locations. The game retains fictional generic storefront labels and evenly spaced generated passenger points; neither is represented as a verified real business or official bus stop.
+- Research checks now guard the mapped road names, connected return-path count, approximate length, one-way-direction metadata, and the unresolved field-verification warning. Photo references remain research-only and are not packaged as game textures.
+
 ## Remaining Android release work
 
 1. Preserve the packaged-local-assets-only WebView policy. If optional online services (such as ads) are later approved, isolate them behind a separately reviewed allowlist and ensure they cannot block gameplay; do not introduce remote game dependencies or server/auth requirements into the Android entry.
