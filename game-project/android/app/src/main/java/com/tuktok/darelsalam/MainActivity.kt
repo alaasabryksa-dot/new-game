@@ -28,7 +28,6 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i(TAG, "Activity created")
-        hideSystemBars()
 
         try {
             val assetLoader = WebViewAssetLoader.Builder()
@@ -104,6 +103,8 @@ class MainActivity : Activity() {
             }
             gameView.addJavascriptInterface(AndroidDiagnosticsBridge(), "AndroidDiagnostics")
             setContentView(gameView)
+            // Apply immersive mode only after the decor view has been attached.
+            window.decorView.post { hideSystemBars() }
             gameView.loadUrl("https://appassets.androidplatform.net/assets/public/android.html")
         } catch (error: Exception) {
             Log.e(TAG, "Native startup failed", error)
