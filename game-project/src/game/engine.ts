@@ -621,7 +621,7 @@ export function mountGame(
   const animateTrafficSignals = buildTrafficSignals(scene, track);
   buildStreetSigns(scene, track);
   if (!androidDevice) buildElectricalPoles(scene, track);
-  const buildings = buildCity(scene, track);
+  const buildings = buildCity(scene, track, androidDevice);
   if (!androidDevice) buildRooftopLife(scene, track);
   const lamps = buildLamps(scene, track);
   if (!androidDevice) buildStreetFurniture(scene, track);
@@ -631,7 +631,7 @@ export function mountGame(
   const signs: THREE.Mesh[] = [];
 
   const pools = new Map<VehicleId, { body: THREE.InstancedMesh; glass: THREE.InstancedMesh; wheels: THREE.InstancedMesh; lights: THREE.InstancedMesh; brakes: THREE.InstancedMesh; signalsLeft: THREE.InstancedMesh; signalsRight: THREE.InstancedMesh }>();
-  const POOL = androidDevice ? 24 : 64;
+  const POOL = androidDevice ? 12 : 64;
   const glassMat = new THREE.MeshStandardMaterial({ color: "#1c3c48", roughness: 0.18, metalness: 0.2 });
   const wheelMat = new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.7 });
   const lightMat = new THREE.MeshStandardMaterial({ color: "#ff3030", emissive: "#ff2020", emissiveIntensity: 0.85 });
@@ -660,7 +660,7 @@ export function mountGame(
 
   const dummy = new THREE.Object3D();
   const tukColor = new THREE.Color("#d4654a");
-  const PEOPLE = androidDevice ? 24 : 80;
+  const PEOPLE = androidDevice ? 8 : 80;
   const people = new THREE.InstancedMesh(
     new THREE.CapsuleGeometry(0.22, 0.5, 4, 7),
     new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.78 }),
@@ -1996,7 +1996,7 @@ export function mountGame(
       : coarsePointer
         ? (constrainedDevice ? 1.0 : 1.2)
         : (constrainedDevice ? 1.35 : 1.6);
-    const dpr = Math.max(0.75, Math.min(window.devicePixelRatio || 1, pixelRatioCap));
+    const dpr = Math.max(androidDevice ? 0.65 : 0.75, Math.min(window.devicePixelRatio || 1, androidDevice ? 0.7 : pixelRatioCap));
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
@@ -2616,7 +2616,56 @@ function buildElectricalPoles(scene: THREE.Scene, track: Track) {
   }
 }
 
-function buildCity(scene: THREE.Scene, track: Track) {
+function buildCityMobile(scene: THREE.Scene, track: Track) {
+  // Mobile-safe street shell: preserve the recognizable street corridor while
+  // avoiding the many shop-interior, rooftop and decorative instanced meshes.
+  const colors = ["#e7d3b5", "#e2b39a", "#efe6d6", "#cfc8ba", "#c46a52"];
+  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const materials = colors.map((color) => new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.92,
+    metalness: 0,
+  }));
+  const capacity = Math.max(1, Math.ceil(track.pts.length / 10) * 2);
+  const meshes = materials.map((material) => {
+    const mesh = new THREE.InstancedMesh(geometry, material, capacity);
+    mesh.count = 0;
+    scene.add(mesh);
+    return mesh;
+  });
+  const dummy = new THREE.Object3D();
+  const counts = colors.map(() => 0);
+  for (let i = 0; i < track.pts.length; i += 10) {
+    const point = track.pts[i];
+    const rx = Math.cos(point.yaw);
+    const rz = -Math.sin(point.yaw);
+    for (const side of [-1, 1]) {
+      const seed = Math.abs(Math.floor(point.x * 0.17 + point.z * 0.13 + i * 0.07));
+      const width = 9 + (seed % 5) * 1.6;
+      const height = 9 + ((seed * 7) % 8) * 1.8;
+      const depth = 13 + ((seed * 3) % 5) * 2.2;
+      const colorIndex = seed % materials.length;
+      dummy.position.set(
+        point.x + rx * side * (ROAD_HALF + depth * 0.5 + 2.8),
+        height * 0.5,
+        point.z + rz * side * (ROAD_HALF + depth * 0.5 + 2.8),
+      );
+      dummy.rotation.set(0, point.yaw, 0);
+      dummy.scale.set(width, height, depth);
+      dummy.updateMatrix();
+      const index = counts[colorIndex]++;
+      if (index < capacity) meshes[colorIndex].setMatrixAt(index, dummy.matrix);
+    }
+  }
+  meshes.forEach((mesh, index) => {
+    mesh.count = counts[index];
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+  return materials;
+}
+
+function buildCity(scene: THREE.Scene, track: Track, mobile = false) {
+  if (mobile) return buildCityMobile(scene, track);
   const bases = ["#e7d3b5", "#e2b39a", "#efe6d6", "#cfc8ba", "#c46a52"];
   const emissive = emissiveWindows();
   const mats: THREE.MeshStandardMaterial[] = [];
