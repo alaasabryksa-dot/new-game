@@ -1469,7 +1469,8 @@ const POOL = androidDevice ? 20 : 64;
   }
   applyDusk(cfg.night ? 0.92 : 0.18);
 
-  function drawSigns() {\n    const gasTex = signTexture("بنزينة", "اهدى يمين");
+  function drawSigns() {
+    const gasTex = signTexture("بنزينة", "اهدى يمين");
     if (gasTex) {
       const mat = new THREE.MeshStandardMaterial({ map: gasTex, roughness: 0.55 });
       const sm = track.sample(track.gasS - 36);
