@@ -55,6 +55,9 @@ type Wrong = { s: number; speed: number; lat: number };
 const SAVE_KEY = "daralsalam-save-v2";
 const RADAR_LIMIT = 78 / 3.6;
 const TOLL_LIMIT = 36 / 3.6;
+const TRAFFIC_SIGNAL_CYCLE = 15;
+const TRAFFIC_RED_SECONDS = 7.5;
+const TRAFFIC_AMBER_SECONDS = 1.3;
 
 type Save = {
   v: 2;
@@ -1314,11 +1317,12 @@ export function mountGame(
           }
         }
       }
-      // Obey the same 14-second cycle shown by the signal heads.
-      // Red: 0-7s, amber: 7-8.2s, green: remainder.
-      const signalCycle = trafficClock % 15;
-      const redLight = signalCycle < 7.5;
-      const amberLight = signalCycle >= 7.5 && signalCycle < 8.8;
+      // Keep NPC stopping behavior synchronized with the visible signal heads.
+      // Red: 0-7.5s, amber: 7.5-8.8s, green: remainder.
+      const signalCycle = trafficClock % TRAFFIC_SIGNAL_CYCLE;
+      const redLight = signalCycle < TRAFFIC_RED_SECONDS;
+      const amberLight = signalCycle >= TRAFFIC_RED_SECONDS
+        && signalCycle < TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS;
       let redStopDistance = Infinity;
       let nearestSignalDistance = Infinity;
       let nearestSignalStopS = -1;
@@ -2474,8 +2478,10 @@ function buildTrafficSignals(scene: THREE.Scene, track: Track) {
   }
 
   return (time: number) => {
-    const cycle = time % 14;
-    const active = cycle < 7 ? 0 : cycle < 8.2 ? 1 : 2;
+    const cycle = time % TRAFFIC_SIGNAL_CYCLE;
+    const active = cycle < TRAFFIC_RED_SECONDS
+      ? 0
+      : cycle < TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS ? 1 : 2;
     for (const bulbs of heads) {
       bulbs.forEach((bulb, index) => {
         const material = bulb.material as THREE.MeshStandardMaterial;
