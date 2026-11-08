@@ -1,94 +1,202 @@
 {
   "title": "Fayoum Street business candidates — Dar El Salam",
-  "purpose": "Research leads only. These listings are not verified current tenants, exact facade matches, or field-confirmed coordinates. Do not render real business names/signage in-game until independently checked.",
+  "purpose": "Research leads only. Public directory/map listings are not proof of current tenancy, precise facade position, or appearance. Keep real names and logos out of the playable world until independently checked.",
   "checkedOn": "2026-11-08",
+  "evidencePolicy": "A street number is a locator lead, not a facade coordinate. Directory data may be stale, duplicated, or inconsistent.",
   "candidates": [
+    {
+      "id": "vodafone-36",
+      "name": "Vodafone - Dar El Salam Fayoum St.",
+      "address": "36 Fayoum St., Dar El Salam, Cairo",
+      "source": "WorldPlaces directory",
+      "url": "https://egypt.worldplaces.me/mobile-phone-shops-in-cairo/54232452-vodafone-dar-elsalam-fayoum-st.html",
+      "evidence": "Numbered address explicitly names Fayoum Street; listing also publishes a map pin.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "open-clothing-40",
+      "name": "Open",
+      "address": "40 El Fayoum St., Dar El Salam, Cairo",
+      "source": "Egypt Yellow Pages",
+      "url": "https://yellowpages.com.eg/en/profile/open/471752",
+      "evidence": "Numbered street address and clothing-shop category.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "skirt-40",
+      "name": "Skirt",
+      "address": "40 El Fayoum St., beside Vodafone Egypt, Dar El Salam, Cairo",
+      "source": "Dalil140",
+      "url": "https://dalil140.com/company/en/97286-skirt",
+      "evidence": "Numbered address and nearby Vodafone landmark.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification",
+      "notes": "May share or adjoin the same building/address as another listing; do not assume separate frontage."
+    },
     {
       "id": "telecom-egypt-126",
       "name": "Telecom Egypt / WE - Dar El Salam Central",
       "address": "126 ش الفيوم، دار السلام، القاهرة",
-      "source": "Business listing result",
-      "evidence": "address listing directly names Fayoum Street",
+      "source": "Google Maps business listing",
+      "evidence": "Business listing directly names Fayoum Street and street number.",
       "confidence": "medium",
-      "status": "needs_current_visual_and_position_verification",
-      "notes": "Address is a useful locator lead; exact frontage and current signage not verified."
+      "status": "needs_current_visual_and_position_verification"
     },
     {
-      "id": "vodafone-36",
-      "name": "Vodafone - Dar El Salam Fayoum St.",
-      "address": "36 Al Fayoum, Dar El Salam, Cairo",
-      "source": "Business listing result",
-      "evidence": "address listing directly names Fayoum Street",
+      "id": "amin-shop-134",
+      "name": "Shop Amin Hamed Aly Aldin",
+      "address": "134 El Fayoum St., Dar El Salam, Cairo",
+      "source": "140online",
+      "url": "https://www.140online.com/Company/En/C430820/Shop%20Amin%20Hamed%20Aly%20Aldin",
+      "evidence": "Numbered street address in business directory.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "karam-shop-139",
+      "name": "Shop Karam Mohamed Soliman",
+      "address": "139 El Fayoum St., Dar El Salam, Cairo",
+      "source": "140online",
+      "url": "https://www.140online.com/Company/En/C478532/Shop%20Karam%20Mohamed%20Soliman",
+      "evidence": "Numbered street address in business directory.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "akher-forsa-139",
+      "name": "Akher Forsa gift shop",
+      "address": "139 El Fayoum St., El Malaah, Dar El Salam, Cairo",
+      "source": "Egypt Yellow Pages",
+      "url": "https://yellowpages.com.eg/en/map-category/dar-el-salam-gift-shops/374",
+      "evidence": "Numbered street address with nearby Amin Jewelry landmark.",
       "confidence": "medium",
       "status": "needs_current_visual_and_position_verification",
-      "notes": "Exact facade appearance and present occupancy not verified."
+      "notes": "The same street number is listed for another shop; likely shared building or directory inconsistency."
+    },
+    {
+      "id": "tawheed-nour-70",
+      "name": "El Tawheed & El Nour",
+      "address": "70 El Fayoum St., Dar El Salam, Cairo",
+      "source": "Find in Egypt",
+      "url": "https://www.findinegypt.com/c/el-tawheed-el-nour-282089",
+      "evidence": "Numbered street address and contact details.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification"
     },
     {
       "id": "abd-elhady-jewelry-151",
       "name": "Abd Elhady Jewelry",
-      "address": "151 El Fayoum, Dar El Salam, Cairo",
-      "source": "Business listing result",
-      "evidence": "address listing directly names El Fayoum",
+      "address": "151 El Fayoum St., Dar El Salam, Cairo",
+      "source": "Buy.com.eg directory",
+      "url": "https://buy.com.eg/en/directory/abd-elhady-jewelery-pgc37f",
+      "evidence": "Numbered address and business description; nearby restaurant landmark also mentioned.",
       "confidence": "medium",
-      "status": "needs_current_visual_and_position_verification",
-      "notes": "Nearby listing associates the business with El Meleigy restaurant; do not infer facade details."
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "shop-aly-155",
+      "name": "Shop Aly Hasanein Aly",
+      "address": "155 El Fayoum St., Dar El Salam, Cairo",
+      "source": "140online",
+      "url": "https://www.140online.com/Company/En/C479590/Shop%20Aly%20Hasanein%20Aly",
+      "evidence": "Numbered street address in business directory.",
+      "confidence": "medium",
+      "status": "needs_current_visual_and_position_verification"
     },
     {
       "id": "spicy-chicks-165",
       "name": "Spicy Chicks",
       "address": "165 Al Fayoum, Ezbet Nafie, Dar El Salam, Cairo",
-      "source": "Business listing result",
-      "evidence": "address listing directly names Al Fayoum",
+      "source": "Google Maps business listing",
+      "evidence": "Business listing gives numbered Al Fayoum address.",
       "confidence": "medium",
-      "status": "needs_current_visual_and_position_verification",
-      "notes": "Business identity and branch details should be reconfirmed before use."
+      "status": "needs_current_visual_and_position_verification"
     },
     {
-      "id": "el-meleigy-2",
+      "id": "el-meleigy",
       "name": "El Meleigy",
-      "address": "2 Al Fayoum, Izbat Nafee, Dar El Salam, Cairo",
-      "source": "Business listing result",
-      "evidence": "listing places business on Al Fayoum; another listing associates it with 151 El Fayoum",
+      "address": "Conflicting listings: 2 Al Fayoum and 151 El Fayoum / beside Abd Elhady Jewelry",
+      "source": "Google Maps and local directory listings",
+      "url": "https://buy.com.eg/en/directory/abd-elhady-jewelery-pgc37f",
+      "evidence": "Multiple listings associate the restaurant with the street but disagree on street number.",
       "confidence": "low",
-      "status": "needs_address_reconciliation_and_visual_verification",
-      "notes": "Conflicting address descriptions; do not place in game yet."
+      "status": "needs_address_reconciliation_and_visual_verification"
     },
     {
       "id": "abou-elkhier-pharmacy",
       "name": "Abou Elkhier Pharmacy",
-      "address": "Fayoum Street, Dar El Salam; listing references the Dar El Salam bridge",
-      "source": "Business listing result",
-      "evidence": "street association and nearby bridge landmark",
+      "address": "El Fayoum St., Dar El Salam; reviewer references the Dar El Salam bridge",
+      "source": "Google Maps business listing",
+      "evidence": "Street association and bridge landmark, no consistent street number.",
       "confidence": "low",
-      "status": "needs_exact_address_and_visual_verification",
-      "notes": "No exact street number established in this listing."
+      "status": "needs_exact_address_and_visual_verification"
     },
     {
       "id": "al-mokhtabar-50",
       "name": "Al Mokhtabar - Moamena Kamel Laboratories",
-      "address": "50 El Fayoum St / intersection with Ibrahim Abdel Hady St, Dar El Salam",
-      "source": "Business listing result",
-      "evidence": "listing gives Fayoum Street reference and a more detailed intersection address",
+      "address": "50 El Fayoum St. / intersection with Ibrahim Abdel Hady St., Dar El Salam",
+      "source": "Google Maps business listing",
+      "evidence": "Listing gives Fayoum Street reference and a more detailed intersection address.",
       "confidence": "low",
-      "status": "needs_address_reconciliation_and_visual_verification",
-      "notes": "Use intersection description as a locator lead only."
+      "status": "needs_address_reconciliation_and_visual_verification"
     },
     {
-      "id": "tawheed-nour-70",
-      "name": "El Tawheed & El Nour",
-      "address": "70 El Fayoum St, Dar El Salam, Cairo",
-      "source": "Business listing result",
-      "evidence": "listing description gives Fayoum Street address",
+      "id": "abou-hashem-market",
+      "name": "أبو هاشم ماركت",
+      "address": "5 Al Fayoum, Dar El Salam, Cairo",
+      "source": "Google Maps business listing",
+      "evidence": "Listing gives a numbered Al Fayoum address; verify if this is the same street frontage.",
       "confidence": "low",
-      "status": "needs_current_visual_and_position_verification",
-      "notes": "Another similarly named listing appears elsewhere in Dar El Salam; confirm branch."
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "rahma-supermarket-74",
+      "name": "سوبرماركت الرحمة",
+      "address": "74 Al Fayoum, Dar El Salam, Cairo",
+      "source": "Google Maps business listing",
+      "evidence": "Listing gives a numbered Al Fayoum address.",
+      "confidence": "low",
+      "status": "needs_current_visual_and_position_verification"
+    },
+    {
+      "id": "el-tawheed-branch",
+      "name": "التوحيد والنور",
+      "address": "X7M3+QV5, Ezbet Nafie, Dar El Salam, Cairo; directory also lists 70 El Fayoum St.",
+      "source": "Google Maps and Find in Egypt",
+      "url": "https://www.findinegypt.com/c/el-tawheed-el-nour-282089",
+      "evidence": "Map listing and directory listing may refer to same branch; reconcile pin/address.",
+      "confidence": "medium",
+      "status": "needs_address_reconciliation_and_visual_verification"
+    },
+    {
+      "id": "coffee-beans-shop-unidentified",
+      "name": "Coffee beans shop (business name not confirmed)",
+      "address": "Fayoum Street, exact number not published",
+      "source": "Sout Al-Salam / Bashkatib report, 3 Aug 2024",
+      "url": "https://bashkatibnews.com/en/sawtelsalam/dep/reports/Fayoum_Street",
+      "evidence": "Journalistic interview identifies a coffee-bean shop manager but does not publish a shop name or exact number.",
+      "confidence": "medium_for_business_type_low_for_identity",
+      "status": "context_only_not_an_exact_business_record"
+    },
+    {
+      "id": "al-jumhuriya-grocery-unidentified",
+      "name": "Al-Jumhuriya grocery store",
+      "address": "Fayoum Street, exact number not published",
+      "source": "Sout Al-Salam / Bashkatib report, 3 Aug 2024",
+      "url": "https://bashkatibnews.com/en/sawtelsalam/dep/reports/Fayoum_Street",
+      "evidence": "Report names the grocery store and describes its shop-display footprint; no street number or current facade photo match supplied.",
+      "confidence": "medium_for_historical_identity_low_for_position",
+      "status": "context_only_needs_exact_position_and_current_verification"
     }
   ],
   "policy": [
     "Do not invent coordinates from addresses or names.",
     "Do not treat business listing metadata as a photo reference.",
-    "Resolve conflicting addresses before adding a business to the route.",
+    "Resolve conflicting addresses and same-number listings before adding a business to the route.",
     "Only mark a facade visually verified after matching a current image to a precise location.",
-    "Do not redistribute third-party photographs or logos without permission."
+    "Do not redistribute third-party photographs or logos without permission.",
+    "The named grocery and coffee shop in the 2024 report are historical/contextual leads, not exact geolocated facade records."
   ]
 }
