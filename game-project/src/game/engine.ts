@@ -639,8 +639,8 @@ export function mountGame(
   const buildings = buildCity(scene, track, androidDevice);
   if (!androidDevice) buildRooftopLife(scene, track);
   const lamps = buildLamps(scene, track);
-  if (!androidDevice) buildStreetFurniture(scene, track);
-  const animatePedestrians = androidDevice ? (() => undefined) : buildPedestrians(scene, track);
+  if (androidDevice) buildStreetFurnitureMobile(scene, track); else buildStreetFurniture(scene, track);
+  const animatePedestrians = buildPedestrians(scene, track, androidDevice);
   if (!androidDevice) buildGantries(scene, track);
   buildQuarter(scene, track);
   const signs: THREE.Mesh[] = [];
