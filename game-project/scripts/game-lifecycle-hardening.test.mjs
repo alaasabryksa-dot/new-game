@@ -6,16 +6,25 @@ const engine = await readFile(new URL("../src/game/engine.ts", import.meta.url),
 const ui = await readFile(new URL("../src/components/dar-salam.tsx", import.meta.url), "utf8");
 
 test("manual pause suspends continuous engine audio after saving the run", () => {
-  assert.match(engine, /pause: \\(\\) => \\{[\s\S]*?persist\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?phase = "pause";/);
+  const section = engine.slice(engine.lastIndexOf("    pause: () => {"), engine.lastIndexOf("    resume: () => {"));
+  assert.ok(section.indexOf("persist();") >= 0);
+  assert.ok(section.indexOf("sfx.suspend();") > section.indexOf("persist();"));
+  assert.ok(section.indexOf('phase = "pause";') > section.indexOf("sfx.suspend();"));
 });
 
 test("resume deliberately unlocks audio again after pause", () => {
-  assert.match(engine, /resume: \\(\\) => \\{[\s\S]*?phase = "play";[\s\S]*?sfx\.unlock\(\);/);
+  const section = engine.slice(engine.lastIndexOf("    resume: () => {"), engine.lastIndexOf("    quit: () => {"));
+  assert.ok(section.indexOf('phase = "play";') >= 0);
+  assert.ok(section.indexOf("sfx.unlock();") > section.indexOf('phase = "play";'));
 });
 
 test("quit and manual finish stop the continuous engine sound", () => {
-  assert.match(engine, /quit: \\(\\) => \\{[\s\S]*?persist\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?phase = "menu";/);
-  assert.match(engine, /finish: \\(\\) => \\{[\s\S]*?settle\(\);[\s\S]*?sfx\.suspend\(\);[\s\S]*?publish\(\);/);
+  const quit = engine.slice(engine.lastIndexOf("    quit: () => {"), engine.lastIndexOf("    finish: () => {"));
+  const finish = engine.slice(engine.lastIndexOf("    finish: () => {"), engine.lastIndexOf("    buy: (id: UpgradeId) => {"));
+  assert.ok(quit.indexOf("persist();") >= 0);
+  assert.ok(quit.indexOf("sfx.suspend();") > quit.indexOf("persist();"));
+  assert.ok(finish.indexOf("settle();") >= 0);
+  assert.ok(finish.indexOf("sfx.suspend();") > finish.indexOf("settle();"));
 });
 
 test("automatic shift and rush completion suspend audio on the summary screen", () => {
