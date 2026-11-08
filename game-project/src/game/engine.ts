@@ -307,7 +307,15 @@ function readSaveSlot(key: string): Save | null {
 }
 
 function loadSave(): Save {
-  return readSaveSlot(SAVE_KEY) ?? readSaveSlot(SAVE_BACKUP_KEY) ?? blankSave();
+  const primary = readSaveSlot(SAVE_KEY);
+  if (primary) return primary;
+  const backup = readSaveSlot(SAVE_BACKUP_KEY);
+  if (backup) {
+    // Repair the primary slot from the validated backup after a partial WebView write.
+    writeSave(backup);
+    return backup;
+  }
+  return blankSave();
 }
 
 function writeSave(s: Save) {
@@ -1502,7 +1510,20 @@ const POOL = androidDevice ? 20 : 64;
     fuel = Number.isFinite(fuel) ? Math.max(0, Math.min(100, fuel)) : 0;
     if (Number.isFinite(money) && money > save.bestMoney) save.bestMoney = money;
     if (Number.isFinite(km) && km > save.bestKm) save.bestKm = km;
-    save.sound = sfx.on;
+    save.sound = sfx.on === true;
+    save.wallet = Math.floor(finiteNonNegative(save.wallet, 10_000_000));
+    save.bestMoney = finiteNonNegative(save.bestMoney, 10_000_000);
+    save.bestKm = finiteNonNegative(save.bestKm, 1_000_000);
+    save.bestTrial =
+      typeof save.bestTrial === "number" && Number.isFinite(save.bestTrial) && save.bestTrial >= 0
+        ? save.bestTrial
+        : null;
+    save.upgrades = {
+      motor: clampLvl(save.upgrades.motor),
+      fuel: clampLvl(save.upgrades.fuel),
+      seats: clampLvl(save.upgrades.seats),
+      tires: clampLvl(save.upgrades.tires),
+    };
     writeSave(save);
   }
 
@@ -2845,6 +2866,8 @@ function rollJobs(fromStop: number) {
     touch.steer = 0;
     touch.throttle = 0;
     touch.brake = 0;
+    steeringInput = 0;
+    steerVis = 0;
     // Suspend audio immediately on calls, notifications, app switching and tab hiding.
     // Resume remains gesture-gated through Sfx.unlock() on the next deliberate action.
     sfx.suspend();
@@ -2922,6 +2945,8 @@ function rollJobs(fromStop: number) {
     pause: () => {
       keys.clear();
       touch.steer = touch.throttle = touch.brake = 0;
+      steeringInput = 0;
+      steerVis = 0;
       if (phase === "play") {
         // Save and suspend the continuous engine tone on deliberate pause.
         persist();
@@ -2933,6 +2958,8 @@ function rollJobs(fromStop: number) {
     resume: () => {
       keys.clear();
       touch.steer = touch.throttle = touch.brake = 0;
+      steeringInput = 0;
+      steerVis = 0;
       last = performance.now();
       acc = 0;
       if (phase === "pause") {
@@ -2944,6 +2971,8 @@ function rollJobs(fromStop: number) {
     quit: () => {
       keys.clear();
       touch.steer = touch.throttle = touch.brake = 0;
+      steeringInput = 0;
+      steerVis = 0;
       persist();
       sfx.suspend();
       phase = "menu";
@@ -2954,6 +2983,10 @@ function rollJobs(fromStop: number) {
     },
     finish: () => {
       if (phase !== "play") return;
+      keys.clear();
+      touch.steer = touch.throttle = touch.brake = 0;
+      steeringInput = 0;
+      steerVis = 0;
       phase = "summary";
       settle();
       sfx.suspend();
@@ -2965,7 +2998,7 @@ function rollJobs(fromStop: number) {
       const lvl = save.upgrades[id];
       if (lvl >= def.max) return;
       const cost = def.costs[lvl];
-      if (save.wallet < cost) return;
+      if (!Number.isFinite(cost) || cost < 0 || save.wallet < cost) return;
       save.wallet -= cost;
       save.upgrades[id] = lvl + 1;
       writeSave(save);
