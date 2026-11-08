@@ -1225,6 +1225,25 @@ export function mountGame(
         n.brake -= dt;
         if (n.brake <= 0 && Math.random() < dt * 0.1) n.brake = 1.35;
         if (n.brake > 0) target = Math.min(target, 1.6);
+      } else if (n.kind === "tuktuk") {
+        // Some tuk-tuks make short passenger pick-ups at the curb-side game stops.
+        n.stopTimer = Math.max(0, n.stopTimer - dt);
+        for (let i = 0; i < track.stops.length; i++) {
+          const d = wrapDelta(track.stops[i].s, n.s, track.total);
+          const curbLane = n.lane < 0.55 || n.lane > 2.45;
+          if (curbLane && d > -8 && d < 28) {
+            const approachSpeed = Math.min(3.2, Math.max(0, (d - 2.8) * 0.5));
+            target = Math.min(target, approachSpeed);
+            if (d < 3.8 && d > -1 && n.stopAt !== i && n.stopTimer <= 0 && n.speed < 4) {
+              n.stopAt = i;
+              // Not every tuk-tuk stops at every point; this avoids synchronized queues.
+              n.stopTimer = Math.random() < 0.32 ? 1.0 + Math.random() * 0.8 : 0;
+            }
+            if (n.stopTimer > 0 && n.stopAt === i) target = 0;
+          } else if (n.stopAt === i && d < -6) {
+            n.stopAt = -1;
+          }
+        }
       }
       // Obey the same 14-second cycle shown by the signal heads.
       // Red: 0-7s, amber: 7-8.2s, green: remainder.
