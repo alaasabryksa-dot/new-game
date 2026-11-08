@@ -789,6 +789,40 @@ function signTexture(title: string, sub: string) {
   return tex;
 }
 
+// Tunable audio levels keep feedback clear without dominating phone speakers.
+const SFX_TUNING = {
+  initialEngineFrequency: 44,
+  initialFilterFrequency: 260,
+  engineSpeedFrequency: 3.25,
+  engineThrottleFrequency: 20,
+  engineFilterSpeed: 19,
+  engineGainBase: 0.016,
+  engineGainCap: 0.045,
+  engineGainSpeedScale: 0.0016,
+  engineFrequencySmoothing: 0.035,
+  engineFilterSmoothing: 0.045,
+  engineGainSmoothing: 0.055,
+  mutedGain: 0.0001,
+  engineMinFrequency: 38,
+  engineMaxFrequency: 210,
+  engineMinFilter: 150,
+  engineMaxFilter: 1250,
+  blipMinFrequency: 45,
+  blipMaxFrequency: 1600,
+  blipMinDuration: 0.04,
+  blipMaxDuration: 0.4,
+  blipMinVolume: 0.001,
+  blipMaxVolume: 0.08,
+  blipReleaseTail: 0.02,
+  blipEnvelopeFloor: 0.0001,
+  hornProfile: [340, 280, 0.18, 0.16, 0.05, 0.04, 90],
+  cashProfile: [660, 880, 0.08, 0.1, 0.05, 0.04, 70],
+  crashProfile: [90, 0.22, 0.07],
+  radarProfile: [980, 0.12, 0.05],
+  audioResumeRamp: 0.025,
+  blipStartRamp: 0.006,
+} as const;
+
 class Sfx {
   ctx: AudioContext | null = null;
   gain: GainNode | null = null;
@@ -803,13 +837,13 @@ class Sfx {
         if (!AudioContextCtor) return;
         const ctx = new AudioContextCtor();
         const gain = ctx.createGain();
-        gain.gain.value = 0.0001;
+        gain.gain.value = SFX_TUNING.mutedGain;
         const filter = ctx.createBiquadFilter();
         filter.type = "lowpass";
-        filter.frequency.value = 260;
+        filter.frequency.value = SFX_TUNING.initialFilterFrequency;
         const osc = ctx.createOscillator();
         osc.type = "sawtooth";
-        osc.frequency.value = 44;
+        osc.frequency.value = SFX_TUNING.initialEngineFrequency;
         osc.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
@@ -828,49 +862,95 @@ class Sfx {
 
   engine(speed: number, throttle: number) {
     if (!this.ctx || !this.osc || !this.gain || !this.filter || !this.on) {
-      if (this.gain) this.gain.gain.value = 0.0001;
+      if (this.gain && this.ctx) {
+        this.gain.gain.setTargetAtTime(
+          SFX_TUNING.mutedGain,
+          this.ctx.currentTime,
+          SFX_TUNING.engineGainSmoothing,
+        );
+      }
       return;
     }
     const k = Math.abs(speed);
-    this.osc.frequency.value = 40 + k * 3.25 + throttle * 20;
-    this.filter.frequency.value = 190 + k * 19;
-    this.gain.gain.value = 0.016 + Math.min(0.045, k * 0.0016);
+    const now = this.ctx.currentTime;
+    const frequency = THREE.MathUtils.clamp(
+      SFX_TUNING.initialEngineFrequency +
+        k * SFX_TUNING.engineSpeedFrequency +
+        Math.max(0, throttle) * SFX_TUNING.engineThrottleFrequency,
+      SFX_TUNING.engineMinFrequency,
+      SFX_TUNING.engineMaxFrequency,
+    );
+    const filterFrequency = THREE.MathUtils.clamp(
+      SFX_TUNING.initialFilterFrequency + k * SFX_TUNING.engineFilterSpeed,
+      SFX_TUNING.engineMinFilter,
+      SFX_TUNING.engineMaxFilter,
+    );
+    const level = SFX_TUNING.engineGainBase +
+      Math.min(SFX_TUNING.engineGainCap, k * SFX_TUNING.engineGainSpeedScale);
+    this.osc.frequency.setTargetAtTime(frequency, now, SFX_TUNING.engineFrequencySmoothing);
+    this.filter.frequency.setTargetAtTime(filterFrequency, now, SFX_TUNING.engineFilterSmoothing);
+    this.gain.gain.setTargetAtTime(level, now, SFX_TUNING.engineGainSmoothing);
   }
 
   blip(freq: number, dur: number, type: OscillatorType, vol: number) {
     if (!this.ctx || !this.on) return;
+    const safeFrequency = THREE.MathUtils.clamp(
+      Number.isFinite(freq) ? freq : SFX_TUNING.blipMinFrequency,
+      SFX_TUNING.blipMinFrequency,
+      SFX_TUNING.blipMaxFrequency,
+    );
+    const safeDuration = THREE.MathUtils.clamp(
+      Number.isFinite(dur) ? dur : SFX_TUNING.blipMinDuration,
+      SFX_TUNING.blipMinDuration,
+      SFX_TUNING.blipMaxDuration,
+    );
+    const safeVolume = THREE.MathUtils.clamp(
+      Number.isFinite(vol) ? vol : SFX_TUNING.blipMinVolume,
+      SFX_TUNING.blipMinVolume,
+      SFX_TUNING.blipMaxVolume,
+    );
     const o = this.ctx.createOscillator();
     const g = this.ctx.createGain();
+    const now = this.ctx.currentTime;
     o.type = type;
-    o.frequency.value = freq;
-    g.gain.value = vol;
+    o.frequency.value = safeFrequency;
+    g.gain.setValueAtTime(SFX_TUNING.blipEnvelopeFloor, now);
+    g.gain.linearRampToValueAtTime(safeVolume, now + SFX_TUNING.blipStartRamp);
     o.connect(g);
     g.connect(this.ctx.destination);
-    o.start();
-    g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
-    o.stop(this.ctx.currentTime + dur + 0.02);
+    o.start(now);
+    g.gain.setTargetAtTime(
+      SFX_TUNING.blipEnvelopeFloor,
+      now + Math.max(SFX_TUNING.blipStartRamp, safeDuration - SFX_TUNING.audioResumeRamp),
+      SFX_TUNING.audioResumeRamp,
+    );
+    o.stop(now + safeDuration + SFX_TUNING.blipReleaseTail);
   }
 
   horn() {
-    this.blip(340, 0.18, "square", 0.05);
-    setTimeout(() => this.blip(280, 0.16, "square", 0.04), 90);
+    const [first, second, firstDuration, secondDuration, firstVolume, secondVolume, gap] = SFX_TUNING.hornProfile;
+    this.blip(first, firstDuration, "square", firstVolume);
+    setTimeout(() => this.blip(second, secondDuration, "square", secondVolume), gap);
   }
 
   cash() {
-    this.blip(660, 0.08, "sine", 0.05);
-    setTimeout(() => this.blip(880, 0.1, "sine", 0.04), 70);
+    const [first, second, firstDuration, secondDuration, firstVolume, secondVolume, gap] = SFX_TUNING.cashProfile;
+    this.blip(first, firstDuration, "sine", firstVolume);
+    setTimeout(() => this.blip(second, secondDuration, "sine", secondVolume), gap);
   }
 
   crash() {
-    this.blip(90, 0.22, "sawtooth", 0.07);
+    const [frequency, duration, volume] = SFX_TUNING.crashProfile;
+    this.blip(frequency, duration, "sawtooth", volume);
   }
 
   radar() {
-    this.blip(980, 0.12, "square", 0.05);
+    const [frequency, duration, volume] = SFX_TUNING.radarProfile;
+    this.blip(frequency, duration, "square", volume);
   }
 
   stop() {
-    if (this.gain) this.gain.gain.value = 0.0001;
+    if (this.gain) this.gain.gain.value = SFX_TUNING.mutedGain;
     void this.ctx?.close();
     this.ctx = null;
   }
