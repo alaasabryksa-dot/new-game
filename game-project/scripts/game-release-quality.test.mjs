@@ -147,14 +147,17 @@ test("collision fine message matches the amount deducted", () => {
   assert.ok(!engine.includes('say("خبطة! غرامة ٤٠ ج")'));
 });
 
-test("visible traffic lights and NPC stopping share one signal cycle", () => {
+test("visible traffic lights and NPC stopping share staggered per-stop signal phases", () => {
   assert.ok(engine.includes("const TRAFFIC_SIGNAL_CYCLE = 15"));
   assert.ok(engine.includes("const TRAFFIC_RED_SECONDS = 7.5"));
   assert.ok(engine.includes("const TRAFFIC_AMBER_SECONDS = 1.3"));
-  assert.ok(engine.includes("const signalCycle = trafficClock % TRAFFIC_SIGNAL_CYCLE"));
-  assert.ok(engine.includes("const cycle = time % TRAFFIC_SIGNAL_CYCLE"));
-  assert.ok(engine.includes("signalCycle < TRAFFIC_RED_SECONDS"));
-  assert.ok(engine.includes("cycle < TRAFFIC_RED_SECONDS + TRAFFIC_AMBER_SECONDS"));
+  assert.match(engine, /const signalIndex = Math\.floor\(headIndex \/ 2\)/);
+  assert.match(engine, /time \+ signalIndex \* 2\.4/);
+  assert.match(engine, /const stopCycle = \(trafficClock \+ stopIndex \* 2\.4\) % TRAFFIC_SIGNAL_CYCLE/);
+  assert.match(engine, /nearestSignalCycle = stopCycle/);
+  assert.match(engine, /redStopDistance = Math\.min\(redStopDistance, distanceToLine\)/);
+  assert.match(engine, /nearestSignalCycle >= TRAFFIC_RED_SECONDS \+ TRAFFIC_AMBER_SECONDS/);
+  assert.match(engine, /greenElapsed = Math\.max\(0, nearestSignalCycle - releaseAt\)/);
 });
 
 test("the project has reproducible typecheck, test and production build scripts", () => {
