@@ -150,6 +150,9 @@ class MainActivity : Activity() {
         @JavascriptInterface
         fun onGameError(message: String) {
             Log.e(TAG, "GAME_STARTUP_ERROR: $message")
+            // Surface JavaScript/Three.js startup failures on the device instead of
+            // leaving the player with a blank screen and an error hidden in logcat.
+            showFailure("تعذر تشغيل محرك اللعبة", message)
         }
     }
 
