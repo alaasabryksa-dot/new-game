@@ -21,6 +21,7 @@
 - Stop-crowd instancing now respects the device-wide mesh capacity (8 on Android) across all stops, avoiding attempts to write beyond the mobile crowd buffer.
 - NPC instance rendering now reuses its hidden transform matrix, per-vehicle cursors, and painter function across frames; it also passes the shared transform directly to `InstancedMesh.setMatrixAt` instead of cloning a matrix for every traffic vehicle.
 - The minimap now distinguishes passenger drop-off destinations from ordinary pickup points, while retaining the active rush-delivery marker.
+- The passenger HUD now identifies the nearest upcoming onboard drop-off and its forward route distance, so the driver can prepare for the next stop without guessing from the passenger list.
 - The renderer requires WebGL 2 / OpenGL ES 3.0. The manifest declares this hardware feature as required; devices without it are not compatible.
 - Android scene generation has a reduced-detail path and lower render resolution. The mobile path now uses instanced procedural building facades with textured upper-floor windows, generic Arabic shop signs, shutters/glazing, and awnings. These are original generic game assets, not verified reconstructions of individual storefronts.
 - APK build and browser-based offline bundle checks are automated. They do not prove successful operation on every physical Android phone.
