@@ -53,7 +53,7 @@ Source record IDs and evidence notes are stored in:
 - `src/game/data/fayoum-business-candidates.json`
 - `src/game/data/fayoum-landmark-candidates.json`
 
-The business catalog now has 21 leads; the separate landmark catalog has 4 leads. These counts are research records, **not** verified current tenants or completed facade models. No new real-world sign has been enabled in the game.
+The business catalog now has 21 leads; the separate landmark catalog has 4 leads. These counts are research records, not verified current tenants or completed facade models. No new real-world sign has been enabled in the game.
 
 ## Environment modeling guidance
 
