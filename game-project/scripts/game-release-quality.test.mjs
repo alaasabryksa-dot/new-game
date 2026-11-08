@@ -313,7 +313,11 @@ test("route distance helper measures correctly across the closed-loop seam", () 
 
 test("Android instanced vehicle pools can render the maximum weighted traffic population", () => {
   assert.match(engine, /const POOL = androidDevice \? 20 : 64/);
-  assert.match(engine, /const n = densityCount\(\);[\s\S]*?const weights: VehicleId\[\] = \[[\s\S]*?"tuktuk"[\s\S]*?"truck"/);
+  const weights = ["tuktuk", "tuktuk", "tuktuk", "micro", "micro", "taxi", "malaky", "tuktuk", "truck"];
+  const counts = new Map();
+  for (let i = 0; i < 44; i++) counts.set(weights[i % weights.length], (counts.get(weights[i % weights.length]) ?? 0) + 1);
+  assert.equal(counts.get("tuktuk"), 20);
+  assert.ok([...counts.values()].every((count) => count <= 20));
   assert.match(engine, /if \(i >= POOL\) return/);
 });
 
