@@ -1498,15 +1498,23 @@ export function mountGame(
         if (n.laneTarget === playerLane) {
           const frontGap = wrapDelta(proj.s, n.s, track.total);
           const rearGap = wrapDelta(n.s, proj.s, track.total);
-          if ((frontGap > 0 && frontGap < 12 + spec.length * 0.4)
-            || (rearGap > 0 && rearGap < 10)) return false;
+          const playerAheadBuffer = 12 + spec.length * 0.4
+            + Math.max(0, n.speed - player.speed) * 1.1;
+          const playerBehindBuffer = 10 + Math.max(0, player.speed - n.speed);
+          if ((frontGap > 0 && frontGap < playerAheadBuffer)
+            || (rearGap > 0 && rearGap < playerBehindBuffer)) return false;
         }
         return npcs.every((o) => {
           if (o === n || !o.alive || Math.abs(o.lane - n.laneTarget) > 0.68) return true;
           const frontGap = wrapDelta(o.s, n.s, track.total);
           const rearGap = wrapDelta(n.s, o.s, track.total);
-          return !(frontGap > 0 && frontGap < 11 + spec.length * 0.4)
-            && !(rearGap > 0 && rearGap < 9 + vehicleById(o.kind).length * 0.3);
+          const otherSpec = vehicleById(o.kind);
+          const frontBuffer = 11 + spec.length * 0.4
+            + Math.max(0, n.speed - o.speed) * 1.2;
+          const rearBuffer = 9 + otherSpec.length * 0.3
+            + Math.max(0, o.speed - n.speed) * 1.1;
+          return !(frontGap > 0 && frontGap < frontBuffer)
+            && !(rearGap > 0 && rearGap < rearBuffer);
         });
       })();
       if (leadGap < safeGap + 5 && n.speed < 3.5) {
