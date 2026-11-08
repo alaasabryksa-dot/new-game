@@ -45,7 +45,6 @@ class MainActivity : Activity() {
             gameView.settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
-                databaseEnabled = true
                 allowFileAccess = false
                 allowContentAccess = false
                 javaScriptCanOpenWindowsAutomatically = false
