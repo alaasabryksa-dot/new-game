@@ -203,16 +203,13 @@ export type PreviewCfg = {
   sound: boolean;
 };
 
-// Working Fayoum Street branch-street candidates collected from map/address listings.
-// This is not yet a verified 100-street inventory or exact along-road order.
-export const STOP_NAMES = [
+// Older candidate names retained until each one is checked against the local map.
+const LEGACY_STOP_NAMES = [
   "شارع خيري الجندي",
-  "شارع محمد حسنين مطر",
   "شارع الشهيد حمدي جودة",
   "شارع سيد حنفي",
   "شارع إسماعيل الليثي",
   "شارع حسن منصور",
-  "شارع عبد الغفار عزيز",
   "شارع السيدة زينب",
   "شارع لاشين",
   "شارع المهدي",
@@ -220,20 +217,17 @@ export const STOP_NAMES = [
   "شارع الإخلاص",
   "شارع هاشم العطار",
   "شارع رشاد عبد الهادي",
-  "شارع حسين مطر",
   "شارع حسين الفخراني",
   "شارع المطبعة",
   "شارع المحجر",
   "شارع التل",
   "شارع محمد عبد الكريم",
-  "شارع عزت مطر",
   "شارع الهدى",
   "شارع عبد القادر",
   "شارع أحمد متولي",
   "شارع الأكحل",
   "شارع أبو أشرف",
   "شارع الجامع",
-  "شارع أبو طالب",
   "شارع إبراهيم عبد الهادي",
   "شارع سعيد النسناس",
   "شارع الجمهورية",
@@ -259,11 +253,41 @@ export const STOP_NAMES = [
   "شارع مطر",
   "شارع عبد السلام",
   "شارع سيد عبد الرازق",
-  "شارع فهيم عبد الخالق",
   "امتداد شارع رشاد عبد الهادي",
-
 ];
 
+// User-confirmed order while driving from the bridge toward Fayda Kamel.
+// Left side is listed from the lower part of the map upward.
+export const LEFT_SIDE_STOPS = [
+  "شارع حسن مطر",
+  "شارع محمد رزق",
+  "كشري الدكتور",
+  "شارع قدري الصياد",
+  "شارع كمال عبد الحميد",
+  "شارع فهيم عبد الخالق",
+  "شارع تاج الدين عمرو",
+] as const;
+
+// Right side, in the same bridge-to-Fayda-Kamel direction.
+export const RIGHT_SIDE_STOPS = [
+  "شارع أحمد عسلاقي",
+  "شارع محمد حسين مطر",
+  "شارع أحمد محمود",
+  "شارع أحمد المصري",
+  "شارع السيد أبو كريشة",
+  "شارع أبو طالب",
+  "شارع علي زينهم",
+  "شارع عبد الغفار عزيز",
+  "شارع أحمد زكي",
+] as const;
+
+// Keep one passenger destination inventory while retaining the side-specific order
+// for later map-accurate placement. Cross-side interleaving still needs coordinates.
+export const STOP_NAMES = [
+  ...LEFT_SIDE_STOPS,
+  ...RIGHT_SIDE_STOPS,
+  ...LEGACY_STOP_NAMES,
+];
 export function vehicleById(id: VehicleId) {
   return VEHICLES.find((v) => v.id === id) ?? VEHICLES[3];
 }
