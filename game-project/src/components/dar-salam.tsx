@@ -326,7 +326,8 @@ export function DarSalam() {
                       type="button"
                       disabled={!ready || maxed || !afford}
                       onClick={() => gameRef.current?.buy(u.id as UpgradeId)}
-                      aria-label={`${u.name}: المستوى ${lvl} من ${u.max}${maxed ? "، مكتمل" : `، السعر ${cost} جنيه`}`}\n                      className="min-h-16 rounded-xl bg-panel-2 px-3 py-2 text-right focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber disabled:opacity-45"
+                      aria-label={`${u.name}: المستوى ${lvl} من ${u.max}${maxed ? "، مكتمل" : `، السعر ${cost} جنيه`}`}
+                      className="min-h-16 rounded-xl bg-panel-2 px-3 py-2 text-right focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber disabled:opacity-45"
                     >
                       <span className="flex items-center justify-between gap-2">
                         <span className="text-sm font-extrabold">{u.name}</span>
