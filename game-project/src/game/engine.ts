@@ -2396,12 +2396,14 @@ function rollJobs(fromStop: number) {
   function drawPeople() {
     let i = 0;
     const bobT = performance.now() / 1000;
-    for (let sIdx = 0; sIdx < track.stops.length; sIdx++) {
-      const n = Math.min(8, waiting[sIdx] ?? 0);
+    for (let sIdx = 0; sIdx < track.stops.length && i < PEOPLE; sIdx++) {
+      // The InstancedMesh has a strict per-device capacity (8 on Android).
+      // Cap the total crowd across all stops, not each stop independently.
+      const n = Math.min(8, waiting[sIdx] ?? 0, PEOPLE - i);
       const sm = track.sample(track.stops[sIdx].s);
       const rx = Math.cos(sm.yaw);
       const rz = -Math.sin(sm.yaw);
-      for (let k = 0; k < n; k++) {
+      for (let k = 0; k < n && i < PEOPLE; k++) {
         const bob = Math.sin(bobT * 2.2 + sIdx + k) * 0.04;
         dummy.position.set(sm.x + rx * (7.15 + k * 0.72), 0.64 + bob, sm.z + rz * (7.15 + k * 0.72));
         dummy.rotation.set(0, sm.yaw + k, 0);
