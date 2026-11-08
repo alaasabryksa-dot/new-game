@@ -13,6 +13,18 @@ Sout Al-Salam / Bashkatib describes a roughly 2.2 km walk from Dar El-Salam Brid
 4. **Education zone:** broad school/education building silhouettes and increased pedestrian activity, without invented school names or logos.
 5. **Return/U-turn area:** widen the visual rhythm and road furniture where the mapped candidate indicates the transition; do not assume this is a surveyed exact U-turn location.
 
+## Additional named landmark leads (8 Nov 2026)
+
+Public map listings add useful research leads, not verified facade assets:
+- The Gamal Abdel Nasser National Mixed Language School is listed at 2 El Fayoum Street and can inform the broad education-zone context.
+- Telecom Egypt / WE Dar El Salam Central is listed at 126 El Fayoum Street.
+- Nahdet Dar El Salam Mosque is associated with Fayoum Street in El-Mala'a, opposite the consumer association; its exact frontage remains uncertain.
+- El-Karim Mosque is associated with the wider El-Fayoumy / Ezbet Nafie corridor and should not be placed on the main road without a precise position check.
+- Paris For Clothes is listed at 92 Al Fayoum Street.
+- Orange Express is listed on Matar Street off/near Al Fayoum and must remain a side-street lead.
+
+All six require current visual confirmation before any recognizable signage or facade recreation is added. The source place IDs and confidence notes are in the JSON research catalogs.
+
 ## Asset and evidence rules
 - Use original procedural meshes and original fictional signs for unverified storefronts.
 - Never place a real business name at a specific frontage based only on a directory street number.
