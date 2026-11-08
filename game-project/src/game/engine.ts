@@ -585,7 +585,7 @@ export function mountGame(
   const sfx = new Sfx();
   sfx.on = save.sound;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "low-power", failIfMajorPerformanceCaveat: false });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor("#9ec9e8");
   const scene = new THREE.Scene();
