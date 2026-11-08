@@ -130,3 +130,13 @@ test("cancelled touch gestures release every driving input", () => {
   assert.match(ui, /window\.removeEventListener\("pointercancel", releaseInputs\)/);
   assert.match(ui, /const releaseInputs = \(\) => \{[\s\S]*?holds\.current = \{ l: false, r: false, g: false, b: false \}/);
 });
+
+
+test("driving HUD fuel and rent meters expose accessible progress values", () => {
+  assert.match(ui, /role="progressbar"[\\s\\S]*?aria-label="مستوى البنزين"/);
+  assert.match(ui, /aria-valuemin=\\{0\\}[\\s\\S]*?aria-valuemax=\\{100\\}/);
+  assert.match(ui, /aria-valuenow=\\{Math\\.max\\(0, Math\\.min\\(100, snap\\.fuel\\)\\)\\}/);
+  assert.match(ui, /role="progressbar"[\\s\\S]*?aria-label="تقدم سداد الإيجار"/);
+  assert.match(ui, /aria-valuemax=\\{snap\\.rent\\}/);
+  assert.match(ui, /aria-valuenow=\\{Math\\.max\\(0, Math\\.min\\(snap\\.rent, snap\\.money\\)\\)\\}/);
+});
