@@ -2705,6 +2705,70 @@ function buildElectricalPoles(scene: THREE.Scene, track: Track) {
   }
 }
 
+
+function buildStreetFurnitureMobile(scene: THREE.Scene, track: Track) {
+  // Compact Android-only street life: six instanced draw calls instead of the
+  // richer desktop prop set. Keep props outside the drivable carriageway.
+  const props: Array<{ x: number; y: number; z: number; yaw: number; sx?: number; sy?: number; sz?: number }> = [];
+  const bins: THREE.Matrix4[] = [];
+  const trees: THREE.Matrix4[] = [];
+  const treeCrowns: THREE.Matrix4[] = [];
+  const lamps: THREE.Matrix4[] = [];
+  const lampHeads: THREE.Matrix4[] = [];
+  const carts: THREE.Matrix4[] = [];
+  const cartCanopies: THREE.Matrix4[] = [];
+  const benches: THREE.Matrix4[] = [];
+  const o = new THREE.Object3D();
+  const put = (list: THREE.Matrix4[], p: typeof props[number], y: number, sx: number, sy: number, sz: number) => {
+    o.position.set(p.x, y, p.z);
+    o.rotation.set(0, p.yaw, 0);
+    o.scale.set(sx, sy, sz);
+    o.updateMatrix();
+    list.push(o.matrix.clone());
+  };
+  const pts = track.pts;
+  for (let i = 10; i < pts.length; i += 22) {
+    const p = pts[i];
+    const rx = Math.cos(p.yaw);
+    const rz = -Math.sin(p.yaw);
+    const side = i % 2 === 0 ? -1 : 1;
+    const lat = ROAD_HALF + 2.55 + (i % 3) * 0.18;
+    const x = p.x + rx * side * lat;
+    const z = p.z + rz * side * lat;
+    const item = { x, y: 0, z, yaw: p.yaw };
+    put(bins, { ...item, x: x + rx * side * 0.55, z: z + rz * side * 0.55 }, 0.48, 0.55, 0.96, 0.55);
+    if (i % 44 === 10) {
+      put(trees, item, 1.1, 0.22, 2.2, 0.22);
+      put(treeCrowns, item, 2.7, 1.05, 1.25, 1.05);
+    }
+    if (i % 66 === 10) {
+      put(lamps, { ...item, x: x + rx * side * 0.7, z: z + rz * side * 0.7 }, 2.45, 0.09, 4.9, 0.09);
+      put(lampHeads, { ...item, x: x + rx * side * 0.7, z: z + rz * side * 0.7 }, 4.95, 0.72, 0.12, 0.42);
+    }
+    if (i % 55 === 10) {
+      const cart = { ...item, x: x + rx * side * 0.95, z: z + rz * side * 0.95 };
+      put(carts, cart, 0.58, 0.95, 0.72, 0.68);
+      put(cartCanopies, cart, 1.12, 1.12, 0.12, 0.86);
+    }
+    if (i % 88 === 10) put(benches, { ...item, x: x + rx * side * 0.35, z: z + rz * side * 0.35 }, 0.48, 1.35, 0.16, 0.52);
+  }
+  const add = (geometry: THREE.BufferGeometry, material: THREE.Material, matrices: THREE.Matrix4[]) => {
+    const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, matrices.length));
+    matrices.forEach((matrix, index) => mesh.setMatrixAt(index, matrix));
+    mesh.count = matrices.length;
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  };
+  add(new THREE.BoxGeometry(0.62, 1, 0.62), new THREE.MeshStandardMaterial({ color: "#52636a", roughness: 0.86 }), bins);
+  add(new THREE.CylinderGeometry(0.18, 0.24, 1, 7), new THREE.MeshStandardMaterial({ color: "#76533a", roughness: 0.95 }), trees);
+  add(new THREE.SphereGeometry(1, 7, 5), new THREE.MeshStandardMaterial({ color: "#47734a", roughness: 0.94 }), treeCrowns);
+  add(new THREE.BoxGeometry(0.18, 1, 0.18), new THREE.MeshStandardMaterial({ color: "#4b5155", metalness: 0.35, roughness: 0.68 }), lamps);
+  add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#e7d7a4", emissive: "#f4d78d", emissiveIntensity: 0.22 }), lampHeads);
+  add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#8b6240", roughness: 0.9 }), carts);
+  add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#b6533f", roughness: 0.9 }), cartCanopies);
+  add(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: "#9b8060", roughness: 0.9 }), benches);
+}
+
 function buildCityMobile(scene: THREE.Scene, track: Track) {
   // Mobile-safe, instanced street frontage. Keep draw calls low while making
   // the Android scene read as a dense Cairo commercial/residential corridor.
@@ -3834,7 +3898,7 @@ function buildStreetFurniture(scene: THREE.Scene, track: Track) {
   scene.add(trunk, canopy, bins, bollards, lampPoles, lampHeads, stopPoles, stopBoards, benchSeats, benchBacks, benchLegs, cartBodies, cartTops, cartCanopies, cartWheels, ...produceMeshes);
 }
 
-function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, playerX: number, playerZ: number) => void {
+function buildPedestrians(scene: THREE.Scene, track: Track, mobile = false): (time: number, playerX: number, playerZ: number) => void {
   type Walker = {
     s: number;
     side: number;
@@ -3871,7 +3935,7 @@ function buildPedestrians(scene: THREE.Scene, track: Track): (time: number, play
   const device = navigator as Navigator & { deviceMemory?: number };
   const constrainedDevice =
     (device.hardwareConcurrency || 4) <= 4 || (device.deviceMemory ?? 4) <= 3;
-  const walkerBudget = constrainedDevice ? 18 : 32;
+  const walkerBudget = mobile ? 10 : constrainedDevice ? 18 : 32;
   for (let i = 22; i < track.pts.length && walkers.length < walkerBudget; i += 31) {
     const p = track.pts[i];
     const index = walkers.length;
