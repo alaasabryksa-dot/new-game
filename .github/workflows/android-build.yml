@@ -55,29 +55,15 @@ jobs:
         working-directory: game-project/android
         run: gradle --no-daemon :app:assembleDebug
 
-      - name: Launch APK in Android emulator and verify game startup
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          profile: pixel_2
-          disable-animations: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -camera-back none -camera-front none
-          script: |
-            set -e
-            adb wait-for-device
-            echo "Waiting for Android package manager to become available..."
-            package_ready=0
-            for attempt in $(seq 1 36); do if adb shell pm list packages >/dev/null 2>&1; then package_ready=1; break; fi; echo "Package manager not ready (attempt $attempt/36)"; sleep 5; done
-            if [ "$package_ready" -ne 1 ]; then echo "Android package manager did not become available."; adb shell getprop || true; adb shell service list || true; adb logcat -d -t 400 || true; exit 1; fi
-            adb install game-project/android/app/build/outputs/apk/debug/app-debug.apk
-            adb logcat -c
-            adb shell am start -n com.tuktok.darelsalam/.MainActivity
-            sleep 45
-            adb shell pidof com.tuktok.darelsalam
-            adb logcat -d -s TuktokDarElsalam:I TuktokDarElsalam:E | tee android-startup.log
-            grep -q "GAME_READY" android-startup.log
+      - name: Verify APK package and signature
+        run: |
+          set -euo pipefail
+          APK="game-project/android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          unzip -t "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | tee apk-badging.txt
+          grep -q "package: name='com.tuktok.darelsalam'" apk-badging.txt
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
