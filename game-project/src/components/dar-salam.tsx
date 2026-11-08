@@ -541,7 +541,7 @@ function PlayHud({
                 <span>ركاب {snap.passengers.length}/{snap.seats}</span>
                 <span>منتظرين {snap.waitingPassengers}/8</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-label="الركاب المنتظرون عند مدخل الشارع" aria-valuemin={0} aria-valuemax={8} aria-valuenow={Math.max(0, Math.min(8, snap.waitingPassengers))}>
+              <div className="h-1.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-label="الركاب المنتظرون في المحطة" aria-valuemin={0} aria-valuemax={8} aria-valuenow={Math.max(0, Math.min(8, snap.waitingPassengers))}>
                 <div
                   className="h-full rounded-full bg-nile transition-[width] duration-300"
                   style={{ width: `${Math.max(0, Math.min(100, (snap.waitingPassengers / 8) * 100))}%` }}
@@ -558,7 +558,7 @@ function PlayHud({
                 <>
                   <p className="text-xs font-extrabold text-amber">أجرة متوقعة {snap.onboardFareTotal} ج</p>
                   <p className="text-[10px] font-bold leading-relaxed text-muted" aria-live="polite">
-                    أقرب مدخل: {snap.nextDropoffName} · {snap.nextDropoffDist} م
+                    أقرب نزلة: {snap.nextDropoffName} · {snap.nextDropoffDist} م
                   </p>
                 </>
               ) : null}
@@ -566,13 +566,13 @@ function PlayHud({
           ) : null}
         </div>
 
-        <div className="pointer-events-auto w-32 rounded-2xl border border-line bg-panel/90 px-3 py-2 sm:w-40" role="group" aria-label="معلومات مدخل الشارع والوجهة">
+        <div className="pointer-events-auto w-32 rounded-2xl border border-line bg-panel/90 px-3 py-2 sm:w-40" role="group" aria-label="معلومات المحطة والوجهة">
           <div className="flex items-center gap-1 text-xs text-muted">
             <MapPin className="size-3.5 text-nile" />
             {rush ? "التوصيلة" : "مدخل الشارع"}
           </div>
           <p className="truncate text-base font-extrabold leading-snug">{rush ? snap.jobName : snap.stopName}</p>
-          <p dir="ltr" aria-label={`المسافة إلى مدخل الشارع ${snap.stopDist} متر`} className="text-sm font-bold text-amber tabular-nums">
+          <p dir="ltr" aria-label={`المسافة إلى المحطة ${snap.stopDist} متر`} className="text-sm font-bold text-amber tabular-nums">
             {snap.stopDist} m
           </p>
           {snap.hint ? <p className="mt-1 text-xs font-bold text-amber">{snap.hint}</p> : null}
