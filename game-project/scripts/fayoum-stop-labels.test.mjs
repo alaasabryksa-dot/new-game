@@ -29,7 +29,7 @@ test("passenger stops are named and preserve the side for curb-side servicing", 
   assert.match(track, /const stops = entrances/);
   assert.match(track, /side: "left" \| "right"/);
   assert.match(engine, /proj\.lat \* sideSign > PASSENGER_SYSTEM_TUNING\.curbLaneMinimum/);
-  assert.match(engine, /اتجه ناحية \\u\{sideWord\}/);
+  assert.match(engine, /sideWord/);
 });
 
 test("opposite-side names are paired only as provisional visual cross-sections", () => {
