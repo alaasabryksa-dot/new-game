@@ -62,6 +62,13 @@ test("mobile performance budgets pedestrians and render pixel ratio", () => {
   assert.match(engine, /if \(!androidDevice\) buildStreetFurniture/);
 });
 
+test("steering input eases smoothly with a frame-rate-independent response", () => {
+  assert.match(engine, /let steeringInput = 0/);
+  assert.match(engine, /const steeringResponse = 1 - Math\.exp\(-dt \* 9\)/);
+  assert.match(engine, /steeringInput \+= \(steer - steeringInput\) \* steeringResponse/);
+  assert.match(engine, /player\.yaw \+= steeringInput \* spec\.turn/);
+});
+
 test("steering inputs preserve player-visible left and right", () => {
   assert.match(engine, /down\("KeyA"\)[\s\S]{0,90}steer \+= 1/);
   assert.match(engine, /down\("KeyD"\)[\s\S]{0,90}steer -= 1/);
