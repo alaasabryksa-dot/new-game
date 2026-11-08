@@ -142,3 +142,18 @@ test("driving HUD fuel and rent meters expose accessible progress values", () =>
   assert.ok(ui.includes("aria-valuemax={snap.rent}"));
   assert.ok(ui.includes("aria-valuenow={Math.max(0, Math.min(snap.rent, snap.money))}"));
 });
+
+
+test("mobile driving HUD exposes ten clear assistive and feedback cues", () => {
+  assert.ok(ui.includes('aria-label={`السرعة ${snap.speed} كيلومتر في الساعة`}'));
+  assert.ok(ui.includes('aria-label="الركاب المنتظرون في المحطة"'));
+  assert.ok(ui.includes("aria-valuemax={8}"));
+  assert.ok(ui.includes('aria-label="الركاب الموجودون في التوكتوك"'));
+  assert.ok(ui.includes('aria-label="عدادات القيادة"'));
+  assert.ok(ui.includes('role="status" aria-live="polite" aria-atomic="true"'));
+  assert.ok(ui.includes("aria-pressed={!snap.sound}"));
+  assert.ok(ui.includes('aria-label="تغيير زاوية الكاميرا"'));
+  assert.ok(ui.includes('role="dialog" aria-modal="true"'));
+  assert.ok(ui.includes('aria-label={`المسافة إلى المحطة ${snap.stopDist} متر`}'));
+  assert.ok(ui.includes('aria-label="معلومات المحطة والوجهة"'));
+});
