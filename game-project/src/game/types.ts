@@ -189,7 +189,7 @@ export type Hud = {
 
 export type PreviewCfg = {
   mode: Mode;
-  vehicle: VehicleId;
+  vehicle: "tuktuk";
   night: boolean;
   density: number;
   paint: string;
