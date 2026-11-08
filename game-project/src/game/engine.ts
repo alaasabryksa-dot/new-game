@@ -2733,8 +2733,8 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
     emissive: "#142c32", emissiveIntensity: 0.18,
   });
   const shutterMat = new THREE.MeshStandardMaterial({ color: "#737b7c", roughness: 0.72, metalness: 0.42 });
-  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "مخبوزات", "خضار وفاكهة", "حلاقة", "ورشة"];
-  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334", "#477342", "#5a526b", "#59636b"];
+  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "مخبوزات", "خضار وفاكهة", "حلاقة", "ورشة", "جزارة", "فرن", "عطارة", "أدوات منزلية", "مكتبة", "قطع غيار", "حلواني", "عصائر", "ملابس", "أحذية", "منظفات", "إكسسوارات"];
+  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334", "#477342", "#5a526b", "#59636b", "#8b3028", "#b16a24", "#72502e", "#3f6870", "#315b83", "#565b62", "#8d3e66", "#247b83", "#9a4f38", "#665b8a", "#52613c", "#8a6734"];
   const signMats = signLabels.map((label, index) => {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -2749,7 +2749,7 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
       context.direction = "rtl";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      context.font = "bold 62px Tajawal, sans-serif";
+      context.font = `bold ${label.length > 10 ? 43 : label.length > 7 ? 52 : 62}px Tajawal, sans-serif`;
       context.fillText(label, canvas.width / 2, canvas.height / 2);
     }
     const texture = new THREE.CanvasTexture(canvas);
@@ -2809,7 +2809,7 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
       }
 
       // Alternate shop and residential ground floors; real names stay out until verified.
-      const isShop = variation > 0.43;
+      const isShop = variation > 0.24; // Denser mixed-use frontage with plausible fictional local businesses.
       if (!isShop || shopCount >= capacity) continue;
       const frontOffset = -side * (width * 0.5 + 0.1);
       const frontX = point.x + rx * (side * (ROAD_HALF + depth * 0.5 + 2.5) + frontOffset);
@@ -2939,8 +2939,8 @@ function buildCity(scene: THREE.Scene, track: Track, mobile = false) {
   const awningValances = awningMats.map((mat) => new THREE.InstancedMesh(awningValanceGeo, mat, 100));
   const signGeo = new THREE.BoxGeometry(0.16, 0.72, 1);
   // Fictional category labels add neighborhood texture; they are not verified shop identities.
-  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "مخبوزات", "خضار وفاكهة", "حلاقة", "ورشة"];
-  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334", "#477342", "#5a526b", "#59636b"];
+  const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "مخبوزات", "خضار وفاكهة", "حلاقة", "ورشة", "جزارة", "فرن", "عطارة", "أدوات منزلية", "مكتبة", "قطع غيار", "حلواني", "عصائر", "ملابس", "أحذية", "منظفات", "إكسسوارات"];
+  const signColors = ["#174b70", "#176b55", "#a84a32", "#55447c", "#9a6334", "#477342", "#5a526b", "#59636b", "#8b3028", "#b16a24", "#72502e", "#3f6870", "#315b83", "#565b62", "#8d3e66", "#247b83", "#9a4f38", "#665b8a", "#52613c", "#8a6734"];
   const signMeshes = signLabels.map((label, index) => {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -2955,7 +2955,7 @@ function buildCity(scene: THREE.Scene, track: Track, mobile = false) {
       ctx.direction = "rtl";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = "bold 66px Tajawal, sans-serif";
+      ctx.font = `bold ${label.length > 10 ? 43 : label.length > 7 ? 54 : 66}px Tajawal, sans-serif`;
       ctx.fillText(label, 256, 67);
     }
     const texture = new THREE.CanvasTexture(canvas);
