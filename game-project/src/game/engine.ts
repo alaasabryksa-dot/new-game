@@ -2568,6 +2568,9 @@ function buildCity(scene: THREE.Scene, track: Track) {
     });
   });
   const awnings = awningMats.map((mat) => new THREE.InstancedMesh(awningGeo, mat, 100));
+  // Matching striped front valances make each canopy read as fabric, not a floating slab.
+  const awningValanceGeo = new THREE.BoxGeometry(0.08, 0.2, 1);
+  const awningValances = awningMats.map((mat) => new THREE.InstancedMesh(awningValanceGeo, mat, 100));
   const signGeo = new THREE.BoxGeometry(0.16, 0.72, 1);
   // Fictional category labels add neighborhood texture; they are not verified shop identities.
   const signLabels = ["بقالة", "صيدلية", "مطعم", "موبايلات", "مخبوزات", "خضار وفاكهة", "حلاقة", "ورشة"];
@@ -2699,6 +2702,7 @@ function buildCity(scene: THREE.Scene, track: Track) {
   let signCount = 0;
   let shopFrontCount = 0;
   const awningCounts = [0, 0, 0, 0];
+  const awningValanceCounts = [0, 0, 0, 0];
   const signCounts = signLabels.map(() => 0);
 
   // Sample the route more densely and alternate building sides so both sidewalks
@@ -2827,6 +2831,10 @@ function buildCity(scene: THREE.Scene, track: Track) {
       dummy.scale.set(1, 1, deep * 0.92);
       dummy.updateMatrix();
       awnings[awningIndex].setMatrixAt(awningCounts[awningIndex]++, dummy.matrix);
+      dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.55), 2.43, p.z + rz * (side * depth + frontX - side * 0.55));
+      dummy.scale.set(1, 1, deep * 0.92);
+      dummy.updateMatrix();
+      awningValances[awningIndex].setMatrixAt(awningValanceCounts[awningIndex]++, dummy.matrix);
       awningCount++;
 
       dummy.position.set(p.x + rx * (side * depth + frontX - side * 0.12), 3.22, p.z + rz * (side * depth + frontX - side * 0.12));
@@ -2944,6 +2952,11 @@ function buildCity(scene: THREE.Scene, track: Track) {
   signMeshes.forEach((mesh) => scene.add(mesh));
   awnings.forEach((mesh, i) => {
     mesh.count = awningCounts[i];
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  });
+  awningValances.forEach((mesh, i) => {
+    mesh.count = awningValanceCounts[i];
     mesh.instanceMatrix.needsUpdate = true;
     scene.add(mesh);
   });
