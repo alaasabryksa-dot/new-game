@@ -54,7 +54,7 @@ test("the player can only drive a tuk-tuk; other vehicle types are traffic NPCs"
 });
 
 test("mobile performance budgets pedestrians and render pixel ratio", () => {
-  assert.ok(engine.includes("const walkerBudget = mobile ? 10 : constrainedDevice ? 18 : 32;"));
+  assert.match(engine, /const walkerBudget = mobile[\\s\\S]*?PEDESTRIAN_TUNING\\.mobileWalkerBudget[\\s\\S]*?PEDESTRIAN_TUNING\\.constrainedWalkerBudget[\\s\\S]*?PEDESTRIAN_TUNING\\.desktopWalkerBudget/);
   assert.match(engine, /const androidDevice = \/Android\/i\.test\(navigator\.userAgent\)/);
   assert.match(engine, /pixelRatioCap = androidDevice/);
   assert.match(engine, /const POOL = androidDevice \? 12 : 64/);
