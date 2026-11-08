@@ -58,3 +58,14 @@ test("apartment frontage texture includes all twenty deterministic low-cost deta
   assert.deepEqual(detailCases.slice(-20), Array.from({ length: 20 }, (_, index) => index));
   assert.match(engine, /painted once into the shared texture, not scene meshes/);
 });
+
+test("NPC traffic has twenty active driving-tuning controls for curves, spacing, and varied pace", () => {
+  const tuning = engine.match(/const NPC_DRIVING_TUNING = \{([\s\S]*?)\} as const;/);
+  assert.ok(tuning, "NPC driving tuning must remain explicit");
+  const keys = [...tuning[1].matchAll(/^\s*([A-Za-z][A-Za-z0-9]*):/gm)].map((entry) => entry[1]);
+  assert.equal(keys.length, 20, "traffic tuning must expose twenty independent controls");
+  assert.match(engine, /const speedVariation = 1/);
+  assert.match(engine, /const curveFactor = Math\.max\(NPC_DRIVING_TUNING\.curveSpeedFloor/);
+  assert.match(engine, /NPC_DRIVING_TUNING\.signalLaneLock/);
+  assert.match(engine, /NPC_DRIVING_TUNING\.playerHornReactionRange/);
+});
