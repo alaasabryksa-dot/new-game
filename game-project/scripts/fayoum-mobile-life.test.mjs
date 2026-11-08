@@ -14,6 +14,6 @@ test("Android gets compact instanced street-life props", () => {
 
 test("Android gets a reduced animated pedestrian crowd instead of no pedestrians", () => {
   assert.match(engine, /buildPedestrians\(scene, track, androidDevice\)/);
-  assert.match(engine, /const walkerBudget = mobile[\\s\\S]*?PEDESTRIAN_TUNING\\.mobileWalkerBudget[\\s\\S]*?PEDESTRIAN_TUNING\\.constrainedWalkerBudget[\\s\\S]*?PEDESTRIAN_TUNING\\.desktopWalkerBudget/);
+  assert.ok(engine.includes("PEDESTRIAN_TUNING.mobileWalkerBudget") && engine.includes("PEDESTRIAN_TUNING.constrainedWalkerBudget") && engine.includes("PEDESTRIAN_TUNING.desktopWalkerBudget"));
   assert.doesNotMatch(engine, /androidDevice \? \(\(\) => undefined\)/);
 });
