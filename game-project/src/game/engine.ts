@@ -1561,7 +1561,7 @@ export function mountGame(
         if (pax.length) {
           pax.pop();
           say("راكب نزل غصب — غرامة");
-        } else say("خبطة! غرامة ٤٠ ج");
+        } else say("خبطة! غرامة ٣٥ ج");
       } else if (cfg.mode === "rush") {
         time += 2;
         say("خبطة +٢ ث");
