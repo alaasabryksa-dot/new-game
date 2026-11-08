@@ -22,6 +22,7 @@ export default defineConfig({
     // modules in bounded local chunks so low-memory Android WebViews do not
     // need to parse one oversized engine file at startup.
     rolldownOptions: {
+      input: resolve(root, "android.html"),
       output: {
         codeSplitting: {
           groups: [
@@ -35,9 +36,6 @@ export default defineConfig({
           ],
         },
       },
-    },
-    rollupOptions: {
-      input: resolve(root, "android.html"),
     },
   },
 });
