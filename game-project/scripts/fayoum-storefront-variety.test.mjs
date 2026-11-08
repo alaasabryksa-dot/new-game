@@ -167,3 +167,21 @@ test("rush delivery scheduling varies routes while keeping destinations distinct
   assert.match(engine, /if \(sector !== previousSector\)/);
   assert.match(engine, /if \(!available\.length\) break/);
 });
+
+test("camera exposes twenty tuning controls for phone comfort and stable follow", () => {
+  const marker = "const CAMERA_TUNING = {";
+  const start = engine.indexOf(marker);
+  assert.notEqual(start, -1, "camera tuning must remain explicit");
+  const end = engine.indexOf("} as const;", start);
+  assert.notEqual(end, -1, "camera tuning must be closed");
+  const tuning = engine.slice(start, end);
+  const keys = [...tuning.matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
+  assert.equal(keys.length, 20, "camera tuning must expose twenty controls");
+  for (const key of keys) {
+    assert.ok(engine.includes("CAMERA_TUNING." + key), "unused camera tuning: " + key);
+  }
+  assert.ok(engine.includes("CAMERA_TUNING.followSmoothing"));
+  assert.ok(engine.includes("CAMERA_TUNING.cockpitLookAhead"));
+  assert.ok(engine.includes("CAMERA_TUNING.speedFovBoost"));
+  assert.ok(engine.includes("CAMERA_TUNING.shakePositionScale"));
+});
