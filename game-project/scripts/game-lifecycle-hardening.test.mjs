@@ -45,10 +45,16 @@ test("stop crowds respect the total InstancedMesh capacity on Android", () => {
   assert.match(engine, /for \(let k = 0; k < n && i < PEOPLE; k\+\+\)/);
 });
 
-test("NPC lamp visibility reuses a stable hidden matrix without per-vehicle closures", () => {
+test("NPC rendering reuses frame scratch state and keeps painter outside render", () => {
+  const renderStart = engine.indexOf("  function render(dt: number) {");
+  const renderEnd = engine.indexOf("\n  const mapPts", renderStart);
+  const render = engine.slice(renderStart, renderEnd);
   assert.match(engine, /const hiddenNpcMatrix = new THREE\.Matrix4\(\)\.makeScale\(0, 0, 0\)/);
-  assert.match(engine, /pool\.brakes\.setMatrixAt\(i, braking \? vehicleMatrix : hiddenNpcMatrix\)/);
-  assert.match(engine, /pool\.signalsLeft\.setMatrixAt\(i, turnDirection < 0 && blinkOn \? vehicleMatrix : hiddenNpcMatrix\)/);
-  assert.match(engine, /pool\.signalsRight\.setMatrixAt\(i, turnDirection > 0 && blinkOn \? vehicleMatrix : hiddenNpcMatrix\)/);
-  assert.doesNotMatch(engine, /const hidden = \(\) => \{[\s\S]{0,180}return dummy\.matrix/);
+  assert.match(engine, /const cursors: Record<VehicleId, number> = \{/);
+  assert.match(engine, /const paintNpc = \(kind: VehicleId,[\s\S]*?pool\.body\.setMatrixAt\(i, dummy\.matrix\)/);
+  assert.match(engine, /pool\.brakes\.setMatrixAt\(i, braking \? dummy\.matrix : hiddenNpcMatrix\)/);
+  assert.match(engine, /pool\.signalsLeft\.setMatrixAt\(i, turnDirection < 0 && blinkOn \? dummy\.matrix : hiddenNpcMatrix\)/);
+  assert.match(engine, /pool\.signalsRight\.setMatrixAt\(i, turnDirection > 0 && blinkOn \? dummy\.matrix : hiddenNpcMatrix\)/);
+  assert.match(render, /for \(const kind of KINDS\) cursors\[kind\] = 0/);
+  assert.doesNotMatch(render, /new THREE\.Matrix4|dummy\.matrix\.clone\(\)|const paintNpc =/);
 });
