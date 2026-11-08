@@ -78,14 +78,27 @@ export function DarSalam() {
           const heard = handle.getHud();
           setCfg((c) => ({ ...c, sound: heard.sound }));
           setReady(true);
+          (window as Window & {
+            AndroidDiagnostics?: { onGameReady?: () => void };
+          }).AndroidDiagnostics?.onGameReady?.();
         } catch (error) {
           console.error("Game engine startup failed", error);
-          setStartupError(error instanceof Error ? error.message : String(error));
+          const message = error instanceof Error ? error.message : String(error);
+          (window as Window & {
+            AndroidDiagnostics?: { onGameError?: (value: string) => void };
+          }).AndroidDiagnostics?.onGameError?.(message);
+          setStartupError(message);
         }
       })
       .catch((error: unknown) => {
         console.error("Game engine module failed to load", error);
-        if (!dead) setStartupError(error instanceof Error ? error.message : String(error));
+        if (!dead) {
+          const message = error instanceof Error ? error.message : String(error);
+          (window as Window & {
+            AndroidDiagnostics?: { onGameError?: (value: string) => void };
+          }).AndroidDiagnostics?.onGameError?.(message);
+          setStartupError(message);
+        }
       });
     return () => {
       dead = true;
