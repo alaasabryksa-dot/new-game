@@ -164,7 +164,7 @@ export function DarSalam() {
             <div className="h-1.5 bg-amber" />
             <div className="overflow-y-auto p-4 sm:p-5">
               <p className="text-xs font-bold text-brick">حلقة العشرين</p>
-              <h1 className="mt-1 text-3xl font-extrabold leading-tight sm:text-4xl">توكتوك شارع الفيوم</h1>
+              <h1 className="mt-1 text-3xl font-extrabold leading-tight sm:text-4xl">توكتوك دار السلام</h1>
               <p className="mt-1 text-sm leading-relaxed text-muted">
                 ركّب من اليمين، نزّل الركاب، وخلّي بالك من البنزين والمطب والكمين.
               </p>
