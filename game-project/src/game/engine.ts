@@ -1671,7 +1671,7 @@ function rollJobs(fromStop: number) {
         nextDropoffName = track.stops[person.dest].name;
       }
     }
-    const gasStationDist = Math.round(Math.abs(wrapDelta(track.gasS, proj.s, track.total)));
+    const gasStationDist = Math.round(forwardDist(track.gasS, proj.s));
     let hint = "";
     if (phase === "play") {
       const gasD = gasStationDist;
