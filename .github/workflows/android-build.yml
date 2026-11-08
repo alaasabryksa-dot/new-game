@@ -5,6 +5,7 @@ on:
     paths:
       - "game-project/**"
       - ".github/workflows/android-build.yml"
+      - ".github/scripts/**"
   workflow_dispatch:
 
 permissions:
@@ -75,49 +76,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -camera-back none -camera-front none
           emulator-boot-timeout: 600
-          script: |
-            set -euo pipefail
-            adb wait-for-device
-            booted=0
-            for attempt in $(seq 1 90); do
-              state="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\\r' || true)"
-              if [ "$state" = "1" ] && adb shell pm list packages >/dev/null 2>&1; then
-                booted=1
-                break
-              fi
-              echo "Waiting for Android emulator boot ($attempt/90); state=$state"
-              sleep 2
-            done
-            if [ "$booted" -ne 1 ]; then
-              adb devices -l || true
-              adb logcat -d -t 500 || true
-              echo "Android emulator did not finish booting"
-              exit 1
-            fi
-            adb install -r game-project/android/app/build/outputs/apk/debug/app-debug.apk
-            adb logcat -c
-            adb shell am force-stop com.tuktok.darelsalam || true
-            adb shell am start -n com.tuktok.darelsalam/.MainActivity
-            ready=0
-            for attempt in $(seq 1 45); do
-              if adb logcat -d -s TuktokDarElsalam:I TuktokDarElsalam:E | grep -q "GAME_READY"; then
-                ready=1
-                break
-              fi
-              if ! adb shell pidof com.tuktok.darelsalam >/dev/null 2>&1; then
-                echo "Game process exited before GAME_READY"
-                adb logcat -d -v time || true
-                exit 1
-              fi
-              sleep 2
-            done
-            adb logcat -d -v time -s TuktokDarElsalam:I TuktokDarElsalam:E chromium:E AndroidRuntime:E | tee android-startup.log
-            if [ "$ready" -ne 1 ]; then
-              echo "Android game did not report GAME_READY"
-              adb logcat -d -v time || true
-              exit 1
-            fi
-            adb shell pidof com.tuktok.darelsalam
+          script: bash .github/scripts/test-android-startup.sh
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
