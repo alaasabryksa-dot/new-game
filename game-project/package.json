@@ -19,7 +19,8 @@
     "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/app-data/readiness-schedule.test.ts src/lib/auth/gate-identity.test.ts src/lib/auth/sign-in-gate.test.ts src/lib/preview-path-prefix.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "osm:fayoum": "node scripts/fetch-fayoum-osm.mjs"
+    "osm:fayoum": "node scripts/fetch-fayoum-osm.mjs",
+    "test:browser": "node scripts/game-browser-smoke.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",
