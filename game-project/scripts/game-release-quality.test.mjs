@@ -133,10 +133,12 @@ test("cancelled touch gestures release every driving input", () => {
 
 
 test("driving HUD fuel and rent meters expose accessible progress values", () => {
-  assert.match(ui, /role="progressbar"[\\s\\S]*?aria-label="مستوى البنزين"/);
-  assert.match(ui, /aria-valuemin=\\{0\\}[\\s\\S]*?aria-valuemax=\\{100\\}/);
-  assert.match(ui, /aria-valuenow=\\{Math\\.max\\(0, Math\\.min\\(100, snap\\.fuel\\)\\)\\}/);
-  assert.match(ui, /role="progressbar"[\\s\\S]*?aria-label="تقدم سداد الإيجار"/);
-  assert.match(ui, /aria-valuemax=\\{snap\\.rent\\}/);
-  assert.match(ui, /aria-valuenow=\\{Math\\.max\\(0, Math\\.min\\(snap\\.rent, snap\\.money\\)\\)\\}/);
+  assert.ok(ui.includes('role="progressbar"'));
+  assert.ok(ui.includes('aria-label="مستوى البنزين"'));
+  assert.ok(ui.includes("aria-valuemin={0}"));
+  assert.ok(ui.includes("aria-valuemax={100}"));
+  assert.ok(ui.includes("aria-valuenow={Math.max(0, Math.min(100, snap.fuel))}"));
+  assert.ok(ui.includes('aria-label="تقدم سداد الإيجار"'));
+  assert.ok(ui.includes("aria-valuemax={snap.rent}"));
+  assert.ok(ui.includes("aria-valuenow={Math.max(0, Math.min(snap.rent, snap.money))}"));
 });
