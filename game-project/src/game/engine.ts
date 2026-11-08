@@ -972,10 +972,43 @@ class Sfx {
     this.blip(frequency, duration, "square", volume);
   }
 
+  suspend() {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state === "closed") return;
+    try {
+      if (this.gain) {
+        this.gain.gain.cancelScheduledValues(ctx.currentTime);
+        this.gain.gain.setTargetAtTime(
+          SFX_TUNING.mutedGain,
+          ctx.currentTime,
+          SFX_TUNING.audioResumeRamp,
+        );
+      }
+      if (ctx.state === "running") void ctx.suspend().catch(() => undefined);
+    } catch {
+      // Audio lifecycle failures must never interrupt the game loop.
+    }
+  }
+
   stop() {
-    if (this.gain) this.gain.gain.value = SFX_TUNING.mutedGain;
-    void this.ctx?.close();
+    const ctx = this.ctx;
+    if (this.gain && ctx && ctx.state !== "closed") {
+      try {
+        this.gain.gain.cancelScheduledValues(ctx.currentTime);
+        this.gain.gain.value = SFX_TUNING.mutedGain;
+      } catch {
+        // The context may already have been closed by the WebView.
+      }
+    }
+    try { this.osc?.stop(); } catch { /* oscillator may already be stopped */ }
+    this.osc?.disconnect();
+    this.filter?.disconnect();
+    this.gain?.disconnect();
+    if (ctx && ctx.state !== "closed") void ctx.close().catch(() => undefined);
     this.ctx = null;
+    this.gain = null;
+    this.osc = null;
+    this.filter = null;
   }
 }
 
@@ -2655,6 +2688,9 @@ function rollJobs(fromStop: number) {
     touch.steer = 0;
     touch.throttle = 0;
     touch.brake = 0;
+    // Suspend audio immediately on calls, notifications, app switching and tab hiding.
+    // Resume remains gesture-gated through Sfx.unlock() on the next deliberate action.
+    sfx.suspend();
     if (phase === "play") {
       // Commit the current run before the browser backgrounds or loses focus.
       // This keeps best-distance and best-earnings data safe on mobile interruptions.
@@ -2743,6 +2779,7 @@ function rollJobs(fromStop: number) {
       acc = 0;
       if (phase === "pause") {
         phase = "play";
+        sfx.unlock();
         publish();
       }
     },
