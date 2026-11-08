@@ -50,5 +50,9 @@ jobs:
           exit 1
       - name: Smoke test landscape mobile gameplay
         run: npm run test:browser
+      - name: Build self-contained Android web bundle
+        run: npm run build:android-web
+      - name: Smoke test offline Android bundle in mobile WebView-like browser
+        run: node scripts/android-bundle-smoke.mjs
       - name: Production build
         run: npm run build
