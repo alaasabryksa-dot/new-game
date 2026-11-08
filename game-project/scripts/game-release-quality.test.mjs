@@ -49,6 +49,14 @@ test("mobile performance budgets pedestrians and render pixel ratio", () => {
   assert.match(engine, /constrainedDevice \? 1\.0 : 1\.2/);
 });
 
+test("steering inputs preserve player-visible left and right", () => {
+  assert.match(engine, /down\("KeyA"\)[\s\S]{0,90}steer \+= 1/);
+  assert.match(engine, /down\("KeyD"\)[\s\S]{0,90}steer -= 1/);
+  assert.match(engine, /player\.yaw \+= steer \* spec\.turn/);
+  assert.match(engine, /window\.__controlsTest =/);
+  assert.match(engine, /setSteer: \(v: number\) =>/);
+});
+
 test("touch controls and game lifecycle retain focus-loss safeguards", () => {
   assert.match(ui, /const releaseInputs = \(\) =>/);
   assert.match(ui, /addEventListener\("visibilitychange"/);
