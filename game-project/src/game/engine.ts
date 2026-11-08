@@ -2293,6 +2293,7 @@ function rollJobs(fromStop: number) {
       if (jobIndex >= JOBS_NEED) {
         phase = "summary";
         settle();
+        sfx.suspend();
         publish();
         return;
       }
@@ -2376,6 +2377,7 @@ function rollJobs(fromStop: number) {
     if (phase === "play" && cfg.mode === "shift" && time >= SHIFT_SECONDS) {
       phase = "summary";
       settle();
+      sfx.suspend();
       publish();
       return;
     }
@@ -2766,8 +2768,9 @@ function rollJobs(fromStop: number) {
       keys.clear();
       touch.steer = touch.throttle = touch.brake = 0;
       if (phase === "play") {
-        // Save immediately when the player deliberately pauses.
+        // Save and suspend the continuous engine tone on deliberate pause.
         persist();
+        sfx.suspend();
         phase = "pause";
         publish();
       }
@@ -2787,6 +2790,7 @@ function rollJobs(fromStop: number) {
       keys.clear();
       touch.steer = touch.throttle = touch.brake = 0;
       persist();
+      sfx.suspend();
       phase = "menu";
       probeKeys = null;
       bootCinematic();
@@ -2797,6 +2801,7 @@ function rollJobs(fromStop: number) {
       if (phase !== "play") return;
       phase = "summary";
       settle();
+      sfx.suspend();
       publish();
     },
     buy: (id: UpgradeId) => {
