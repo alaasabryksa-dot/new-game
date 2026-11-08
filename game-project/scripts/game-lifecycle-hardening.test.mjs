@@ -59,6 +59,12 @@ test("NPC rendering reuses frame scratch state and keeps painter outside render"
   assert.doesNotMatch(render, /new THREE\.Matrix4|dummy\.matrix\.clone\(\)|const paintNpc =/);
 });
 
+test("HUD selects the nearest upcoming passenger drop-off and publishes its distance", () => {
+  assert.match(engine, /for \(const person of pax\) \{[\s\S]*?forwardDist\(track\.stops\[person\.dest\]\.s, proj\.s\)/);
+  assert.match(engine, /nextDropoffName,\s*nextDropoffDist: Number\.isFinite\(nextDropoffDist\)/);
+  assert.match(ui, /أقرب نزلة: \{snap\.nextDropoffName\} · \{snap\.nextDropoffDist\} م/);
+});
+
 test("minimap distinguishes passenger drop-off destinations from pickup points", () => {
   const mapStart = engine.indexOf("  function drawMap() {");
   const mapEnd = engine.indexOf("\n  function frame(", mapStart);
