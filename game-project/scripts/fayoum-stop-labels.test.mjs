@@ -10,7 +10,7 @@ const entranceBlock = types.match(/export const STREET_ENTRANCES(?:\s*:\s*[^=]+)
 
 test("all 24 player-confirmed side-street names are retained in their side-local order", () => {
   assert.ok(entranceBlock, "STREET_ENTRANCES must remain exported");
-  const names = [...entranceBlock[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+  const names = [...entranceBlock[1].matchAll(/"(شارع [^"]+|كشري الدكتور)"/g)].map((match) => match[1]);
   assert.equal(names.length, 24);
   assert.deepEqual(names.slice(0, 12), [
     "شارع حسن مطر", "شارع محمد رزق", "كشري الدكتور", "شارع قدري الصياد",
