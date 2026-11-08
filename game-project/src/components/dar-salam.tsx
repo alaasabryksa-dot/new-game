@@ -129,8 +129,11 @@ export function DarSalam() {
   const startGame = () => {
     // Android installed PWAs can lock orientation after a user gesture.
     // Browsers that do not support the API still work in landscape manually.
-    if (screen.orientation && "lock" in screen.orientation) {
-      void screen.orientation.lock("landscape").catch(() => undefined);
+    const orientation = screen.orientation as unknown as {
+      lock?: (value: string) => Promise<void>;
+    };
+    if (typeof orientation?.lock === "function") {
+      void orientation.lock("landscape").catch(() => undefined);
     }
     gameRef.current?.start(cfg);
   };
