@@ -35,3 +35,11 @@ test("stop crowds respect the total InstancedMesh capacity on Android", () => {
   assert.match(engine, /Math\.min\(8, waiting\[sIdx\] \?\? 0, PEOPLE - i\)/);
   assert.match(engine, /for \(let k = 0; k < n && i < PEOPLE; k\+\+\)/);
 });
+
+test("NPC lamp visibility reuses a stable hidden matrix without per-vehicle closures", () => {
+  assert.match(engine, /const hiddenNpcMatrix = new THREE\.Matrix4\(\)\.makeScale\(0, 0, 0\)/);
+  assert.match(engine, /pool\.brakes\.setMatrixAt\(i, braking \? vehicleMatrix : hiddenNpcMatrix\)/);
+  assert.match(engine, /pool\.signalsLeft\.setMatrixAt\(i, turnDirection < 0 && blinkOn \? vehicleMatrix : hiddenNpcMatrix\)/);
+  assert.match(engine, /pool\.signalsRight\.setMatrixAt\(i, turnDirection > 0 && blinkOn \? vehicleMatrix : hiddenNpcMatrix\)/);
+  assert.doesNotMatch(engine, /const hidden = \(\) => \{[\s\S]{0,180}return dummy\.matrix/);
+});
