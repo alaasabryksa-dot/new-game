@@ -79,7 +79,7 @@ try {
   });
   assert.equal(response?.status(), 200, "Android local entry must load from packaged assets");
   await page.getByText("توكتوك دار السلام", { exact: true }).waitFor({ timeout: 30000 });
-  await page.waitForFunction(() => typeof window.__controlsTest?.getYaw === "function", { timeout: 30000 });
+  await page.waitForFunction(() => typeof window.__controlsTest?.getYaw === "function", null, { timeout: 30000 });
   const graphics = await page.locator("canvas").first().evaluate((canvas) => ({
     width: canvas.width,
     height: canvas.height,
@@ -91,7 +91,7 @@ try {
   await page.getByRole("button", { name: /ابدأ الوردية/ }).click();
   await page.getByRole("button", { name: "كلاكس" }).waitFor({ state: "visible", timeout: 15000 });
   await page.evaluate(() => window.__controlsTest?.setKeys?.(["ArrowUp"]));
-  await page.waitForFunction(() => (window.__controlsTest?.getSpeed?.() ?? 0) > 0, { timeout: 10000 });
+  await page.waitForFunction(() => (window.__controlsTest?.getSpeed?.() ?? 0) > 0, null, { timeout: 10000 });
   await page.evaluate(() => window.__controlsTest?.setKeys?.([]));
   await page.getByRole("button", { name: "إيقاف" }).click();
   await page.getByText("وقفة", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
