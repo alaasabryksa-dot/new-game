@@ -250,3 +250,13 @@ test("mobile menus and driving controls expose selected states and clear labels"
   assert.ok(ui.includes('aria-label="أزرار التحكم الإضافية"'));
   assert.ok(ui.includes('aria-label="أزرار قيادة التوكتوك"'));
 });
+
+
+test("traffic signals are staggered per stop and NPCs obey each visible phase", () => {
+  assert.match(engine, /const signalIndex = Math\.floor\(headIndex \/ 2\)/);
+  assert.match(engine, /time \+ signalIndex \* 2\.4/);
+  assert.match(engine, /const stopCycle = \(trafficClock \+ stopIndex \* 2\.4\) % TRAFFIC_SIGNAL_CYCLE/);
+  assert.match(engine, /nearestSignalCycle = stopCycle/);
+  assert.match(engine, /nearestSignalCycle >= TRAFFIC_RED_SECONDS \+ TRAFFIC_AMBER_SECONDS/);
+  assert.match(engine, /greenElapsed = Math\.max\(0, nearestSignalCycle - releaseAt\)/);
+});
