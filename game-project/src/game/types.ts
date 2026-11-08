@@ -176,6 +176,9 @@ export type Hud = {
   fuelRange: number;
   gasStationDist: number;
   rent: number;
+  rentPaid: number;
+  rentRemaining: number;
+  walletChange: number;
   shiftLeft: number;
   wallet: number;
   upgrades: Upgrades;
