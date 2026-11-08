@@ -43,6 +43,14 @@ test("tuk-tuk model has canopy supports, side rails and paired mirrors", () => {
   assert.match(engine, /-0\.78, 1\.42, -0\.58/);
 });
 
+test("the player can only drive a tuk-tuk; other vehicle types are traffic NPCs", () => {
+  assert.match(engine, /let playerMesh = buildPlayer\("tuktuk"/);
+  assert.match(engine, /cfg = \{ \.\.\.next, vehicle: "tuktuk" \}/);
+  assert.match(engine, /swapPlayer\("tuktuk", cfg\.paint\)/);
+  assert.match(ui, /vehicle: "tuktuk"/);
+  assert.doesNotMatch(ui, /VEHICLES\.map|vehicleById\(/);
+});
+
 test("mobile performance budgets pedestrians and render pixel ratio", () => {
   assert.match(engine, /walkerBudget = constrainedDevice \? 18 : 32/);
   assert.match(engine, /pixelRatioCap = coarsePointer/);
