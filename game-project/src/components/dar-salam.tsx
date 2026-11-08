@@ -663,18 +663,23 @@ function PlayHud({
                 </span>
               </li>
               {shift ? (
-                <>
-                  <li className="flex justify-between">
-                    <span className="text-muted">الإيجار المسدد</span>
-                    <span className="font-extrabold">{snap.rentPaid}/{snap.rent} ج</span>
-                  </li>
-                  {snap.phase === "summary" ? (
+                snap.phase === "summary" ? (
+                  <>
+                    <li className="flex justify-between">
+                      <span className="text-muted">الإيجار المسدد</span>
+                      <span className="font-extrabold">{snap.rentPaid}/{snap.rent} ج</span>
+                    </li>
                     <li className="flex justify-between">
                       <span className="text-muted">المتبقي من الإيجار</span>
                       <span className="font-extrabold">{snap.rentRemaining} ج</span>
                     </li>
-                  ) : null}
-                </>
+                  </>
+                ) : (
+                  <li className="flex justify-between">
+                    <span className="text-muted">الإيجار المطلوب</span>
+                    <span className="font-extrabold">{snap.rent} ج</span>
+                  </li>
+                )
               ) : null}
               {snap.phase === "summary" ? (
                 <li className="flex justify-between">
