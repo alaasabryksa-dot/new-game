@@ -536,6 +536,69 @@ function facadeTexture(base: string, variant = 0) {
     g.fill();
   }
 
+  // Twenty deterministic frontage accents add block-by-block variety to the
+  // apartment strip. They are painted once into the shared texture, not scene meshes.
+  for (let floor = 0; floor < 4; floor++) {
+    for (let col = 0; col < 4; col++) {
+      const frontageDetail = (floor * 17 + col * 11 + variant * 7 + base.length) % 20;
+      const x = 10 + col * 88;
+      const y = 18 + floor * 124;
+      switch (frontageDetail) {
+        case 0: // shallow fabric window shade
+          g.fillStyle = "#b66e52"; g.fillRect(x - 2, y + 69, 43, 5);
+          g.fillStyle = "rgba(55,45,38,0.22)"; g.fillRect(x + 1, y + 74, 39, 3); break;
+        case 1: // flower box
+          g.fillStyle = "#625b4d"; g.fillRect(x + 3, y + 68, 34, 7);
+          g.fillStyle = "#66845b"; g.fillRect(x + 7, y + 62, 4, 7); g.fillRect(x + 18, y + 60, 5, 9); g.fillRect(x + 29, y + 63, 4, 6); break;
+        case 2: // patched plaster
+          g.fillStyle = "rgba(224,211,183,0.38)"; g.fillRect(x + 46, y + 12, 24, 31);
+          g.fillStyle = "rgba(92,78,60,0.13)"; g.fillRect(x + 49, y + 15, 18, 2); break;
+        case 3: // narrow ventilation grille
+          g.fillStyle = "#656d6b"; g.fillRect(x + 48, y + 48, 19, 13);
+          g.fillStyle = "#b9b6aa"; for (let bar = 0; bar < 5; bar++) g.fillRect(x + 51 + bar * 3, y + 50, 1, 9); break;
+        case 4: // exposed cable run
+          g.strokeStyle = "rgba(45,48,47,0.62)"; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 43, y + 4); g.lineTo(x + 48, y + 30); g.lineTo(x + 42, y + 58); g.stroke(); break;
+        case 5: // small wall lamp
+          g.fillStyle = "#555b58"; g.fillRect(x + 48, y + 31, 3, 12);
+          g.fillStyle = "#d8c18a"; g.beginPath(); g.arc(x + 50, y + 29, 5, 0, Math.PI * 2); g.fill(); break;
+        case 6: // masonry repair blocks
+          g.fillStyle = "rgba(120,103,79,0.2)"; g.fillRect(x - 3, y + 88, 16, 8); g.fillRect(x + 14, y + 88, 21, 8); break;
+        case 7: // sill brackets
+          g.fillStyle = "#666c69"; g.fillRect(x + 3, y + 73, 3, 8); g.fillRect(x + 34, y + 73, 3, 8); break;
+        case 8: // slim security bars
+          g.strokeStyle = "#777d7a"; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 8, y + 7); g.lineTo(x + 8, y + 62); g.moveTo(x + 29, y + 7); g.lineTo(x + 29, y + 62); g.moveTo(x + 4, y + 34); g.lineTo(x + 34, y + 34); g.stroke(); break;
+        case 9: // rain marks below a sill
+          g.fillStyle = "rgba(65,76,75,0.18)"; g.fillRect(x + 6, y + 80, 2, 17); g.fillRect(x + 25, y + 81, 3, 12); break;
+        case 10: // small utility label
+          g.fillStyle = "#d4cdbd"; g.fillRect(x + 49, y + 76, 19, 13);
+          g.fillStyle = "#777b73"; g.fillRect(x + 52, y + 79, 12, 2); g.fillRect(x + 52, y + 83, 8, 2); break;
+        case 11: // projecting sign supports
+          g.fillStyle = "#555b59"; g.fillRect(x + 42, y + 93, 23, 3); g.fillRect(x + 44, y + 93, 2, 12); break;
+        case 12: // balcony pot
+          g.fillStyle = "#9b6d4e"; g.fillRect(x + 47, y + 70, 12, 9);
+          g.fillStyle = "#6d895d"; g.fillRect(x + 51, y + 63, 3, 8); g.fillRect(x + 57, y + 66, 3, 5); break;
+        case 13: // partial roller shutter
+          g.fillStyle = "rgba(78,85,84,0.7)"; g.fillRect(x + 3, y + 3, 32, 15);
+          g.fillStyle = "#b3b2a8"; for (let slat = 0; slat < 3; slat++) g.fillRect(x + 4, y + 5 + slat * 4, 30, 1); break;
+        case 14: // concrete corner patch
+          g.fillStyle = "rgba(75,68,57,0.17)"; g.beginPath(); g.moveTo(x + 70, y + 4); g.lineTo(x + 80, y + 4); g.lineTo(x + 80, y + 37); g.lineTo(x + 73, y + 29); g.fill(); break;
+        case 15: // window curtain edge
+          g.fillStyle = "rgba(236,224,202,0.56)"; g.fillRect(x + 4, y + 5, 5, 55); g.fillRect(x + 29, y + 5, 5, 55); break;
+        case 16: // small pipe elbow
+          g.strokeStyle = "#9b9c91"; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 69, y + 51); g.lineTo(x + 75, y + 51); g.lineTo(x + 75, y + 63); g.stroke(); break;
+        case 17: // narrow sun visor
+          g.fillStyle = "#b7a17c"; g.fillRect(x + 1, y + 1, 38, 4);
+          g.fillStyle = "rgba(48,43,37,0.18)"; g.fillRect(x + 3, y + 5, 34, 3); break;
+        case 18: // small wall-mounted box
+          g.fillStyle = "#8c918b"; g.fillRect(x + 48, y + 15, 15, 19);
+          g.fillStyle = "#555e5b"; g.fillRect(x + 51, y + 19, 9, 2); g.fillRect(x + 51, y + 25, 9, 2); break;
+        case 19: // repaired tile strip
+          g.fillStyle = "rgba(188,169,135,0.3)"; g.fillRect(x + 42, y + 101, 28, 7);
+          g.fillStyle = "rgba(65,59,49,0.16)"; g.fillRect(x + 42, y + 104, 28, 1); break;
+      }
+    }
+  }
+
   // Weathering near the lower edge and small facade details.
   g.fillStyle = "rgba(80,65,50,0.13)";
   g.fillRect(0, 478, c.width, 34);
