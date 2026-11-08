@@ -35,14 +35,7 @@ jobs:
           set +e
           npm audit --json > npm-audit.json
           audit_status=$?
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-          const report = JSON.parse(fs.readFileSync("npm-audit.json", "utf8"));
-          console.log("Dependency audit summary:", JSON.stringify(report.metadata?.vulnerabilities ?? {}));
-          for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
-            console.log(JSON.stringify({ package: name, severity: item.severity, direct: item.isDirect, range: item.range, fixAvailable: item.fixAvailable, via: item.via }));
-          }
-          NODE
+          node -e 'const r=require("./npm-audit.json"); console.log("Dependency audit summary:", JSON.stringify(r.metadata?.vulnerabilities ?? {})); for (const [name,v] of Object.entries(r.vulnerabilities ?? {})) console.log(JSON.stringify({package:name,severity:v.severity,direct:v.isDirect,range:v.range,fixAvailable:v.fixAvailable,via:v.via}));'
           echo "npm audit exit code: $audit_status"
       - name: Build the self-contained offline game bundle
         working-directory: game-project
