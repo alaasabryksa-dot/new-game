@@ -125,6 +125,39 @@ const NPC_DRIVING_TUNING = {
   signalLaneLock: 28, mergeSpeedFloor: 2.2, playerHornReactionRange: 26, curbApproachBuffer: 3.2,
 } as const;
 
+const NPC_STOPPING_TUNING = {
+  microStopApproachStart: 12,
+  microStopApproachEnd: 38,
+  microStopSpeedScale: 0.46,
+  microStopCaptureDistance: 3.5,
+  microStopReleaseDistance: -1.2,
+  microStopSpeedLimit: 4.5,
+  microStopDurationMin: 2.2,
+  microStopDurationJitter: 1.9,
+  microBrakeChance: 0.1,
+  microBrakeDuration: 1.35,
+  tuktukStopApproachStart: -8,
+  tuktukStopApproachEnd: 28,
+  tuktukStopApproachBase: 2.8,
+  tuktukStopApproachScale: 0.5,
+  tuktukStopCaptureDistance: 3.8,
+  tuktukStopReleaseDistance: -1,
+  tuktukStopSpeedLimit: 4,
+  tuktukStopChance: 0.32,
+  tuktukStopDurationMin: 1,
+  tuktukStopDurationJitter: 0.8,
+  signalApproachDistance: 38,
+  redBrakeDeceleration: 3.1,
+  redStopBuffer: 3.2,
+  amberBrakeDeceleration: 2.7,
+  amberStopBuffer: 4.5,
+  amberApproachScale: 0.58,
+  greenQueueReleaseMax: 14.2,
+  greenQueueReleaseBase: 8.8,
+  greenQueuePerVehicle: 0.62,
+  greenQueueAcceleration: 2.65,
+} as const;
+
 type Save = {
   v: 2;
   bestMoney: number;
@@ -1549,12 +1582,12 @@ export function mountGame(
         for (let i = 0; i < track.stops.length; i++) {
           const d = wrapDelta(track.stops[i].s, n.s, track.total);
           // Microbuses in the curb-side lanes slow down and briefly wait at stops.
-          if (n.lane > 1.5 && d > -12 && d < 38) {
-            const stopApproachSpeed = Math.min(3, Math.max(0, (d - NPC_DRIVING_TUNING.curbApproachBuffer) * 0.46));
+          if (n.lane > 1.5 && d > -NPC_STOPPING_TUNING.microStopApproachStart && d < NPC_STOPPING_TUNING.microStopApproachEnd) {
+            const stopApproachSpeed = Math.min(3, Math.max(0, (d - NPC_DRIVING_TUNING.curbApproachBuffer) * NPC_STOPPING_TUNING.microStopSpeedScale));
             target = Math.min(target, stopApproachSpeed);
-            if (d < 3.5 && d > -1.2 && n.stopAt !== i && n.stopTimer <= 0 && n.speed < 4.5) {
+            if (d < NPC_STOPPING_TUNING.microStopCaptureDistance && d > NPC_STOPPING_TUNING.microStopReleaseDistance && n.stopAt !== i && n.stopTimer <= 0 && n.speed < NPC_STOPPING_TUNING.microStopSpeedLimit) {
               n.stopAt = i;
-              n.stopTimer = 2.2 + Math.random() * 1.9;
+              n.stopTimer = NPC_STOPPING_TUNING.microStopDurationMin + Math.random() * NPC_STOPPING_TUNING.microStopDurationJitter;
             }
             // A bus fully stops while boarding/alighting instead of crawling forward.
             if (n.stopTimer > 0 && n.stopAt === i) target = 0;
@@ -1563,7 +1596,7 @@ export function mountGame(
           }
         }
         n.brake -= dt;
-        if (n.brake <= 0 && Math.random() < dt * 0.1) n.brake = 1.35;
+        if (n.brake <= 0 && Math.random() < dt * NPC_STOPPING_TUNING.microBrakeChance) n.brake = NPC_STOPPING_TUNING.microBrakeDuration;
         if (n.brake > 0) target = Math.min(target, 1.6);
       } else if (n.kind === "tuktuk") {
         // Some tuk-tuks make short passenger pick-ups at the curb-side game stops.
@@ -1571,13 +1604,13 @@ export function mountGame(
         for (let i = 0; i < track.stops.length; i++) {
           const d = wrapDelta(track.stops[i].s, n.s, track.total);
           const curbLane = n.lane < 0.55 || n.lane > 2.45;
-          if (curbLane && d > -8 && d < 28) {
-            const approachSpeed = Math.min(3.2, Math.max(0, (d - 2.8) * 0.5));
+          if (curbLane && d > NPC_STOPPING_TUNING.tuktukStopApproachStart && d < NPC_STOPPING_TUNING.tuktukStopApproachEnd) {
+            const approachSpeed = Math.min(3.2, Math.max(0, (d - NPC_STOPPING_TUNING.tuktukStopApproachBase) * NPC_STOPPING_TUNING.tuktukStopApproachScale));
             target = Math.min(target, approachSpeed);
-            if (d < 3.8 && d > -1 && n.stopAt !== i && n.stopTimer <= 0 && n.speed < 4) {
+            if (d < NPC_STOPPING_TUNING.tuktukStopCaptureDistance && d > NPC_STOPPING_TUNING.tuktukStopReleaseDistance && n.stopAt !== i && n.stopTimer <= 0 && n.speed < NPC_STOPPING_TUNING.tuktukStopSpeedLimit) {
               n.stopAt = i;
               // Not every tuk-tuk stops at every point; this avoids synchronized queues.
-              n.stopTimer = Math.random() < 0.32 ? 1.0 + Math.random() * 0.8 : 0;
+              n.stopTimer = Math.random() < NPC_STOPPING_TUNING.tuktukStopChance ? NPC_STOPPING_TUNING.tuktukStopDurationMin + Math.random() * NPC_STOPPING_TUNING.tuktukStopDurationJitter : 0;
             }
             if (n.stopTimer > 0 && n.stopAt === i) target = 0;
           } else if (n.stopAt === i && d < -6) {
@@ -1594,7 +1627,7 @@ export function mountGame(
       for (let stopIndex = 0; stopIndex < track.stops.length; stopIndex++) {
         const stop = track.stops[stopIndex];
         const distanceToLine = wrapDelta(stop.s, n.s, track.total);
-        if (distanceToLine <= 0 || distanceToLine > 38) continue;
+        if (distanceToLine <= 0 || distanceToLine > NPC_STOPPING_TUNING.signalApproachDistance) continue;
         const stopCycle = (trafficClock + stopIndex * 2.4) % TRAFFIC_SIGNAL_CYCLE;
         const redLight = stopCycle < TRAFFIC_RED_SECONDS;
         const amberLight = stopCycle >= TRAFFIC_RED_SECONDS
@@ -1606,15 +1639,15 @@ export function mountGame(
         }
         if (redLight) {
           redStopDistance = Math.min(redStopDistance, distanceToLine);
-          const stoppingDistance = (n.speed * n.speed) / (2 * 3.1) + 3.2;
+          const stoppingDistance = (n.speed * n.speed) / (2 * NPC_STOPPING_TUNING.redBrakeDeceleration) + NPC_STOPPING_TUNING.redStopBuffer;
           const approachSpeed = distanceToLine > stoppingDistance
-            ? Math.min(target, Math.sqrt(Math.max(0, 2 * 3.1 * (distanceToLine - 3.2))))
+            ? Math.min(target, Math.sqrt(Math.max(0, 2 * NPC_STOPPING_TUNING.redBrakeDeceleration * (distanceToLine - NPC_STOPPING_TUNING.redStopBuffer))))
             : 0;
           target = Math.min(target, approachSpeed);
         } else if (amberLight) {
-          const stoppingDistance = (n.speed * n.speed) / (2 * 2.7) + 4.5;
+          const stoppingDistance = (n.speed * n.speed) / (2 * NPC_STOPPING_TUNING.amberBrakeDeceleration) + NPC_STOPPING_TUNING.amberStopBuffer;
           if (distanceToLine > stoppingDistance) {
-            target = Math.min(target, Math.max(0, (distanceToLine - 3.2) * 0.58));
+            target = Math.min(target, Math.max(0, (distanceToLine - NPC_STOPPING_TUNING.redStopBuffer) * NPC_STOPPING_TUNING.amberApproachScale));
           }
         }
       }
@@ -1629,9 +1662,9 @@ export function mountGame(
             queueAhead++;
           }
         }
-        const releaseAt = Math.min(14.2, 8.8 + queueAhead * 0.62);
+        const releaseAt = Math.min(NPC_STOPPING_TUNING.greenQueueReleaseMax, NPC_STOPPING_TUNING.greenQueueReleaseBase + queueAhead * NPC_STOPPING_TUNING.greenQueuePerVehicle);
         const greenElapsed = Math.max(0, nearestSignalCycle - releaseAt);
-        target = Math.min(target, greenElapsed <= 0 ? 0 : greenElapsed * 2.65);
+        target = Math.min(target, greenElapsed <= 0 ? 0 : greenElapsed * NPC_STOPPING_TUNING.greenQueueAcceleration);
       }
       // Follow traffic with a longer buffer for large vehicles and higher closing speeds.
       let leadGap = Infinity;
