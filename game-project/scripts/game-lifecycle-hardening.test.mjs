@@ -99,8 +99,8 @@ test("low-fuel HUD reports forward route distance to the next gas station", () =
 test("stop guidance distinguishes passenger drop-offs from pickups", () => {
   assert.match(engine, /const droppingHere = pax\.some\(\(person\) => person\.dest === targetI\)/);
   assert.match(engine, /const waitingHere = waiting\[targetI\] > 0/);
-  assert.ok(engine.includes("قف يمينًا لتنزيل الركاب"));
-  assert.ok(engine.includes("قف عند المحطة لاستلام الركاب"));
+  assert.match(engine, /قف \\${sideWord} لتنزيل الركاب/);
+  assert.match(engine, /قف عند \\${stop.name} لاستلام الركاب/);
   assert.ok(engine.includes("تنزيل الركاب واستلام المنتظرين"));
 });
 
