@@ -13,7 +13,7 @@ const [engine, ui, routeSource, routeData, photoRefs, packageJson] = await Promi
 ]);
 
 test("the game identifies the requested street without overstating map verification", () => {
-  assert.match(ui, /توكتوك شارع الفيوم/);
+  assert.match(ui, /توكتوك دار السلام/);
   assert.match(routeSource, /still needs on-site validation/);
   assert.equal(routeData.validation.fieldVerified, false);
   assert.equal(routeData.validation.connected, true);
