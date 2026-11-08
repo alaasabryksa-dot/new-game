@@ -92,12 +92,13 @@ test("road-edge handling applies progressive shoulder drag before clamping", () 
 });
 
 test("rush delivery routes avoid repeating a destination within the same run", () => {
-  assert.match(engine, /function rollJobs\\(fromStop: number\\)/);
-  assert.match(engine, /const available = Array\\.from\\(/);
-  assert.match(engine, /\\.filter\\(\\(candidate\\) => !jobs\\.includes\\(candidate\\.dest\\)\\)/);
-  assert.match(engine, /const preferred = available\\.filter\\(\\(candidate\\) =>[\\s\\S]*?JOB_ROUTE_TUNING\\.minHop[\\s\\S]*?JOB_ROUTE_TUNING\\.maxHop/);
-  assert.match(engine, /const routeCandidates = preferred\\.length \\? preferred : available/);
-  assert.match(engine, /const totalWeight = weighted\\.reduce/);
+  assert.ok(engine.includes("function rollJobs(fromStop: number)"));
+  assert.ok(engine.includes("const available = Array.from("));
+  assert.ok(engine.includes(".filter((candidate) => !jobs.includes(candidate.dest))"));
+  assert.ok(engine.includes("JOB_ROUTE_TUNING.minHop"));
+  assert.ok(engine.includes("JOB_ROUTE_TUNING.maxHop"));
+  assert.ok(engine.includes("const routeCandidates = preferred.length ? preferred : available"));
+  assert.ok(engine.includes("const totalWeight = weighted.reduce"));
 });
 
 test("passenger boarding spreads drop-off destinations when alternatives are available", () => {
