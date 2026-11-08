@@ -112,7 +112,7 @@ test("NPC microbus, tuk-tuk and signal stopping exposes thirty used traffic cont
 });
 
 test("pedestrian crowd exposes thirty active mobile-safe movement and sidewalk-safety controls", () => {
-  const tuning = engine.match(/const PEDESTRIAN_TUNING = \\{([\\s\\S]*?)\\} as const;/);
+  const tuning = engine.match(/const PEDESTRIAN_TUNING = \{([\s\S]*?)\} as const;/);
   assert.ok(tuning, "pedestrian tuning must remain explicit");
   const keys = [...tuning[1].matchAll(/([A-Za-z][A-Za-z0-9]*):/g)].map((entry) => entry[1]);
   assert.equal(keys.length, 30, "pedestrian tuning must expose thirty independent controls");
