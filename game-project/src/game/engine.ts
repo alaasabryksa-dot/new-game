@@ -2053,6 +2053,9 @@ export function mountGame(
     touch.throttle = 0;
     touch.brake = 0;
     if (phase === "play") {
+      // Commit the current run before the browser backgrounds or loses focus.
+      // This keeps best-distance and best-earnings data safe on mobile interruptions.
+      persist();
       phase = "pause";
       last = performance.now();
       acc = 0;
@@ -2112,6 +2115,8 @@ export function mountGame(
       keys.clear();
       touch.steer = touch.throttle = touch.brake = 0;
       if (phase === "play") {
+        // Save immediately when the player deliberately pauses.
+        persist();
         phase = "pause";
         publish();
       }
