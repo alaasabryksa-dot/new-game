@@ -1,7 +1,11 @@
 name: Android offline APK
 on:
-  # APK packaging is deliberately deferred until the full game is complete.
-  # Run this workflow manually only after the user approves the final build.
+  push:
+    branches: [main]
+    paths:
+      - "game-project/**"
+      - ".github/workflows/android-build.yml"
+      - ".github/scripts/test-android-startup.sh"
   workflow_dispatch:
 
 permissions:
@@ -99,17 +103,16 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Save APK for isolated device test
+      - name: Save APK candidate for user testing
         uses: actions/upload-artifact@v7
         with:
-          name: tuktuk-apk-candidate
+          name: Tuktuk-Dar-El-Salam-APK
           path: game-project/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 14
 
-  # Emulator startup is intentionally manual-only: do not repeat expensive
-  # emulator attempts on every source commit while the Android renderer issue
-  # is being resolved.
+  # Full emulator startup remains manual to keep the normal build quick.
+  # Dispatch manually when an isolated emulator validation is required.
   test-on-clean-emulator:
     if: github.event_name == 'workflow_dispatch'
     needs: build-apk
@@ -121,7 +124,7 @@ jobs:
       - name: Download APK candidate
         uses: actions/download-artifact@v8
         with:
-          name: tuktuk-apk-candidate
+          name: Tuktuk-Dar-El-Salam-APK
           path: artifacts
 
       - name: Launch APK on an isolated Android emulator
@@ -135,10 +138,10 @@ jobs:
           emulator-boot-timeout: 900
           script: APK_PATH=artifacts/app-debug.apk bash .github/scripts/test-android-startup.sh
 
-      - name: Publish APK only after Android startup passes
+      - name: Publish emulator-tested APK
         uses: actions/upload-artifact@v7
         with:
-          name: Tuktuk-Dar-El-Salam-verified-APK
+          name: Tuktuk-Dar-El-Salam-emulator-tested-APK
           path: artifacts/app-debug.apk
           if-no-files-found: error
           retention-days: 14
