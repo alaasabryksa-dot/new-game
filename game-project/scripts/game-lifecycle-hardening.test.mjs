@@ -65,6 +65,14 @@ test("HUD selects the nearest upcoming passenger drop-off and publishes its dist
   assert.match(ui, /أقرب نزلة: \{snap\.nextDropoffName\} · \{snap\.nextDropoffDist\} م/);
 });
 
+test("stop guidance distinguishes passenger drop-offs from pickups", () => {
+  assert.match(engine, /const droppingHere = pax\.some\(\(person\) => person\.dest === targetI\)/);
+  assert.match(engine, /const waitingHere = waiting\[targetI\] > 0/);
+  assert.ok(engine.includes("قف يمينًا لتنزيل الركاب"));
+  assert.ok(engine.includes("قف عند المحطة لاستلام الركاب"));
+  assert.ok(engine.includes("تنزيل الركاب واستلام المنتظرين"));
+});
+
 test("minimap distinguishes passenger drop-off destinations from pickup points", () => {
   const mapStart = engine.indexOf("  function drawMap() {");
   const mapEnd = engine.indexOf("\n  function frame(", mapStart);
