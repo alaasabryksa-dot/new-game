@@ -22,6 +22,12 @@ test("the game identifies the requested street without overstating map verificat
   assert.equal(routeData.validation.closed, true);
   assert.ok(routeData.coordinates.length >= 100);
   assert.ok(routeData.segments.some((segment) => segment[1] === "شارع الفيوم"));
+  assert.ok(routeData.segments.some((segment) => segment[1] === "كوبري دار السلام"));
+  assert.ok(routeData.segments.some((segment) => segment[1] === "شارع احمد زكي"));
+  assert.equal(routeData.validation.returnPathEdges, 102);
+  assert.equal(routeData.validation.allEdgesFollowMappedOnewayDirection, true);
+  assert.ok(routeData.validation.warning.some((warning) => /not fetched|timeout/.test(warning)));
+  assert.ok(routeData.lengthMeters[2] > 3900 && routeData.lengthMeters[2] < 4000);
 });
 
 test("photo references preserve rights and historical-source caveats", () => {
