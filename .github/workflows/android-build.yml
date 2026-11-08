@@ -9,27 +9,22 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-apk:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: game-project/package-lock.json
 
-      - name: Refresh lockfile with security fixes
-        working-directory: game-project
-        run: |
-          npm install --package-lock-only --ignore-scripts
-          npm audit fix --package-lock-only || true
       - name: Install web dependencies
         working-directory: game-project
         run: npm ci
@@ -65,13 +60,13 @@ jobs:
           test "$(find "$ASSETS" -type f | wc -l)" -gt 5
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-android-actions/setup-android@v4
         with:
           packages: "platform-tools"
 
@@ -79,7 +74,7 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "8.13"
 
@@ -101,27 +96,15 @@ jobs:
 
       - name: Save dependency audit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: npm-dependency-audit
           path: game-project/npm-audit.json
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Commit refreshed dependency lockfile
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add game-project/package-lock.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Update dependency lockfile security fixes"
-            git fetch origin main
-            git rebase origin/main
-            git push origin HEAD:main
-          fi
-
       - name: Save APK for isolated device test
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tuktuk-apk-candidate
           path: game-project/android/app/build/outputs/apk/debug/app-debug.apk
@@ -137,16 +120,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download APK candidate
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: tuktuk-apk-candidate
           path: artifacts
 
       - name: Launch APK on an isolated Android emulator
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@v2.38.0
         with:
           api-level: 34
           target: google_apis
@@ -157,7 +140,7 @@ jobs:
           script: APK_PATH=artifacts/app-debug.apk bash .github/scripts/test-android-startup.sh
 
       - name: Publish APK only after Android startup passes
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Tuktuk-Dar-El-Salam-verified-APK
           path: artifacts/app-debug.apk
