@@ -297,3 +297,11 @@ test("route distance helper measures correctly across the closed-loop seam", () 
   assert.equal(wrapDelta(25, 10, 100), 15);
   assert.equal(wrapDelta(10, 25, 100), -15);
 });
+
+
+test("Android backgrounding stops the render loop and safely restarts it on return", () => {
+  assert.match(engine, /if \(document\.visibilityState === "hidden"\) \{\s*raf = 0;\s*return;/);
+  assert.match(engine, /if \(raf\) cancelAnimationFrame\(raf\);\s*raf = 0;/);
+  assert.match(engine, /last = performance\.now\(\);\s*acc = 0;\s*if \(running && raf === 0\) raf = requestAnimationFrame\(frame\);/);
+  assert.match(engine, /Android WebViews may suspend animation frames while backgrounded/);
+});
