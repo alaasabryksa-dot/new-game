@@ -4015,6 +4015,28 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
   );
 
   const dummy = new THREE.Object3D();
+  // Real Dar El Salam photographs are bundled locally and used as photographic
+  // facade panels. They are loaded from the app bundle, so gameplay stays offline.
+  const photoLoader = new THREE.TextureLoader();
+  const photoPaths = [
+    new URL("./assets/legacy-dar-salam/fustat-school-front.jpg", document.baseURI).toString(),
+    new URL("./assets/legacy-dar-salam/fustat-school-side.jpg", document.baseURI).toString(),
+  ];
+  const photoMaterials = photoPaths.map((path) => {
+    const texture = photoLoader.load(path);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 2;
+    return new THREE.MeshStandardMaterial({
+      color: "#ffffff", map: texture, roughness: 0.88, metalness: 0,
+    });
+  });
+  const photoBoards = photoMaterials.map((material) => new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.12, 3.25, 4.8), material, 1,
+  ));
+  photoBoards.forEach((mesh) => scene.add(mesh));
+  const photoPointA = Math.floor((track.pts.length * 0.29) / 3) * 3;
+  const photoPointB = Math.floor((track.pts.length * 0.71) / 3) * 3;
+  const photoBoardCounts = [0, 0];
   const counts = colors.map(() => 0);
   const signsCount = signMats.map(() => 0);
   const awningsCount = awningMats.map(() => 0);
@@ -4065,6 +4087,20 @@ function buildCityMobile(scene: THREE.Scene, track: Track) {
 
       // Give upper floors readable windows instead of blank procedural walls.
       const facadeX = point.x + rx * side * (ROAD_HALF + depth * 0.5 + 2.5 + width * 0.5 + 0.1);
+      // Two distinct, locally photographed Dar El Salam school views are placed
+      // as real image textures on selected building fronts, not generated signs.
+      const photoIndex = i === photoPointA && side === -1 ? 0
+        : i === photoPointB && side === 1 ? 1 : -1;
+      if (photoIndex >= 0 && photoBoardCounts[photoIndex] === 0) {
+        addInstance(
+          photoBoards[photoIndex], 0, facadeX - side * 0.12,
+          Math.min(height - 2.15, 5.15), centerZ,
+          point.yaw, 1, 1, 1,
+        );
+        photoBoardCounts[photoIndex] = 1;
+        photoBoards[photoIndex].count = 1;
+        photoBoards[photoIndex].instanceMatrix.needsUpdate = true;
+      }
       const upperFloors = Math.min(floors - 1, 5);
       for (let floor = 1; floor <= upperFloors; floor++) {
         for (let column = 0; column < 3; column++) {
