@@ -3461,6 +3461,16 @@ function buildStreetSigns(scene: THREE.Scene, track: Track) {
       ctx.fillStyle = "#ffe18a";
       ctx.font = "bold 42px Tajawal, sans-serif";
       ctx.fillText(`مدخل الشارع • ${entrance.side === "left" ? "شمال" : "يمين"}`, 450, 218);
+      // Large curb-direction arrow makes the intended turn legible at a glance.
+      ctx.fillStyle = "#ffd15e";
+      ctx.beginPath();
+      if (entrance.side === "left") {
+        ctx.moveTo(72, 145); ctx.lineTo(128, 105); ctx.lineTo(128, 185);
+      } else {
+        ctx.moveTo(828, 145); ctx.lineTo(772, 105); ctx.lineTo(772, 185);
+      }
+      ctx.closePath();
+      ctx.fill();
     }
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
