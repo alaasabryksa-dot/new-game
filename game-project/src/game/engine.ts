@@ -2707,6 +2707,7 @@ function rollJobs(fromStop: number) {
     const ox = w / 2 - ((minX + maxX) / 2) * sc;
     const oy = h / 2 - ((minZ + maxZ) / 2) * sc;
     const px = (x: number, z: number) => [ox + x * sc, oy + z * sc] as const;
+    // Dark casing under the route makes it readable over the circular minimap.
     ctx.beginPath();
     mapPts.forEach((p, i) => {
       const [x, y] = px(p.x, p.z);
@@ -2714,8 +2715,11 @@ function rollJobs(fromStop: number) {
       else ctx.lineTo(x, y);
     });
     ctx.closePath();
+    ctx.strokeStyle = "rgba(5, 9, 12, 0.82)";
+    ctx.lineWidth = 6;
+    ctx.stroke();
     ctx.strokeStyle = "#f0b429";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.6;
     ctx.stroke();
     track.stops.forEach((stop, i) => {
       const sm = track.sample(stop.s);
@@ -2725,15 +2729,19 @@ function rollJobs(fromStop: number) {
       const [x, y] = px(mapX, mapZ);
       const hot = cfg.mode === "rush" && jobs[jobIndex] === i;
       const passengerDestination = pax.some((person) => person.dest === i);
-      ctx.fillStyle = hot ? "#f0b429" : passengerDestination ? "#d6a7ff" : "#1aa6a6";
-      const markerSize = hot ? 6 : passengerDestination ? 4.8 : 3.2;
-      ctx.fillRect(x - markerSize / 2, y - markerSize / 2, markerSize, markerSize);
+      ctx.fillStyle = hot ? "#f0b429" : passengerDestination ? "#d6a7ff" : stop.side === "left" ? "#42c8bc" : "#69a8ef";
+      const markerSize = hot ? 6.2 : passengerDestination ? 5.2 : 3.6;
+      ctx.beginPath();
+      ctx.arc(x, y, markerSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(8, 13, 18, 0.9)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
       if (passengerDestination && !hot) {
-        // A subtle ring distinguishes passenger drop-offs from pickup points.
         ctx.strokeStyle = "#f0e5ff";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(x, y, 4.2, 0, Math.PI * 2);
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
         ctx.stroke();
       }
     });
