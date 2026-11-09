@@ -36,6 +36,13 @@ test("photo references preserve rights and historical-source caveats", () => {
   assert.ok(photoRefs.caveats.some((line) => /historical/.test(line)));
 });
 
+test("all 24 street entrances have distinct provisional gameplay positions", () => {
+  assert.match(trackSource, /\(\(entry\.sideOrder - 1\) \* 2 \+ \(entry\.side === "right" \? 1 : 0\) \+ 1\) \/ 25 \* total/);
+  assert.match(trackSource, /real cross-side order still needs field mapping/);
+  assert.match(engine, /stop\.side === "left" \? "#42c8bc" : "#69a8ef"/);
+  assert.match(engine, /rgba\(5, 9, 12, 0\.82\)/);
+});
+
 test("all 24 confirmed street signs remain readable and visible on Android", () => {
   assert.match(engine, /function buildStreetSigns\(scene: THREE\.Scene, track: Track\)/);
   assert.match(engine, /for \(const entrance of track\.entrances\)/);
