@@ -1,0 +1,25 @@
+Dar El Salam photo textures
+===========================
+
+These two photographs are used as photographic facade textures in the game.
+They depict Fustat Secondary School for Males in Dar El Salam, Cairo, photographed on 11 June 2018.
+
+1) fustat-school-front.jpg
+   Original title: Fustat secondary School for Males.jpg
+   Author: Ashashyou
+   Source: https://commons.wikimedia.org/wiki/File:Fustat_secondary_School_for_Males.jpg
+   License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+   License URL: https://creativecommons.org/licenses/by-sa/4.0/
+   Changes: resized by the game build pipeline only if needed; otherwise used unchanged.
+
+2) fustat-school-side.jpg
+   Original title: Fustat secondary School for Males 2.jpg
+   Author: Ashashyou
+   Source: https://commons.wikimedia.org/wiki/File:Fustat_secondary_School_for_Males_2.jpg
+   License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+   License URL: https://creativecommons.org/licenses/by-sa/4.0/
+   Changes: resized by the game build pipeline only if needed; otherwise used unchanged.
+
+These photos are not claimed to depict the exact building parcels or storefronts beside
+Fayoum Street. They are genuine Dar El Salam locality photographs used as visual
+reference/photo panels. The photographs and adaptations are provided under CC BY-SA 4.0.
