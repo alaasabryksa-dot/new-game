@@ -3404,9 +3404,16 @@ function buildTrafficSignals(scene: THREE.Scene, track: Track) {
 function buildStreetSigns(scene: THREE.Scene, track: Track) {
   const postMat = new THREE.MeshStandardMaterial({ color: "#777b7c", roughness: 0.78, metalness: 0.35 });
   const frameMat = new THREE.MeshStandardMaterial({ color: "#d4bd8a", roughness: 0.7, metalness: 0.12 });
-  const postGeo = new THREE.CylinderGeometry(0.075, 0.11, 3.4, 7);
-  const boardGeo = new THREE.PlaneGeometry(3.65, 1.18);
-  const frameGeo = new THREE.BoxGeometry(3.78, 1.3, 0.09);
+  const postGeo = new THREE.CylinderGeometry(0.085, 0.12, 3.55, 8);
+  // Larger, high-contrast boards keep all 24 names readable on narrow Android screens.
+  const boardGeo = new THREE.PlaneGeometry(4.35, 1.42);
+  const frameGeo = new THREE.BoxGeometry(4.5, 1.56, 0.12);
+  const bracketGeo = new THREE.BoxGeometry(0.16, 0.13, 0.52);
+  const reflectorGeo = new THREE.BoxGeometry(4.22, 0.055, 0.035);
+  const reflectorMat = new THREE.MeshStandardMaterial({
+    color: "#f3c85d", emissive: "#d99a24", emissiveIntensity: 0.42,
+    roughness: 0.35, metalness: 0.18,
+  });
 
   // 24 named entrance signs: each side preserves the player's confirmed order.
   // Their spacing is deliberately illustrative, not a claim of surveyed GPS positions.
@@ -3421,9 +3428,13 @@ function buildStreetSigns(scene: THREE.Scene, track: Track) {
     group.rotation.y = p.yaw + (side < 0 ? Math.PI : 0);
 
     const post = new THREE.Mesh(postGeo, postMat);
-    post.position.y = 1.7;
+    post.position.y = 1.78;
     const frame = new THREE.Mesh(frameGeo, frameMat);
     frame.position.set(0, 3.05, 0);
+    const bracket = new THREE.Mesh(bracketGeo, postMat);
+    bracket.position.set(0, 2.98, 0.16);
+    const reflector = new THREE.Mesh(reflectorGeo, reflectorMat);
+    reflector.position.set(0, 2.34, 0.075);
     const canvas = document.createElement("canvas");
     canvas.width = 900;
     canvas.height = 290;
@@ -3441,11 +3452,14 @@ function buildStreetSigns(scene: THREE.Scene, track: Track) {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#fff4d9";
-      const fontSize = entrance.name.length > 20 ? 48 : entrance.name.length > 15 ? 58 : 70;
-      ctx.font = `bold ${fontSize}px Tajawal, sans-serif`;
-      ctx.fillText(entrance.name, 450, 112, 820);
-      ctx.fillStyle = "#f0d79f";
-      ctx.font = "bold 38px Tajawal, sans-serif";
+      const fontSize = entrance.name.length > 20 ? 54 : entrance.name.length > 15 ? 66 : 78;
+      ctx.font = `900 ${fontSize}px Tajawal, sans-serif`;
+      ctx.shadowColor = "rgba(0,0,0,0.7)";
+      ctx.shadowBlur = 8;
+      ctx.fillText(entrance.name, 450, 112, 830);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#ffe18a";
+      ctx.font = "bold 42px Tajawal, sans-serif";
       ctx.fillText(`مدخل الشارع • ${entrance.side === "left" ? "شمال" : "يمين"}`, 450, 218);
     }
     const texture = new THREE.CanvasTexture(canvas);
@@ -3454,13 +3468,13 @@ function buildStreetSigns(scene: THREE.Scene, track: Track) {
       map: texture,
       roughness: 0.68,
       side: THREE.DoubleSide,
-      emissive: "#20384a",
+      emissive: "#28465b",
       emissiveMap: texture,
-      emissiveIntensity: 0.18,
+      emissiveIntensity: 0.32,
     });
     const board = new THREE.Mesh(boardGeo, boardMat);
     board.position.set(0, 3.05, 0.055);
-    group.add(post, frame, board);
+    group.add(post, frame, bracket, reflector, board);
     scene.add(group);
   }
 }
