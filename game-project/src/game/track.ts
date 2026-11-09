@@ -93,11 +93,12 @@ export function buildTrack(): Track {
   const total = s;
 
   // Passenger stops now use the player's 24 confirmed street names.
-  // Opposite-side streets with the same sideOrder share a provisional cross-section;
-  // this preserves each side's order without claiming surveyed cross-side alignment.
+  // Interleave the two independently confirmed side lists to avoid stacking
+  // opposite-side junctions at the exact same gameplay coordinate. This is a
+  // presentation-only sequence; the real cross-side order still needs field mapping.
   const entrances = STREET_ENTRANCES.map((entry) => ({
     ...entry,
-    s: (entry.sideOrder / 13) * total,
+    s: ((entry.sideOrder - 1) * 2 + (entry.side === "right" ? 1 : 0) + 1) / 25 * total,
   }));
   const stops = entrances
     .map(({ name, side, s: stopS }) => ({ name, side, s: stopS }))
