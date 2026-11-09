@@ -109,9 +109,10 @@ test("minimap distinguishes passenger drop-off destinations from pickup points",
   const mapEnd = engine.indexOf("\n  function frame(", mapStart);
   const map = engine.slice(mapStart, mapEnd);
   assert.ok(map.includes("const passengerDestination = pax.some((person) => person.dest === i);"));
-  assert.ok(map.includes('passengerDestination ? "#d6a7ff" : "#1aa6a6"'));
+  assert.ok(map.includes('passengerDestination ? "#d6a7ff" : stop.side === "left" ? "#42c8bc" : "#69a8ef"'));
   assert.ok(map.includes("if (passengerDestination && !hot)"));
-  assert.ok(map.includes("ctx.arc(x, y, 4.2, 0, Math.PI * 2)"));
+  assert.ok(map.includes("ctx.arc(x, y, 4.5, 0, Math.PI * 2)"));
+  assert.ok(map.includes('ctx.strokeStyle = "rgba(5, 9, 12, 0.82)"'));
 });
 
 test("pedestrian player-avoidance smoothing is frame-rate independent and delta-clamped", () => {
