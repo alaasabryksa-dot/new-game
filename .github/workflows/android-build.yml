@@ -25,6 +25,17 @@ jobs:
           cache: npm
           cache-dependency-path: game-project/package-lock.json
 
+      - name: Download licensed Dar El Salam photo textures
+        run: |
+          set -euo pipefail
+          PHOTO_DIR="game-project/public/assets/legacy-dar-salam"
+          mkdir -p "$PHOTO_DIR"
+          curl -L --fail --retry 3 "https://upload.wikimedia.org/wikipedia/commons/8/8c/Fustat_secondary_School_for_Males.jpg" -o "$PHOTO_DIR/fustat-school-front.jpg"
+          curl -L --fail --retry 3 "https://upload.wikimedia.org/wikipedia/commons/4/4c/Fustat_secondary_School_for_Males_2.jpg" -o "$PHOTO_DIR/fustat-school-side.jpg"
+          test -s "$PHOTO_DIR/fustat-school-front.jpg"
+          test -s "$PHOTO_DIR/fustat-school-side.jpg"
+          file "$PHOTO_DIR"/*.jpg
+
       - name: Install web dependencies
         working-directory: game-project
         run: npm ci
@@ -55,6 +66,8 @@ jobs:
           set -euo pipefail
           ASSETS="game-project/android/app/src/main/assets/public"
           test -s "$ASSETS/android.html"
+          test -s "$ASSETS/assets/legacy-dar-salam/fustat-school-front.jpg"
+          test -s "$ASSETS/assets/legacy-dar-salam/fustat-school-side.jpg"
           grep -q "assets/" "$ASSETS/android.html" || true
           find "$ASSETS" -type f -printf '%s %p\\n' | sort -nr | head -20
           test "$(find "$ASSETS" -type f | wc -l)" -gt 5
