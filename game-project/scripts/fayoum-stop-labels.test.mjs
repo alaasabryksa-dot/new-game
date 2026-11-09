@@ -32,7 +32,8 @@ test("passenger stops are named and preserve the side for curb-side servicing", 
   assert.match(engine, /sideWord/);
 });
 
-test("opposite-side names are paired only as provisional visual cross-sections", () => {
-  assert.match(track, /share a provisional cross-section/);
-  assert.match(track, /without claiming surveyed cross-side alignment/);
+test("opposite-side names use a provisional staggered sequence without claiming mapped order", () => {
+  assert.match(track, /Interleave the two independently confirmed side lists/);
+  assert.match(track, /real cross-side order still needs field mapping/);
+  assert.match(track, /entry.side === "right" \? 1 : 0/);
 });
