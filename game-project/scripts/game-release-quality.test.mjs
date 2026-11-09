@@ -36,6 +36,17 @@ test("photo references preserve rights and historical-source caveats", () => {
   assert.ok(photoRefs.caveats.some((line) => /historical/.test(line)));
 });
 
+test("all 24 confirmed street signs remain readable and visible on Android", () => {
+  assert.match(engine, /function buildStreetSigns\(scene: THREE\.Scene, track: Track\)/);
+  assert.match(engine, /for \(const entrance of track\.entrances\)/);
+  assert.match(engine, /PlaneGeometry\(4\.35, 1\.42\)/);
+  assert.match(engine, /fontSize = entrance\.name\.length > 20 \? 54 : entrance\.name\.length > 15 \? 66 : 78/);
+  assert.match(engine, /side === "left" \? "شمال" : "يمين"/);
+  assert.match(engine, /side: THREE\.DoubleSide/);
+  assert.match(engine, /reflectorMat/);
+  assert.match(engine, /buildStreetSigns\(scene, track\)/);
+});
+
 test("storefront signs are generic categories, not claimed real shop names", () => {
   assert.match(engine, /Fictional category labels/);
   const match = engine.match(/const signLabels = \[([^\]]+)\]/);
